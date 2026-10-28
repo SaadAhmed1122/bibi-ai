@@ -17,3 +17,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Changed
 - Renamed the product from the working name "Pip" to **Bibi AI** across all docs, config, and the repo folder (`bibi-ai/`). The PRD in `reference/` is unchanged.
+- Design: chose the seed character, restyled so it reads as an AI phone helper rather than a plant or health app. New `docs/design/bibi-character-gemini.md` (brief, palette, one-image-per-prompt Gemini prompts). `codex-design-prompts.md` now builds the vector master from the approved Gemini reference.

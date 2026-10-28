@@ -37,7 +37,8 @@ docs/
   architecture.md           processes, modules, data flows, scheduler
   changelog.md              Keep a Changelog
   project_status.md         phase, milestones, spikes, open items, decisions
-  design/codex-design-prompts.md   prompts for character + UI design work
+  design/bibi-character-gemini.md  character brief + Gemini image prompts
+  design/codex-design-prompts.md   prompts to turn the art into vector assets + UI
   tooling.md                setup and when-to-use for agent tools
   features/overlay.md       floating character, foreground service (S1)
   features/model-runtime.md LLM runtime, gates, decision rule (S2)

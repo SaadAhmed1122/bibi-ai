@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-28 — Character direction: the seed concept, restyled as a tech helper (pearl shell, indigo face panel, cyan eyes, glowing sprout that shows state; violet/amber accents; no green or health cues). Brief and Gemini prompts in docs/design/bibi-character-gemini.md. — Owner feedback.
 - 2026-10-28 — Product renamed from working name "Pip" to **Bibi AI** (character: Bibi). Repo slug `bibi-ai`; database `bibi.db`; export files `bibimem.json` / `.bibimem`. The PRD stays unchanged in `reference/` and still says Pip. — Owner decision.
 - 2026-10-28 — Project scaffold created (structure, planning docs, reference PRD). — Owner request.
 - 2026-10-28 — The decision log lives here, in "Decisions", instead of the `DECISIONS.md` named in PRD 0.11. — Owner instruction.
