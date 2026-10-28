@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "ci-security-scanning-with-strix": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/ci-security-scanning-with-strix/SKILL.md",
+      "computedHash": "cc83f0220a742c563b0728bbbfcdf547463a1ae8e60b8ed4e68d487072fe70cf"
+    },
+    "find-security-vulnerabilities-in-code": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/find-security-vulnerabilities-in-code/SKILL.md",
+      "computedHash": "551afea3693d77172cc83278bd6185cfb232be75e5c683506fd00b9630691272"
+    },
+    "fix-security-vulnerabilities-with-strix": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/fix-security-vulnerabilities-with-strix/SKILL.md",
+      "computedHash": "f5fcf1365bbaa650b246c9a0e6338db2e40ecc46fba60ff64fd2f6311eed901c"
+    }
+  }
+}

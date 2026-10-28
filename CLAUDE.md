@@ -27,6 +27,9 @@ CLAUDE.md                   this file
 .env.example                required variable names (no values)
 .env                        local values; git-ignored
 .gitignore
+.mcp.json                   project MCP servers (context7, 21st); keys come from env
+.claude/settings.json       agent-skills plugin, MCP approval, graphify hooks
+.claude/skills/             graphify + Strix skills (pinned in skills-lock.json)
 reference/
   Pip_PRD_Final.md          source PRD; Part 0 is binding
   Pip_Spike_Tracker.xlsx    spike measurements (source of truth for results)
@@ -35,6 +38,7 @@ docs/
   changelog.md              Keep a Changelog
   project_status.md         phase, milestones, spikes, open items, decisions
   design/codex-design-prompts.md   prompts for character + UI design work
+  tooling.md                setup and when-to-use for agent tools
   features/overlay.md       floating character, foreground service (S1)
   features/model-runtime.md LLM runtime, gates, decision rule (S2)
   features/memory.md        memory, retention, export/delete
@@ -81,3 +85,26 @@ Gate measurements also go in `reference/Pip_Spike_Tracker.xlsx`.
 - Spec: [project_spec.md](project_spec.md)
 - Architecture: [docs/architecture.md](docs/architecture.md)
 - Status: [docs/project_status.md](docs/project_status.md)
+- Tooling setup and limits: [docs/tooling.md](docs/tooling.md)
+
+## 9. Tooling — mandatory during implementation
+- **Workflow (Agent Skills plugin):**
+  - New feature or spike: `/spec` → `/plan` → `/build` (one task, one commit) → `/test` → `/review`.
+  - Release gates: `/ship`.
+  - Let auto-triggered skills (TDD, API design, security) run.
+- **Context7:** query `resolve-library-id` + `query-docs` before writing code against any library or Android API, pinned to the version in `libs.versions.toml`. Never code library APIs from memory.
+- **Graphify:** follow the `## graphify` rules below. Run `graphify update .` after code changes.
+- **21st MCP:** UI inspiration search only. It returns React/Tailwind; translate ideas into Compose with `core/designsystem` tokens. Never paste web code into the app.
+- **Strix (local CLI):** run the `find-security-vulnerabilities-in-code` skill on changes to the Permission Engine, tool router, export/import, encryption, or overlay touch handling, and at the P2 gate. Fix findings with `fix-security-vulnerabilities-with-strix`. No Strix Cloud uploads without a decision entry.
+- If a tool is unavailable (no key, not installed, server down), say so in the session summary and continue with official docs. Don't silently skip it.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.

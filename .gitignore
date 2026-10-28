@@ -34,3 +34,8 @@ outputs/
 Thumbs.db
 .externalNativeBuild/
 .cxx/
+
+# Agent tooling outputs (regenerated locally)
+graphify-out/
+strix_runs/
+node_modules/
