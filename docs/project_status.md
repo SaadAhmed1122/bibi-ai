@@ -62,5 +62,6 @@ Notes on the vivo Y17s:
 2026-10-28: scaffold committed ("Scaffold project structure and planning docs"). No Gradle project or app code exists yet. The spike tracker spreadsheet is still missing from `reference/`.
 
 ## Next step
+Create the private GitHub repository and push the initial history (gh can't authenticate from the cloud session, so the owner creates the empty repo and Claude pushes). Then open issues for milestones P0–P4 and spikes S1–S4.
 Run spike S1: foreground-service overlay on the Galaxy A23.
 First confirm the A23's RAM and Android version (Settings → About phone), because Android < 14 rules the device out.

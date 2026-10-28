@@ -1,41 +1,99 @@
-# Secrets and local config
+# =====================================================================
+# Pip — .gitignore (Android · Kotlin · Gradle · Compose · native AI runtimes)
+# =====================================================================
+
+# --- Secrets and local config (never commit) ---
 .env
 .env.*
 !.env.example
 local.properties
+keystore.properties
+signing.properties
 *.jks
 *.keystore
 *.p12
+*.pem
 service-account*.json
+play-service-account*.json
+# Pip uses no Firebase; ignore it so a stray config file is never committed
+google-services.json
 
-# Gradle / build outputs
+# --- Gradle ---
 .gradle/
 build/
-*/build/
+**/build/
 .kotlin/
-captures/
+# Keep the wrapper so builds are reproducible
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# --- Android build outputs and artifacts ---
 *.apk
 *.aab
 *.ap_
+*.apks
 *.dex
+*.class
 outputs/
+captures/
+release/
+*.hprof
+# Proguard/R8 mapping files belong to a release, not the repo
+mapping.txt
 
-# Model packs (downloaded at runtime, never committed)
+# --- Native code (llama.cpp / LiteRT wrappers) ---
+.externalNativeBuild/
+.cxx/
+obj/
+
+# --- Model packs (downloaded at runtime, never committed) ---
 *.gguf
 *.tflite
+*.litertlm
 *.task
 *.onnx
 *.bin
+*.safetensors
+models/cache/
 
-# IDE / OS
+# --- IDEs and editors ---
 .idea/
 *.iml
+*.ipr
+*.iws
+.navigation/
+.vscode/
+*.swp
+*~
+
+# --- OS ---
 .DS_Store
 Thumbs.db
-.externalNativeBuild/
-.cxx/
+desktop.ini
 
-# Agent tooling outputs (regenerated locally)
+# --- Logs, reports, test output ---
+*.log
+lint-results*.html
+lint-results*.xml
+benchmark-results/
+
+# --- Python (evaluation harness, PRD Appendix E) ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# --- Release automation (if fastlane is added later) ---
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# --- Agent tooling outputs (regenerated locally) ---
 graphify-out/
 strix_runs/
 node_modules/
+.claude/settings.local.json
+
+# NOTE: Room exported schemas (app/schemas/ or core/database/schemas/) MUST be committed (PRD §18.1).

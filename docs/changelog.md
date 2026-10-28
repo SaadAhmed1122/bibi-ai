@@ -12,3 +12,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - `docs/design/codex-design-prompts.md` with prompts for character and UI design work.
 - vivo Y17s recorded as a test device in `docs/project_status.md` (new "Test devices" section), `CLAUDE.md`, and `docs/features/overlay.md`.
 - Agent tooling: `.mcp.json` (Context7, 21st), `.claude/settings.json` (Agent Skills plugin, Graphify hooks), `.claude/skills/` (Graphify, Strix), `docs/tooling.md`, and CLAUDE.md §9 usage rules.
+- Expanded `.gitignore` for Android/Kotlin/Gradle, native builds, model files, Python eval harness, and agent tooling outputs.
+- CLAUDE.md §10 "Repository Etiquette & Git Rules" (branch-per-change, Issues as source of truth, PR before merge).

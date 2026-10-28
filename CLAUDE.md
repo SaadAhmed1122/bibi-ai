@@ -63,7 +63,7 @@ docs/
   - No business logic in composables.
 - Architecture: MVI. `StateFlow<UiState>` from ViewModels, pure-Kotlin use cases, repositories at the data boundary (PRD §12).
 - Coroutines: structured concurrency, cancellable long operations, a single-thread dispatcher per inference engine (PRD §12.7).
-- No `TODO`/`FIXME` without a matching note in `docs/project_status.md` (Open items or Next step).
+- No `TODO`/`FIXME` without a GitHub issue reference, e.g. `TODO(#N)` (see §10).
 - Tests first for the Permission Engine and the tool-call parser (PRD 0.11).
 
 ## 6. Session protocol
@@ -97,6 +97,21 @@ Gate measurements also go in `reference/Pip_Spike_Tracker.xlsx`.
 - **21st MCP:** UI inspiration search only. It returns React/Tailwind; translate ideas into Compose with `core/designsystem` tokens. Never paste web code into the app.
 - **Strix (local CLI):** run the `find-security-vulnerabilities-in-code` skill on changes to the Permission Engine, tool router, export/import, encryption, or overlay touch handling, and at the P2 gate. Fix findings with `fix-security-vulnerabilities-with-strix`. No Strix Cloud uploads without a decision entry.
 - If a tool is unavailable (no key, not installed, server down), say so in the session summary and continue with official docs. Don't silently skip it.
+
+## 10. Repository Etiquette & Git Rules
+- **NEVER push directly to `main`.** `main` changes only through merged Pull Requests.
+- **One branch per change**, created from an up-to-date `main`, with a descriptive name:
+  - `feature/<issue#>-<short-name>` (e.g. `feature/12-overlay-drag-snap`)
+  - `bugfix/<issue#>-<short-name>`
+  - `spike/<S1..S4>-<short-name>`
+  - `docs/<short-name>`
+  - `chore/<short-name>`
+- **GitHub Issues are the single source of truth** for bugs, features, and milestones (P0–P4 milestones, S1–S4 spike issues).
+  - Every branch, commit series, and PR references its issue (`Closes #N`).
+  - `docs/project_status.md` keeps phase, decisions, and the session stopping point, and links issue numbers instead of duplicating them.
+  - A `TODO` in code must cite an issue: `// TODO(#N): ...`.
+- **Pull Requests:** when a feature is complete and verified (tests pass, `/review` done, status and changelog updated), open a PR against `main` with `gh pr create`. Never merge without the owner's explicit confirmation.
+- **Commits:** small and focused, imperative subject line (≤ 72 chars), no secrets, no generated outputs. Never force-push to `main`. Never rewrite pushed history on shared branches without asking.
 
 ## graphify
 
