@@ -1,9 +1,9 @@
-# CLAUDE.md — Pip project memory
+# CLAUDE.md — Bibi AI project memory
 
-## 1. What Pip is
+## 1. What Bibi AI is
 An offline, on-device AI companion for Android: a small animated character floating over other apps that chats with a local LLM, keeps local memory, and performs a few safe phone actions.
 It's a portfolio piece and technical experiment by Saad (solo) plus Claude Code. Funding only if results justify it.
-Working name "Pip"; the final name is undecided.
+Product name **Bibi AI**; the character is **Bibi**. The PRD in `reference/` uses the old working name "Pip"; treat it as Bibi.
 
 **Current phase: P0 — Feasibility spikes.** No app code until S1 and S2 are measured. Status: [docs/project_status.md](docs/project_status.md).
 

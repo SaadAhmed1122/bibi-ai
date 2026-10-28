@@ -1,14 +1,14 @@
-# Pip — Project Spec (MVP)
+# Bibi AI — Project Spec (MVP)
 
 Unified product and engineering spec. Derived only from [reference/Pip_PRD_Final.md](reference/Pip_PRD_Final.md) Part 0 and the sections it points to. Part 0 overrides Sections 1–26 wherever they conflict (PRD 0.1, 0.10). Anything not yet measured on a device is marked **[VERIFY]**. Choices not yet made are marked **[OPEN]**.
 
-Working name: **Pip**. The final name is undecided (PRD 0.12 item 5).
+Product name: **Bibi AI** (owner decision, 2026-10-28). The character is called **Bibi**. The PRD in `reference/` still says "Pip"; read it as Bibi. Trademark and Play clearance is still open (PRD 0.12 item 5).
 
 ---
 
 ## 1. Product summary
 
-Pip is an offline, on-device AI companion for Android: a small animated character that floats over other apps.
+Bibi is an offline, on-device AI companion for Android: a small animated character that floats over other apps.
 - Chats by text, and by voice if the S3 gate passes, using a local language model.
 - Remembers only what the user chooses to keep, stored locally. Default retention is 90 days; the user can pin, search, export, and delete.
 - Performs a small set of safe phone actions.
@@ -36,7 +36,7 @@ Source: PRD 0.8. Anything outside "In MVP" needs a dated decision entry in `docs
 
 | Area | MVP behavior | Detail |
 |---|---|---|
-| Overlay | Floating draggable character. Tap opens a compact chat card. Hide, snap to edge, and a persistent notification with a "Hide Pip" action. | [features/overlay.md](docs/features/overlay.md), PRD §17, §12.4–12.5 |
+| Overlay | Floating draggable character. Tap opens a compact chat card. Hide, snap to edge, and a persistent notification with a "Hide Bibi" action. | [features/overlay.md](docs/features/overlay.md), PRD §17, §12.4–12.5 |
 | Chat | Typed chat with a streaming local LLM. Short answers by default. Stop-generation control. | PRD §13 |
 | Model | One Core Pack (small LLM, ≤ 2 GB), downloaded at first run, with resume, checksum verification, and delete. | [features/model-runtime.md](docs/features/model-runtime.md) |
 | Memory | Manual "remember this", automatic short summaries, pin, search, delete, export. 90-day default retention, user-adjustable. | [features/memory.md](docs/features/memory.md), PRD §14, §18 |
@@ -117,7 +117,7 @@ Full detail: [docs/architecture.md](docs/architecture.md), PRD §11–13.
 - Memory Manager (§14).
 - Avatar, Emotion, and Behavior engines (§17).
 
-**Storage:** Room in one encrypted database (`pip.db`) via an SQLCipher-backed factory, with FTS5 for text search (§18.1, §11.5). Migrations are tested, and destructive fallback is disabled.
+**Storage:** Room in one encrypted database (`bibi.db`) via an SQLCipher-backed factory, with FTS5 for text search (§18.1, §11.5). Migrations are tested, and destructive fallback is disabled.
 
 **Still open:**
 - LLM runtime: LiteRT-LM or llama.cpp **[OPEN]** — decided by S2 (PRD §11.5, 0.10 OD-02).
@@ -184,7 +184,7 @@ Source: PRD 0.12, plus inconsistencies found while writing this spec.
 | 2 | A23 Android version | Assume Android 14+. If lower, the A23 cannot run the app. | Whether the A23 is a valid test device |
 | 3 | Play account type | Assume personal → closed test with about 12 testers | Release timeline |
 | 4 | Second test phone (6–8 GB) | None; results are labeled "single-device" | Credibility of benchmarks |
-| 5 | Final app name | Working name "Pip"; trademark and Play availability unchecked [VERIFY] | Branding |
+| 5 | Final app name | **Bibi AI** chosen by owner. A web check found no exact-match app, but similar "Bibi" products exist (see brainstorm.md); formal trademark and Play check still needed [VERIFY] | Branding |
 | 6 | Model pack hosting | Decide in P1 after checking Play Asset Delivery limits [VERIFY] | Cost, release path |
 | 7 | Dial action risk class: 0.8 calls it "Safe", §16.3 rates `call_contact` SENSITIVE | Treat it as **Sensitive** (confirmation card), since the stricter rule is safer | Tool UX |
 | 8 | Decision log location: 0.11 says `DECISIONS.md`; the owner chose `docs/project_status.md` → "Decisions" | Use `docs/project_status.md` (recorded as a decision) | Process |

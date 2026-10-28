@@ -29,7 +29,7 @@ flowchart LR
         TOOLS["Tool Router + Permission Engine"]
         MEM["Memory Manager"]
         SCHED["Model Scheduler (client side)"]
-        DB[("Room · pip.db<br/>SQLCipher + FTS5")]
+        DB[("Room · bibi.db<br/>SQLCipher + FTS5")]
     end
     subgraph INF[":inference process"]
         SVC["InferenceService (bound, AIDL)"]
@@ -147,7 +147,7 @@ Idle → Thinking → (AwaitingConfirmation | ExecutingTool | Responding | Speak
 
 ## 8. Storage
 
-- **Database:** Room, one encrypted database `pip.db`, SQLCipher-backed factory. The key is wrapped by an Android Keystore key (§18.1).
+- **Database:** Room, one encrypted database `bibi.db`, SQLCipher-backed factory. The key is wrapped by an Android Keystore key (§18.1).
 - **Search:** FTS5 for memory and message search.
 - **Conventions:** every user-content table carries `profileId` (single profile in MVP), plus `deletedAt` for soft delete and a purge job with `secure_delete` (§18.1).
 - **Migrations:** schemas exported to VCS; each migration has a `MigrationTestHelper` test; destructive fallback disabled.

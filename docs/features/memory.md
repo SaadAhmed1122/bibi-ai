@@ -1,7 +1,7 @@
 # Feature: Memory
 
 ## Purpose
-Pip remembers what the user chooses to keep, entirely on device. Memory must be small, correctable, explainable, and deletable (PRD §14.1).
+Bibi remembers what the user chooses to keep, entirely on device. Memory must be small, correctable, explainable, and deletable (PRD §14.1).
 
 ## Requirements
 - **PRD 0.8 (MVP behavior):**
@@ -28,7 +28,7 @@ Pip remembers what the user chooses to keep, entirely on device. Memory must be 
 - **Retrieval** (§14.5): pinned items, then top-K FTS results, within a token budget, into the Prompt Builder.
 - **Retention job** (§14.6): WorkManager, requires charging and device idle. Deletes expired unpinned rows, then purges.
 - **Recently deleted** (§14.6): a 24-hour soft-delete window, plus a "Delete now" option that deletes securely.
-- **Export** (§14.7): readable `pipmem.json`, or an encrypted `.pipmem` (Argon2id → AES-256-GCM). Embeddings aren't exported.
+- **Export** (§14.7): readable `bibimem.json`, or an encrypted `.bibimem` (Argon2id → AES-256-GCM). Embeddings aren't exported.
 - **Profiles:** single profile in MVP, but `profileId` is in the schema from day one (FR-101).
 
 ## Risks

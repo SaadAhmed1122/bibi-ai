@@ -1,14 +1,14 @@
 # Feature: Overlay (floating character)
 
 ## Purpose
-Pip's main surface is a small animated character that floats over other apps (PRD §20.1, "presence over screens"). Tapping it opens a compact chat card. Spike S1 tests whether this is stable and cheap enough on the Galaxy A23.
+Bibi's main surface is a small animated character that floats over other apps (PRD §20.1, "presence over screens"). Tapping it opens a compact chat card. Spike S1 tests whether this is stable and cheap enough on the Galaxy A23.
 
 ## Requirements
 - **PRD 0.8 (MVP behavior):**
   - A floating, draggable character.
   - Tap opens a compact chat card.
   - Hide and snap-to-edge.
-  - A persistent notification with a "Hide Pip" action.
+  - A persistent notification with a "Hide Bibi" action.
 - **PRD 0.7 S1 gate:** stable for 1 hour, and battery drain ≤ 3% per hour with the screen on. If it fails: Bubble/Edge mode only, a lower frame rate, and Calm mode as the default.
 - **PRD 0.9 policy:**
   - Request `SYSTEM_ALERT_WINDOW` only when the user enables the floating character, with a rationale.
@@ -37,7 +37,7 @@ Pip's main surface is a small animated character that floats over other apps (PR
 
 ## Risks
 - **Samsung battery management (PRD 0.13, medium/high):** One UI may put the app to sleep or kill the foreground service.
-  - Mitigations: a watchdog, an in-app guide that explains how to exempt Pip from battery optimization (Pip does not request the exemption itself, §12.4), and the in-app chat fallback.
+  - Mitigations: a watchdog, an in-app guide that explains how to exempt Bibi from battery optimization (Bibi does not request the exemption itself, §12.4), and the in-app chat fallback.
   - The S1 soak must run with default Samsung battery settings first, then with the exemption, and both results must be recorded.
 - **vivo Funtouch OS background limits** (PRD §12.4 lists vivo). These apply on the vivo Y17s test device. Run the same soak protocol there, labeled by device.
 - **Play review friction** for `specialUse` foreground services and overlays (0.13). Mitigation: upload to the internal track early.

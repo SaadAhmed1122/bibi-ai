@@ -1,7 +1,7 @@
 # Feature: Tools and permissions
 
 ## Purpose
-Let Pip perform a small set of phone actions safely. Every action goes through one Tool Router and one Permission Engine (PRD §11.1 goal 4). Spike S4 measures the direct-shortcut path.
+Let Bibi perform a small set of phone actions safely. Every action goes through one Tool Router and one Permission Engine (PRD §11.1 goal 4). Spike S4 measures the direct-shortcut path.
 
 ## Requirements
 - **PRD 0.8:**

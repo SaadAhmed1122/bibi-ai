@@ -1,5 +1,5 @@
 # =====================================================================
-# Pip — .gitignore (Android · Kotlin · Gradle · Compose · native AI runtimes)
+# Bibi — .gitignore (Android · Kotlin · Gradle · Compose · native AI runtimes)
 # =====================================================================
 
 # --- Secrets and local config (never commit) ---
@@ -15,7 +15,7 @@ signing.properties
 *.pem
 service-account*.json
 play-service-account*.json
-# Pip uses no Firebase; ignore it so a stray config file is never committed
+# Bibi uses no Firebase; ignore it so a stray config file is never committed
 google-services.json
 
 # --- Gradle ---

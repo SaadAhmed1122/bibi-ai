@@ -14,7 +14,7 @@ From PRD Part 0.3 (MVP): monetization, multi-language, multi-user profiles, clou
 
 ## User flows
 ### First run
-- Install → AI disclosure + age notice (FR-188) → download the Core Pack (resume, checksum) → optional overlay permission with rationale → Pip appears.
+- Install → AI disclosure + age notice (FR-188) → download the Core Pack (resume, checksum) → optional overlay permission with rationale → Bibi appears.
 - Without overlay permission → in-app chat only.
 - Onboarding isn't designed yet. These are notes only.
 
@@ -27,14 +27,14 @@ From PRD Part 0.3 (MVP): monetization, multi-language, multi-user profiles, clou
 - If S3 fails on the A23, show "Voice not supported on this device" (Part 0.5).
 
 ### Tool action
-- "Set a timer for 5 minutes" → shortcut path (no LLM) → runs → Pip confirms.
+- "Set a timer for 5 minutes" → shortcut path (no LLM) → runs → Bibi confirms.
 - LLM path → structured tool call → validated → Safe runs; Sensitive shows a confirmation card.
 
 ### Delete my data
 - Privacy dashboard → see what's stored and for how long → export → "Delete all".
 - Single memory: long-press → forget.
 
-## Name candidates (working name: Pip)
+## Name candidates (decided: Bibi AI — see the check below)
 The name should be cute, short, and easy to say aloud. From PRD Appendix F: Pip, Mochi, Sprout, Nova, Wisp, Orbit-friend, Lumi, Tama, Bit, Kiko.
 Extra ideas, each with a character hook:
 - **Pip:** a tiny seed-sprite with a leaf on its head.
@@ -79,6 +79,19 @@ Still to verify for the shortlist [VERIFY]:
 - The trademark office for each launch market.
 - `.app` / `.com` domain availability.
 - No bad meaning in Arabic, Urdu, Hindi, or Spanish.
+
+### Decision: Bibi AI (2026-10-28)
+The owner chose **Bibi AI**. The app is "Bibi AI" and the character is "Bibi". A web check (not legal clearance) found no exact "Bibi AI" app on Play, no bibi.ai site, and no "Bibi" software trademark, but there are near-collisions to keep in mind:
+| Found | What it is | Risk |
+|---|---|---|
+| BibiGPT (bibigpt.co) | AI video/audio summarizer; App Store, plus an Android APK outside Play | Medium: "Bibi" + AI, though a different function |
+| "bibi*" on Shapes.inc | An AI companion chatbot character on a chat platform | Medium: same category, but a character, not an app |
+| Bibi.Pet / Bibi toddler games | Kids' education apps with cute pet characters | Low–medium: kids' education, not AI |
+| Bibi Enterprises Ltd (UK) | One pending US application, class 9 | Unknown: check the goods [VERIFY] |
+
+The word itself has existing meanings to check with the target audience: "lady/wife" (Urdu/Hindi), "grandmother" (Persian/Swahili), a well-known political nickname in Israel, and the German children's franchise "Bibi Blocksberg" [VERIFY]. Store copy should always say "Bibi AI", not just "Bibi", to stay distinct.
+
+Still to do [VERIFY]: exact Play Store search, WIPO Global Brand Database (classes 9 and 42), bibi.ai / bibiai.app domain WHOIS, and the GitHub repo name `bibi-ai`.
 
 ## Open questions
 - Part 0.8 lists "dial with prefilled number" as one of five *Safe* actions, but §16.3 rates `call_contact` (dialer intent) as SENSITIVE. Which one wins?

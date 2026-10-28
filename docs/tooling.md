@@ -2,7 +2,7 @@
 
 Five agent tools are wired into this repository for the implementation phases (P1 onward). This file covers one-time setup on each machine and when each tool is used. The short version of the rules is in `CLAUDE.md` §9.
 
-None of these tools ship in the app. Pip itself stays offline (PRD 0.4). Context7, 21st, and Strix send queries or code to external services. Never send them user data, `.env` contents, or keystores.
+None of these tools ship in the app. Bibi itself stays offline (PRD 0.4). Context7, 21st, and Strix send queries or code to external services. Never send them user data, `.env` contents, or keystores.
 
 ## What is installed where
 
@@ -34,7 +34,7 @@ None of these tools ship in the app. Pip itself stays offline (PRD 0.4). Context
    ```bash
    export CONTEXT7_API_KEY=...   API_KEY_21ST=...   STRIX_LLM=...   LLM_API_KEY=...
    ```
-4. **Trust the folder:** open Claude Code in `pip-companion/` and accept the plugin and MCP prompts. Then check with `/mcp`, which should list `context7` and `21st`, and `/plugin`, which should list `agent-skills`.
+4. **Trust the folder:** open Claude Code in `bibi-ai/` and accept the plugin and MCP prompts. Then check with `/mcp`, which should list `context7` and `21st`, and `/plugin`, which should list `agent-skills`.
 5. **Build the first graph** once real code exists:
    ```bash
    graphify update .
@@ -57,7 +57,7 @@ None of these tools ship in the app. Pip itself stays offline (PRD 0.4). Context
 ## Limits and caveats
 
 - **21st** targets web stacks (React/Tailwind/shadcn). For a Compose app it's a mood board, not a code source. Hosted generation needs a paid AI tier on 21st [VERIFY plan].
-- **Strix** is built mainly for web apps and APIs. Pip has no server, so findings will come from white-box source review. How well it handles Kotlin and Android-specific issues (intent spoofing, exported components, overlay tapjacking) is unknown [VERIFY on first run]. Still run Android Lint security checks as the baseline.
+- **Strix** is built mainly for web apps and APIs. Bibi has no server, so findings will come from white-box source review. How well it handles Kotlin and Android-specific issues (intent spoofing, exported components, overlay tapjacking) is unknown [VERIFY on first run]. Still run Android Lint security checks as the baseline.
 - **Strix sends source code to the LLM provider** you configure. That's acceptable for this portfolio repo, but don't scan anything containing secrets.
 - **Context7** content is community-indexed. If its docs disagree with the official Android docs, the official docs win [VERIFY on conflict].
 - **Graphify** writes absolute paths into the hooks if you re-run `graphify claude install`. Restore the portable `command -v graphify` form in `.claude/settings.json` afterwards.

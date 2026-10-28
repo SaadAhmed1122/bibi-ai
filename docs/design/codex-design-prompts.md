@@ -1,7 +1,7 @@
 # Design prompts for Codex (character + UI)
 
-These are copy-paste prompts for generating Pip's character art and UI design system with Codex (or another coding agent).
-- **Name-agnostic.** Replace `{NAME}` with the final name. Until then, use "Pip".
+These are copy-paste prompts for generating Bibi's character art and UI design system with Codex (or another coding agent).
+- **Name:** the app is **Bibi AI** and the character is **Bibi** (owner decision, 2026-10-28).
 - **Grounded in the PRD:** §17 (avatar, emotions), §20 (UX, motion, tone, accessibility).
 - **Vector first.** Codex produces code, so the prompts ask for SVG, Compose `ImageVector`, and Canvas output that a coding agent can actually make and that you can edit by hand. Prompt 1b is a plain-language version for an image model if you'd rather explore raster concept art first.
 - **Engine-agnostic.** The avatar tech is still [OPEN] (sprite sheet or Rive, OD-03), so these prompts produce assets either path can use.
@@ -13,8 +13,8 @@ Run them in order. Start each Codex task with prompt 0.
 ## 0. Shared context (paste at the top of every task)
 
 ```
-Project: {NAME}, an offline on-device AI companion for Android (Kotlin, Jetpack Compose, Material 3, minSdk 34).
-{NAME} is a small animated character that floats over other apps. Tapping it opens a compact chat card.
+Project: Bibi, an offline on-device AI companion for Android (Kotlin, Jetpack Compose, Material 3, minSdk 34).
+Bibi is a small animated character that floats over other apps. Tapping it opens a compact chat card.
 Design principles (non-negotiable):
 - Cute, warm and calm, never baby-ish or needy. No guilt-tripping or sad faces to pressure the user.
 - Readable at small sizes: the character window is about 64–96 dp. Simple silhouette, big eyes, at most 4 body colors plus outline.
@@ -30,7 +30,7 @@ Do not add network calls, analytics, or third-party asset sources. All output mu
 ## 1. Character concept sheet (3 directions)
 
 ```
-Using the shared context, create three distinct character directions for {NAME} as hand-editable SVG files in design/character/concepts/:
+Using the shared context, create three distinct character directions for Bibi as hand-editable SVG files in design/character/concepts/:
 A) "Seed sprite": a round seed-like body with a tiny leaf sprout on top; the leaf droops when confused and perks up when happy.
 B) "Mochi blob": a soft squishy rounded-square body that squashes when dragged and stretches when it jumps.
 C) "Pocket bot": a small rounded robot with a single antenna light and a screen-face for eyes.
@@ -46,7 +46,7 @@ Use only flat shapes and simple gradients (no filters heavier than a soft drop s
 ### 1b. Image-model version (optional, for raster exploration)
 
 ```
-Character design sheet for a tiny cute AI companion mascot called {NAME}, for a phone app.
+Character design sheet for a tiny cute AI companion mascot called Bibi, for a phone app.
 Three variations side by side: a round seed sprite with a small leaf on its head; a soft squishy mochi blob; a small rounded robot with one antenna light.
 Big friendly eyes, simple rounded silhouette, flat vector style, 4 colors plus a thin dark outline, soft pastel palette with one warm accent.
 Front view, neutral happy expression, plain white background, no text, no humans, no brand logos.
@@ -68,7 +68,7 @@ listening (eyes wide, soft ring), happy (smile + small bounce pose), excited, sl
 Rules:
 - Same viewBox, anchor point (feet/bottom-center at 128,240) and outline weight across all files, so frames can be swapped without jitter.
 - Each state must be distinguishable in grayscale (check with silhouette exports).
-- Write design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Pip tilts its head with thought dots").
+- Write design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
 ```
 
 ---
@@ -110,10 +110,10 @@ Include a debug overlay showing current fps and frame time, and a JankStats hook
 ## 5. Design system: Material 3 theme from the character
 
 ```
-Create a Material 3 design system for {NAME} in a module named core/designsystem (Kotlin, Compose).
+Create a Material 3 design system for Bibi in a module named core/designsystem (Kotlin, Compose).
 Inputs: the chosen character palette.json.
 Deliver:
-- Color: light and dark ColorSchemes generated from the character's main color as the seed (tonal palettes), plus dynamic color support (Android 12+) with the brand scheme as the fallback. Keep one "character accent" color constant across dynamic color so {NAME} stays recognizable.
+- Color: light and dark ColorSchemes generated from the character's main color as the seed (tonal palettes), plus dynamic color support (Android 12+) with the brand scheme as the fallback. Keep one "character accent" color constant across dynamic color so Bibi stays recognizable.
 - Verify contrast ≥ 4.5:1 for text roles. Write a unit test that computes the contrast ratios and fails below the threshold.
 - Typography: a rounded, friendly but readable type scale (use a system font or one bundled OFL font; list its license in LICENSES.md).
 - Shapes: rounded corners that echo the character's silhouette (e.g. extraLarge for the interaction card).
@@ -158,7 +158,7 @@ Every screen needs empty, loading and error states plus dark and 200% font scale
 ## 8. App icon and store assets
 
 ```
-Create the app icon and Play Store graphics for {NAME} from the chosen character:
+Create the app icon and Play Store graphics for Bibi from the chosen character:
 - Adaptive icon: foreground SVG (the character face/body within the 66 dp safe zone of a 108 dp canvas), solid background color, and a monochrome themed-icon layer (Android 13+). Export to res/mipmap-anydpi-v26 XML + vector drawables.
 - Notification small icon: a single-color silhouette, 24 dp, legible at small size.
 - Play Store: 512x512 icon PNG, 1024x500 feature graphic SVG→PNG with the character and the tagline "Your private, offline companion" (no claims about speed or numbers).
