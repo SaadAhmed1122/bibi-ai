@@ -47,6 +47,39 @@ Extra ideas, each with a character hook:
 
 None of these have been checked for trademarks or Play Store name availability yet [VERIFY]. That's PRD 0.12 open item 5.
 
+### Name check — 2026-10-28 (web search only, not legal clearance)
+Taken in the same space (AI companions, pets, assistants), so drop these:
+| Name | Conflict found |
+|---|---|
+| Pip | "Pip", a safe AI chat companion for kids (guidedaiforkids.com) |
+| Mochi | Several AI companion apps: "Mochi: AI Companion Chat" (Play), himochichat.com, get-mochi.com, Mochi Crew |
+| Nibbo | "Nibbo: Pet on Your Screen" on Play, a screen pet (same concept); also a family app and a recipe app |
+| Nova | Several AI chatbot apps named Nova (Play/App Store), plus Nova Launcher's AI |
+| Lumi | "Lumi AI" chat app on Play |
+| Wisp | Wisp voice notes (AI) and Wisp AI news, both on Play |
+| Kiko | "KiKO" AI video companion on Play |
+| Sprout | Sprout AI knowledge companion, Sprout.ai, Little Sprout parenting AI |
+| Puffin | Puffin Browser (an established brand) |
+| Pipling | Pipling kids app on Play, a baby tracker, and a Stream Deck pet |
+| Tama | Too close to Tamagotchi (Bandai) |
+| Mibbit | A known IRC client brand |
+| Bimble | Too close to Bumble (big brand with its own AI features) |
+
+No app or trademark found with the exact spelling (these are the shortlist):
+| Name | Say it | Character hook | Nearest thing found |
+|---|---|---|---|
+| **Pomki** | POM-kee | A fluffy pom-pom ball with little feet that puffs up when happy | POMIKU (US mark, hand tools); the "POM" juice brand family (different goods) |
+| **Wobbi** | WOB-ee | A jelly blob that wobbles when dragged and squashes when dropped (fits PRD §20.13 spring physics) | A WOBBI US filing for dish drying mats (suspended, different goods); WOBLI wellness software (pending) |
+| **Zibbo** | ZIB-oh | A small round robot with an antenna light | "Zibbo", developer name of a 2013 puzzle game (looks dormant) |
+| Tumbi | TUM-bee | A round tumbling critter | "Tummi" baby-food app (similar sound) |
+
+Still to verify for the shortlist [VERIFY]:
+- Exact search in the Play Store app.
+- WIPO Global Brand Database, classes 9 and 42.
+- The trademark office for each launch market.
+- `.app` / `.com` domain availability.
+- No bad meaning in Arabic, Urdu, Hindi, or Spanish.
+
 ## Open questions
 - Part 0.8 lists "dial with prefilled number" as one of five *Safe* actions, but §16.3 rates `call_contact` (dialer intent) as SENSITIVE. Which one wins?
 - Does MVP memory search include semantic (embedding) search, or only keyword (FTS)? Part 0.8 only says "search".

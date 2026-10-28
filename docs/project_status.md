@@ -47,7 +47,7 @@ Notes on the vivo Y17s:
 | 3 | Play account type (personal or organization) | Personal → plan a closed test with about 12 testers for about 14 days [VERIFY] | Open |
 | 4 | Second test phone (6–8 GB) | vivo Y17s available (6 GB, Helio G85, Android 15). It covers the 6 GB RAM case, but not a recent chip. | Partly resolved |
 | 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
-| 5 | Final app name | Working name "Pip"; candidates in brainstorm.md; trademark and Play check needed | Open [VERIFY] |
+| 5 | Final app name | Working name "Pip" (a kids' AI companion named Pip already exists, so not for release). Shortlist after a web check: Pomki, Wobbi, Zibbo (see brainstorm.md). Formal trademark and Play check still needed. | Open [VERIFY] |
 | 6 | Model pack hosting | Decide in P1 after checking Play Asset Delivery limits | Open [VERIFY] |
 | 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged | Open |
 | 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Open — owner to confirm |
