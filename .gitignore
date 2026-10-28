@@ -1,0 +1,36 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+local.properties
+*.jks
+*.keystore
+*.p12
+service-account*.json
+
+# Gradle / build outputs
+.gradle/
+build/
+*/build/
+.kotlin/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+outputs/
+
+# Model packs (downloaded at runtime, never committed)
+*.gguf
+*.tflite
+*.task
+*.onnx
+*.bin
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+.externalNativeBuild/
+.cxx/
