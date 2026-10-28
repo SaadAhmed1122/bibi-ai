@@ -10,3 +10,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - `reference/Pip_PRD_Final.md` copied unchanged from the source.
 - `docs/architecture.md`, `docs/project_status.md`, and feature docs for overlay, model runtime, memory, and tools/permissions.
 - `docs/design/codex-design-prompts.md` with prompts for character and UI design work.
+- vivo Y17s recorded as a test device in `docs/project_status.md` (new "Test devices" section), `CLAUDE.md`, and `docs/features/overlay.md`.

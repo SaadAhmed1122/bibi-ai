@@ -25,6 +25,19 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 | S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | Not measured | — | — |
 | S4 Tools | Shortcut path < 300 ms | Not measured | — | — |
 
+## Test devices
+
+| Device | RAM | Storage | Android | Chipset | Role | Source |
+|---|---|---|---|---|---|---|
+| Samsung Galaxy A23 | Unconfirmed (assume 4 GB) | Unconfirmed | Unconfirmed | Unconfirmed | Floor reference (PRD 0.4) | PRD |
+| vivo Y17s | 6 GB physical, plus 6 GB "extended RAM" (swap on storage, not real RAM) | 128 GB eMMC 5.1 | 15 (owner-reported) | MediaTek Helio G85, 12 nm: 2× Cortex-A75 @ 2.0 GHz + 6× Cortex-A55 @ 1.8 GHz; GPU Mali-G52 MC2 | Second test device; role to be confirmed by owner | Owner; chipset and storage from GSMArena spec page [VERIFY on device] |
+
+Notes on the vivo Y17s:
+- **Budget against 6 GB, not 12 GB.** The extra 6 GB is swap on slow eMMC. Any model that only fits by using it will page-thrash. S2 must use the 6 GB physical figure, and the extended-RAM setting should be recorded (on/off) for each run.
+- **It doesn't serve as the "better hardware" device for the PRD 0.5 decision rule.** It has 6 GB of RAM but an older mid-range CPU class [VERIFY with benchmarks]. Open item 4 (a stronger 6–8 GB phone) therefore stays partly open.
+- **Battery management:** vivo's Funtouch OS is named in PRD §12.4 as an OEM with aggressive background limits. S1 on this device must record results with default battery settings.
+- **eMMC 5.1** storage makes model load and mmap page-ins slower than on UFS phones [VERIFY in S2 cold-load timing].
+
 ## Open items
 
 | # | Item | Default until answered | Status |
@@ -32,7 +45,8 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 | 1 | Galaxy A23 RAM variant | Assume 4 GB | Open [VERIFY] |
 | 2 | Galaxy A23 Android version | Assume 14+. If lower, the A23 can't run the app (minSdk 34). | Open [VERIFY] |
 | 3 | Play account type (personal or organization) | Personal → plan a closed test with about 12 testers for about 14 days [VERIFY] | Open |
-| 4 | Second test phone (6–8 GB) | None; benchmarks labeled "single-device" | Open |
+| 4 | Second test phone (6–8 GB) | vivo Y17s available (6 GB, Helio G85, Android 15). It covers the 6 GB RAM case, but not a recent chip. | Partly resolved |
+| 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
 | 5 | Final app name | Working name "Pip"; candidates in brainstorm.md; trademark and Play check needed | Open [VERIFY] |
 | 6 | Model pack hosting | Decide in P1 after checking Play Asset Delivery limits | Open [VERIFY] |
 | 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged | Open |
@@ -42,6 +56,7 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 ## Decisions
 - 2026-10-28 — Project scaffold created (structure, planning docs, reference PRD). — Owner request.
 - 2026-10-28 — The decision log lives here, in "Decisions", instead of the `DECISIONS.md` named in PRD 0.11. — Owner instruction.
+- 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
 2026-10-28: scaffold committed ("Scaffold project structure and planning docs"). No Gradle project or app code exists yet. The spike tracker spreadsheet is still missing from `reference/`.

@@ -39,6 +39,7 @@ Pip's main surface is a small animated character that floats over other apps (PR
 - **Samsung battery management (PRD 0.13, medium/high):** One UI may put the app to sleep or kill the foreground service.
   - Mitigations: a watchdog, an in-app guide that explains how to exempt Pip from battery optimization (Pip does not request the exemption itself, §12.4), and the in-app chat fallback.
   - The S1 soak must run with default Samsung battery settings first, then with the exemption, and both results must be recorded.
+- **vivo Funtouch OS background limits** (PRD §12.4 lists vivo). These apply on the vivo Y17s test device. Run the same soak protocol there, labeled by device.
 - **Play review friction** for `specialUse` foreground services and overlays (0.13). Mitigation: upload to the internal track early.
 - **4 GB RAM:** the overlay process competes with the model. The overlay must stay light while idle.
 - **The OS hiding overlays** on sensitive screens is expected behavior, not a bug.

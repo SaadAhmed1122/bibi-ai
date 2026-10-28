@@ -15,6 +15,7 @@ Working name "Pip"; the final name is undecided.
 - **Language:** English first; strings and prompts externalized.
 - **Distribution:** Google Play (internal → closed test → production).
 - **Floor device:** Samsung Galaxy A23, assumed 4 GB RAM (unconfirmed).
+- **Also testing on:** vivo Y17s — 6 GB RAM (ignore the +6 GB "extended RAM"; it is swap), Helio G85, Android 15. Details in project_status.md → Test devices.
 - **Network:** offline after the model pack download. No accounts, no cloud inference, no analytics by default.
 - **Packs:** each model pack ≤ 2 GB.
 
