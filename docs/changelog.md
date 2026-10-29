@@ -24,3 +24,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Design: Bibi vector master v1 (`docs/design/character/master/`): layered `front_neutral.svg`, `silhouette.svg`, `palette.json` sampled from the Gemini master, 64/128/512 px previews, README with layers and known differences.
 - Design: Bibi MVP state SVGs (idle, idle blink, thinking, speaking, confused) in `docs/design/character/states/` with `states.json` and a preview sheet; generator `tools/build_states.py`; SVG render helper `tools/render_svg.js`.
 - Spike S1 overlay test app (`spikes/s1-overlay/`): specialUse foreground service, Canvas-rendered Bibi with drag/snap, Calm mode, baseline mode, per-minute battery/fps/memory/exit-reason CSV log, results panel. GitHub milestones P0–P4 and spike issues #4–#8 created.
+- S1 first device results (vivo Y17s) in `spikes/s1-overlay/results/`.
