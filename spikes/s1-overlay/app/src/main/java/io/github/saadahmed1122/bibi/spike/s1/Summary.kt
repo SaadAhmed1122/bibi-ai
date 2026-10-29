@@ -66,6 +66,9 @@ class Summary private constructor(
 
         const val MIN_MINUTES = 60.0
 
+        /** Event kinds (written by OverlayService) that mean the run was not one clean start. */
+        val RESTART_KINDS = setOf("restart", "restart_blocked", "start_blocked", "baseline_restart", "baseline_restart_blocked")
+
         fun from(csv: String): Summary {
             val lines = csv.lineSequence().filter { it.isNotBlank() }.toList()
             val header = lines.firstOrNull()?.split(",").orEmpty()
@@ -83,10 +86,9 @@ class Summary private constructor(
             if (minutes < MIN_MINUTES) reasons += "shorter than 60 min (%.1f min)".format(Locale.US, minutes)
             if ("screen_off" in kinds || samples.any { it["screen_on"] == "false" }) reasons += "screen off during run"
             if (samples.any { it["charging"] == "true" }) reasons += "charging during run"
-            val restarts = kinds.filter {
-                it == "restart" || it == "restart_blocked" || it == "start_blocked" || it.startsWith("baseline_restart")
-            }.distinct()
+            val restarts = kinds.filter { it in RESTART_KINDS }.distinct()
             if (restarts.isNotEmpty()) reasons += "restart or blocked start (${restarts.joinToString("/")})"
+            if ("overlay_error" in kinds) reasons += "overlay window error"
             if (modes.size > 1) reasons += "mixed modes (${modes.joinToString("/")})"
             if ("hide" in kinds) reasons += "Bibi hidden during run"
 

@@ -27,7 +27,8 @@ import android.widget.Toast
  *
  * The [RunMode] comes from the start intent ([EXTRA_MODE]) and is fixed for the whole run; it is
  * persisted so a START_STICKY restart resumes the same mode and appends to the same run file
- * (see SPEC.md §2).
+ * (see SPEC.md §2). Blocked activity starts never create a run file; they are written to
+ * exit_reasons.csv. Window manager failures are logged as `overlay_error` instead of crashing.
  */
 class OverlayService : Service() {
 
@@ -41,6 +42,10 @@ class OverlayService : Service() {
     private var hidden = false
     private var screenOn = true
     private var lastSampleAt = 0L
+
+    /** A Bibi restart has added the overlay and not yet attempted startForeground (see [restartBibi]). */
+    private var awaitingFirstDraw = false
+    private val promoteFallback = Runnable { promoteRestart("fallback_timer") }
 
     private val sampler = object : Runnable {
         override fun run() {
@@ -79,6 +84,7 @@ class OverlayService : Service() {
         when (intent?.action) {
             null -> {
                 // Restarted by the system after the process was killed (START_STICKY).
+                if (isRunning || awaitingFirstDraw) return START_STICKY
                 val saved = prefs.runMode
                 if (saved == null) {
                     stopSelf()
@@ -86,7 +92,8 @@ class OverlayService : Service() {
                 }
                 mode = saved
                 if (!log.hasRun) log.beginRun(mode)
-                if (!startInForeground(restart = true)) return START_NOT_STICKY
+                val ok = if (mode.showsBibi) restartBibi() else restartBaseline()
+                if (!ok) return START_NOT_STICKY
             }
             ACTION_START -> {
                 if (isRunning) {
@@ -95,17 +102,26 @@ class OverlayService : Service() {
                     startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
                     return START_STICKY
                 }
-                val requested = RunMode.fromLogName(intent.getStringExtra(EXTRA_MODE))
+                if (awaitingFirstDraw) {
+                    // A restart is waiting for Bibi's first frame; the app is visible now, so promote
+                    // the restarted run (its mode wins) and answer this startForegroundService() call.
+                    promoteRestart("activity_start")
+                    return if (isRunning) START_STICKY else START_NOT_STICKY
+                }
+                val raw = intent.getStringExtra(EXTRA_MODE)
+                val requested = RunMode.fromLogName(raw)
                 if (requested == null) {
-                    stopSelf()
+                    blockStart("bad_mode:$raw")
                     return START_NOT_STICKY
                 }
                 mode = requested
-                prefs.runMode = mode
-                log.beginRun(mode)
-                if (!startInForeground(restart = false)) return START_NOT_STICKY
+                if (mode.showsBibi && !Settings.canDrawOverlays(this)) {
+                    blockStart("no_overlay_permission")
+                    return START_NOT_STICKY
+                }
+                if (!startFromActivity()) return START_NOT_STICKY
             }
-            ACTION_TOGGLE_VISIBLE -> if (isRunning) toggleVisible() else stopSelf()
+            ACTION_TOGGLE_VISIBLE -> if (isRunning) toggleVisible() else if (!awaitingFirstDraw) stopSelf()
             ACTION_STOP -> {
                 stopEverything()
                 return START_NOT_STICKY
@@ -115,41 +131,122 @@ class OverlayService : Service() {
     }
 
     /**
-     * Adds the overlay first, then promotes to foreground. Apps targeting Android 15+ may start a
-     * foreground service from the background only while they have a visible overlay window, which is
-     * exactly the situation after a START_STICKY restart. Any refusal is logged as restart_blocked.
+     * Refuses an ACTION_START. startForeground() is called first because the caller used
+     * startForegroundService(), which crashes the app if the service stops without it. No run file is
+     * created: the row goes to exit_reasons.csv via [SpikeLog.diagnostic].
      */
-    private fun startInForeground(restart: Boolean): Boolean {
-        if (mode.showsBibi) addOverlay()
-        return try {
+    private fun blockStart(reason: String) {
+        val promoted = try {
             startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-            if (!isRunning) {
-                isRunning = true
-                val kind = when {
-                    restart -> "restart"
-                    mode == RunMode.BASELINE -> "start_baseline"
-                    else -> "start"
-                }
-                log.event(kind, "", screenOn, mode)
-                lastSampleAt = System.currentTimeMillis()
-                handler.postDelayed(sampler, SAMPLE_INTERVAL_MS)
-            }
-            true
+            ""
         } catch (e: Exception) {
             // ForegroundServiceStartNotAllowedException or SecurityException
-            log.event(if (restart) "restart_blocked" else "start_blocked", e.javaClass.simpleName, screenOn, mode)
-            removeOverlay()
-            stopSelf()
-            false
+            " startForeground:${e.javaClass.simpleName}"
         }
+        log.diagnostic("start_blocked", "$reason mode=${mode.logName}$promoted")
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
-    private fun addOverlay() {
-        if (bibi != null) return
+    /**
+     * ACTION_START from the visible activity: promote first (allowed while the app is visible), then add
+     * the overlay. The run file is created only after both succeed, so a failed start leaves no run file.
+     */
+    private fun startFromActivity(): Boolean {
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } catch (e: Exception) {
+            log.diagnostic("start_blocked", "${e.javaClass.simpleName} mode=${mode.logName}")
+            stopSelf()
+            return false
+        }
+        if (mode.showsBibi && addOverlay() == null) {
+            log.diagnostic("start_blocked", "addView_failed mode=${mode.logName}")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return false
+        }
+        prefs.runMode = mode
+        log.beginRun(mode)
+        markRunning(if (mode == RunMode.BASELINE) "start_baseline" else "start")
+        return true
+    }
+
+    /**
+     * START_STICKY restart of a Bibi run. Apps targeting Android 15+ may start a foreground service
+     * from the background only while they have a visible overlay window, so the overlay goes up first
+     * and startForeground() waits for its first frame: once the view is attached, a one-shot
+     * frame-commit callback fires when that frame has been rendered and submitted to the display
+     * pipeline. [promoteFallback] calls it anyway after [FIRST_DRAW_TIMEOUT_MS] (e.g. screen off, no
+     * hardware rendering); [awaitingFirstDraw] makes sure it is attempted once.
+     */
+    private fun restartBibi(): Boolean {
         if (!Settings.canDrawOverlays(this)) {
-            log.event("no_overlay_permission", "", screenOn, mode)
+            log.event("restart_blocked", "no_overlay_permission", screenOn, mode)
+            stopSelf()
+            return false
+        }
+        awaitingFirstDraw = true // set before addOverlay so its errors go to the run file
+        val view = addOverlay()
+        if (view == null) {
+            awaitingFirstDraw = false
+            log.event("restart_blocked", "addView_failed", screenOn, mode)
+            stopSelf()
+            return false
+        }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                v.removeOnAttachStateChangeListener(this)
+                // The thread this runs on isn't documented, so hop to the main thread.
+                v.viewTreeObserver.registerFrameCommitCallback { handler.post { promoteRestart("first_frame") } }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) = Unit
+        })
+        handler.postDelayed(promoteFallback, FIRST_DRAW_TIMEOUT_MS)
+        return true
+    }
+
+    /** Second half of [restartBibi]; runs at most once per restart. */
+    private fun promoteRestart(trigger: String) {
+        if (!awaitingFirstDraw) return
+        awaitingFirstDraw = false
+        handler.removeCallbacks(promoteFallback)
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } catch (e: Exception) {
+            // ForegroundServiceStartNotAllowedException or SecurityException
+            log.event("restart_blocked", "${e.javaClass.simpleName} after $trigger", screenOn, mode)
+            removeOverlay()
+            stopSelf()
             return
         }
+        markRunning("restart", trigger)
+    }
+
+    /** START_STICKY restart of a baseline run: no overlay, so no Android 15 overlay exemption. */
+    private fun restartBaseline(): Boolean {
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } catch (e: Exception) {
+            log.event("baseline_restart_blocked", e.javaClass.simpleName, screenOn, mode)
+            stopSelf()
+            return false
+        }
+        markRunning("baseline_restart")
+        return true
+    }
+
+    private fun markRunning(kind: String, detail: String = "") {
+        isRunning = true
+        log.event(kind, detail, screenOn, mode)
+        lastSampleAt = System.currentTimeMillis()
+        handler.postDelayed(sampler, SAMPLE_INTERVAL_MS)
+    }
+
+    /** Adds Bibi's window; returns the view, or null after logging `overlay_error` if the window manager refused. */
+    private fun addOverlay(): BibiView? {
+        bibi?.let { return it }
         val size = (BIBI_SIZE_DP * resources.displayMetrics.density).toInt()
         val screen = windowManager.currentWindowMetrics.bounds
         val params = WindowManager.LayoutParams(
@@ -175,19 +272,48 @@ class OverlayService : Service() {
                 Toast.makeText(this, R.string.tap_hello, Toast.LENGTH_SHORT).show()
                 log.event("tap", "", screenOn, mode)
             },
+            onWindowError = ::overlayError,
         )
         view.calm = mode.calm
-        windowManager.addView(view, params)
+        try {
+            windowManager.addView(view, params)
+        } catch (e: RuntimeException) {
+            // BadTokenException (permission revoked, no token), InvalidDisplayException, or the
+            // IllegalState/IllegalArgument errors the window manager throws; anything else is a bug.
+            if (e !is WindowManager.BadTokenException && e !is WindowManager.InvalidDisplayException &&
+                e !is IllegalStateException && e !is IllegalArgumentException
+            ) {
+                throw e
+            }
+            overlayError("addView", e)
+            return null
+        }
         bibi = view
         updateRendering()
+        return view
+    }
+
+    /** Logs a refused window operation to the run file if a run is live, else to exit_reasons.csv. */
+    private fun overlayError(op: String, e: RuntimeException) {
+        val detail = "$op:${e.javaClass.simpleName}"
+        if (isRunning || awaitingFirstDraw) {
+            log.event("overlay_error", detail, screenOn, mode)
+        } else {
+            log.diagnostic("overlay_error", "$detail mode=${mode.logName}")
+        }
     }
 
     private fun removeOverlay() {
-        bibi?.let {
-            it.setRunning(false)
-            windowManager.removeView(it)
-        }
+        val view = bibi ?: return
         bibi = null
+        view.setRunning(false)
+        try {
+            windowManager.removeView(view)
+        } catch (e: IllegalArgumentException) { // not attached to the window manager
+            overlayError("removeView", e)
+        } catch (e: IllegalStateException) {
+            overlayError("removeView", e)
+        }
     }
 
     private fun updateRendering() {
@@ -215,6 +341,8 @@ class OverlayService : Service() {
             log.event("stop", "", screenOn, mode)
         }
         handler.removeCallbacks(sampler)
+        handler.removeCallbacks(promoteFallback)
+        awaitingFirstDraw = false
         removeOverlay()
         isRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -223,6 +351,7 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        awaitingFirstDraw = false // a frame-commit post arriving after this is ignored
         unregisterReceiver(screenReceiver)
         removeOverlay()
         isRunning = false
@@ -278,6 +407,8 @@ class OverlayService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val SAMPLE_INTERVAL_MS = 10_000L
         private const val BIBI_SIZE_DP = 96
+        /** Well inside the startForeground() deadline, which is comparable to the ANR interval. */
+        private const val FIRST_DRAW_TIMEOUT_MS = 2_000L
 
         /** True while the service is in the foreground in this process. */
         @Volatile

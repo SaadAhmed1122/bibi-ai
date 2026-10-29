@@ -142,6 +142,17 @@ class SpikeLog(context: Context) {
         prefs.lastExitTimestamp = fresh.last().timestamp
     }
 
+    /**
+     * Appends an app-written row (e.g. a blocked start) to exit_reasons.csv, for events that happen
+     * when no run is active. A blocked start must not create or touch a run file. The `process`
+     * column is [APP_ROW] so these rows can't be confused with exits Android recorded.
+     */
+    fun diagnostic(kind: String, detail: String) = synchronized(exitLock) {
+        val now = System.currentTimeMillis()
+        if (!exitFile.exists()) exitFile.writeText(EXIT_HEADER + "\n")
+        exitFile.appendText(listOf(time.format(Date(now)), now.toString(), clean(kind), clean(detail), APP_ROW).joinToString(",") + "\n")
+    }
+
     /** An int extra of the battery intent, or "" if the intent or extra is missing. */
     private fun batteryExtra(intent: Intent?, name: String): String =
         intent?.getIntExtra(name, Int.MIN_VALUE)?.takeIf { it != Int.MIN_VALUE }?.toString() ?: ""
@@ -165,6 +176,9 @@ class SpikeLog(context: Context) {
                 "frames,fps,pss_kb,calm,mode," +
                 "voltage_mv,batt_temp_dc,brightness,brightness_mode,power_save,refresh_hz"
         const val EXIT_HEADER = "time,epoch_ms,reason,detail,process"
+
+        /** `process` value of rows written by [diagnostic] rather than read from ActivityManager. */
+        const val APP_ROW = "app_event"
 
         fun reasonName(reason: Int): String = when (reason) {
             ApplicationExitInfo.REASON_EXIT_SELF -> "EXIT_SELF"

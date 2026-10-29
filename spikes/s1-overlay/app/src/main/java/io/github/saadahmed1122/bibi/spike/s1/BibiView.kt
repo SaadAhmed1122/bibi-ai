@@ -36,6 +36,8 @@ class BibiView(
     private val params: WindowManager.LayoutParams,
     private val onMoved: (x: Int, y: Int) -> Unit,
     private val onTap: () -> Unit,
+    /** Called instead of crashing when [WindowManager.updateViewLayout] fails (e.g. window already removed). */
+    private val onWindowError: (op: String, e: RuntimeException) -> Unit,
 ) : View(context), Choreographer.FrameCallback {
 
     private val idle: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bibi_idle)
@@ -139,7 +141,7 @@ class BibiView(
                 if (dragging) {
                     params.x = downX + dx.toInt()
                     params.y = downY + dy.toInt()
-                    windowManager.updateViewLayout(this, params)
+                    moveWindow()
                 }
             }
             MotionEvent.ACTION_UP -> if (dragging) snapToEdge() else performClick()
@@ -163,12 +165,22 @@ class BibiView(
             interpolator = DecelerateInterpolator()
             addUpdateListener {
                 params.x = it.animatedValue as Int
-                if (isAttachedToWindow) windowManager.updateViewLayout(this@BibiView, params)
+                if (isAttachedToWindow) moveWindow()
             }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) = onMoved(params.x, params.y)
             })
             start()
+        }
+    }
+
+    private fun moveWindow() {
+        try {
+            windowManager.updateViewLayout(this, params)
+        } catch (e: IllegalArgumentException) { // view not attached to the window manager
+            onWindowError("updateViewLayout", e)
+        } catch (e: IllegalStateException) {
+            onWindowError("updateViewLayout", e)
         }
     }
 

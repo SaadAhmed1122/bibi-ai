@@ -80,6 +80,15 @@ fun main() {
     check("e) time-weighted mean with uneven spacing = 900 mA",
         abs(e.meanCurrentMa!! - 900.0) < 1e-6, "mean=${e.meanCurrentMa}")
 
+    for (kind in listOf("baseline_restart", "baseline_restart_blocked", "restart", "restart_blocked")) {
+        val f = Summary.from(cleanRun(60) { i, t -> if (i == 50) row(t, kind) else null })
+        check("f) $kind invalid, names it", !f.valid && f.validityLine().contains(kind), f.validityLine())
+    }
+
+    val g = Summary.from(cleanRun(60) { i, t -> if (i == 50) row(t, "overlay_error") else null })
+    check("g) overlay_error invalid, names overlay window error",
+        !g.valid && g.validityLine().contains("overlay window error"), g.validityLine())
+
     println(a.describe())
     println("ALL PASS")
 }
