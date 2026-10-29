@@ -51,6 +51,7 @@ Bibi's main surface is a small animated character that floats over other apps (P
 - How aggressive is battery management on the A23's One UI version? [VERIFY]
 
 ## Test plan
+Spike app and protocol: [`spikes/s1-overlay/`](../../spikes/s1-overlay/) (issue #4).
 - **S1 soak (manual, A23):** overlay visible for 1 h with the screen on, while switching between 3–4 common apps. Record battery % at the start and end, crashes, `ApplicationExitInfo` reasons, and jank (`JankStats`). Pass: stable, and ≤ 3%/h.
 - **Instrumented smoke test (PRD 0.11):** the service starts, the overlay attaches, a tap opens the card, and touches outside the bounds reach the app underneath.
 - **Edge cases:** rotation, keyboard open, Battery Saver on (Calm mode applied), app swiped away, process killed (restarts within 5 s), screen off (no draws).
