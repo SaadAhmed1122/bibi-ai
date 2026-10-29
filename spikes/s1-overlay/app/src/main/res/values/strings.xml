@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bibi S1 spike</string>
+    <string name="channel_name">Bibi overlay</string>
+    <string name="notif_running">Bibi is on your screen</string>
+    <string name="notif_baseline">Baseline run: measuring without Bibi</string>
+    <string name="action_hide">Hide</string>
+    <string name="action_show">Show</string>
+    <string name="action_calm">Calm</string>
+    <string name="action_stop">Stop</string>
+    <string name="tap_hello">Hi, I\'m Bibi! (S1 spike)</string>
+</resources>
