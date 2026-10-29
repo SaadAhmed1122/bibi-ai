@@ -150,6 +150,16 @@ clip2 seems to end with "with me", which both models hear but the reference lack
 
 Measuring either one would change the S3b model list (SPEC §5). That needs the owner's decision and a dated entry in `docs/project_status.md` → Decisions first.
 
+### 4.3 Parakeet re-run with re-recorded clip1 (23:45–23:49)
+After the override decision, clip1 was re-recorded (4.4 s, only "Set a timer for ten minutes.") and Parakeet was run again, charging (66 %), same settings:
+
+| Threads | Median RTF | p95 RTF | Peak PSS | Items | Clean stop |
+|---|---|---|---|---|---|
+| 4 | 0.336 | 0.346 | 902 MiB | 9 | yes |
+| 2 | 0.426 | 0.438 | 899 MiB | 9 | yes |
+
+All 9 transcripts per run are identical across rounds; clip1 now reads exactly "Set a timer for ten minutes." Numbers match the first runs (0.324 / 0.433), so the verdict and the override stand. Files: `raw/2026-10-29-vivo-y17s/s3_20261029-234458_…_t4.csv` and `…-234809_…_t2.csv`. The battery run is still not done (the phone stays on USB for adb).
+
 ## 5. Process exits and anomalies
 `exit_reasons.csv` (copied unchanged):
 - **21:20–21:31: two `CRASH` and four `USER_REQUESTED` (REMOVE TASK / FORCE STOP) exits of the main process.** They happened before the first run file (22:22). No run data comes from that window. Most likely setup or debugging [VERIFY with the owner].
@@ -174,7 +184,7 @@ Measuring either one would change the S3b model list (SPEC §5). That needs the 
 - **Extended-RAM setting** on the vivo isn't recorded [VERIFY].
 
 ## 7. Next runs
-1. **Parakeet (default by override):** re-record clip1, re-run Parakeet at 4 threads on battery, and measure it with the S2 LLM loaded to see the memory headroom. A streaming candidate such as `streaming-zipformer-en-2023-06-26` is now optional; if measured:
+1. **Parakeet (default by override):** clip1 re-recorded and Parakeet re-run (§4.3, done). Still to do: one run on battery, and Parakeet with the S2 LLM loaded to see the memory headroom. A streaming candidate such as `streaming-zipformer-en-2023-06-26` is now optional; if measured:
    - Re-record clip1 (only "Set a timer for ten minutes.", about 2–4 s) and, if needed, clip2.
    - Run the new candidate at 2 and 4 threads and *Parakeet* at 2 threads, so the new model and the reference transcripts hear the same clips.
    - Check RTF ≤ 0.7, PSS ≤ 600 MB, and that the utterance starts are kept.
