@@ -7,6 +7,8 @@ fun main() {
     permissionEngineTests()
     appResolverTests()
     summaryTests()
+    llmToolPathTests()
+    llmSummaryTests()
     println("$passed checks")
     println("ALL PASS")
 }
