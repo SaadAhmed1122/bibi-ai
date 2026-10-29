@@ -15,7 +15,7 @@ class Summary private constructor(
 ) {
 
     fun describe(): String {
-        if (minutes <= 0.0) return "No samples yet. A sample is written every 60 s while running."
+        if (minutes <= 0.0) return "No samples yet. A sample is written every 10 s while running."
         val hours = minutes / 60.0
         fun f(v: Double?, digits: Int = 2) = v?.let { "%.${digits}f".format(Locale.US, it) } ?: "n/a"
         val pctDrop = if (startPct != null && endPct != null) (startPct - endPct).toDouble() else null
@@ -37,7 +37,8 @@ class Summary private constructor(
     companion object {
         fun from(csv: String): Summary {
             // Columns: see SpikeLog.HEADER (0 time, 1 epoch_ms, 2 run_id, 3 kind, 4 detail, 5 battery_pct,
-            // 6 charge_uah, 7 current_ua, 8 charging, 9 screen_on, 10 thermal, 11 frames, 12 fps, 13 pss_kb, 14 calm, 15 mode)
+            // 6 charge_uah, 7 current_ua, 8 charging, 9 screen_on, 10 thermal, 11 frames, 12 fps, 13 pss_kb (blank on event rows), 14 calm, 15 mode;
+            // 16+ test conditions, unused here)
             val rows = csv.lineSequence().drop(1).filter { it.isNotBlank() }.map { it.split(",") }
                 .filter { it.size >= 16 }.toList()
             val samples = rows.filter { it[3] == "sample" || it[3].startsWith("start") || it[3] == "stop" || it[3] == "restart" }

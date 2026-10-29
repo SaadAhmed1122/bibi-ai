@@ -276,7 +276,7 @@ class OverlayService : Service() {
 
         private const val CHANNEL_ID = "bibi_overlay"
         private const val NOTIFICATION_ID = 1
-        private const val SAMPLE_INTERVAL_MS = 60_000L
+        private const val SAMPLE_INTERVAL_MS = 10_000L
         private const val BIBI_SIZE_DP = 96
 
         /** True while the service is in the foreground in this process. */

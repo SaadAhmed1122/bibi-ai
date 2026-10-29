@@ -3,10 +3,15 @@ package io.github.saadahmed1122.bibi.spike.s1
 import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.hardware.display.DisplayManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Debug
 import android.os.PowerManager
+import android.provider.Settings
+import android.view.Display
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -25,6 +30,7 @@ class SpikeLog(context: Context) {
     val exitFile = File(appContext.filesDir, "exit_reasons.csv")
     private val battery = appContext.getSystemService(BatteryManager::class.java)
     private val power = appContext.getSystemService(PowerManager::class.java)
+    private val displays = appContext.getSystemService(DisplayManager::class.java)
     private val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
 
     /** Starts a new run file `s1_<yyyyMMdd-HHmm>_<model>_<mode>.csv` and makes it current. */
@@ -47,19 +53,30 @@ class SpikeLog(context: Context) {
 
     fun sample(frames: Int, intervalMs: Long, screenOn: Boolean, mode: RunMode) {
         val fps = if (intervalMs > 0) frames * 1000.0 / intervalMs else 0.0
-        write("sample", "", frames.toString(), "%.2f".format(Locale.US, fps), screenOn, mode)
+        // PSS is costly to read, so only sample rows carry it.
+        write("sample", "", frames.toString(), "%.2f".format(Locale.US, fps), Debug.getPss().toString(), screenOn, mode)
     }
 
     fun event(kind: String, detail: String, screenOn: Boolean, mode: RunMode) =
-        write(kind, detail, "", "", screenOn, mode)
+        write(kind, detail, "", "", "", screenOn, mode)
 
     /** Appends a row to the current run file; does nothing if no run was begun. */
     @Synchronized
-    private fun write(kind: String, detail: String, frames: String, fps: String, screenOn: Boolean, mode: RunMode) {
+    private fun write(
+        kind: String,
+        detail: String,
+        frames: String,
+        fps: String,
+        pssKb: String,
+        screenOn: Boolean,
+        mode: RunMode,
+    ) {
         val file = prefs.runFile?.let { File(runsDir, it) } ?: return
         val now = System.currentTimeMillis()
         val charge = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
         val current = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+        // Sticky broadcast: a null receiver just returns the last ACTION_BATTERY_CHANGED intent.
+        val batteryIntent = appContext.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val row = listOf(
             time.format(Date(now)),
             now.toString(),
@@ -74,9 +91,15 @@ class SpikeLog(context: Context) {
             power.currentThermalStatus.toString(),
             frames,
             fps,
-            Debug.getPss().toString(),
+            pssKb,
             mode.calm.toString(),
             mode.logName,
+            batteryExtra(batteryIntent, BatteryManager.EXTRA_VOLTAGE),
+            batteryExtra(batteryIntent, BatteryManager.EXTRA_TEMPERATURE),
+            systemSetting(Settings.System.SCREEN_BRIGHTNESS),
+            systemSetting(Settings.System.SCREEN_BRIGHTNESS_MODE),
+            power.isPowerSaveMode.toString(),
+            displays.getDisplay(Display.DEFAULT_DISPLAY)?.let { "%.1f".format(Locale.US, it.refreshRate) } ?: "",
         ).joinToString(",")
         runsDir.mkdirs()
         if (!file.exists()) file.writeText(HEADER + "\n")
@@ -119,6 +142,18 @@ class SpikeLog(context: Context) {
         prefs.lastExitTimestamp = fresh.last().timestamp
     }
 
+    /** An int extra of the battery intent, or "" if the intent or extra is missing. */
+    private fun batteryExtra(intent: Intent?, name: String): String =
+        intent?.getIntExtra(name, Int.MIN_VALUE)?.takeIf { it != Int.MIN_VALUE }?.toString() ?: ""
+
+    /** A Settings.System int (readable without WRITE_SETTINGS), or "" if unset or unreadable. */
+    private fun systemSetting(name: String): String = try {
+        Settings.System.getInt(appContext.contentResolver, name, Int.MIN_VALUE)
+            .takeIf { it != Int.MIN_VALUE }?.toString() ?: ""
+    } catch (e: SecurityException) {
+        ""
+    }
+
     private fun clean(s: String) = s.replace(',', ';').replace('\n', ' ').replace('\r', ' ')
 
     companion object {
@@ -126,7 +161,9 @@ class SpikeLog(context: Context) {
         private val exitLock = Any()
 
         const val HEADER =
-            "time,epoch_ms,run_id,kind,detail,battery_pct,charge_uah,current_ua,charging,screen_on,thermal,frames,fps,pss_kb,calm,mode"
+            "time,epoch_ms,run_id,kind,detail,battery_pct,charge_uah,current_ua,charging,screen_on,thermal," +
+                "frames,fps,pss_kb,calm,mode," +
+                "voltage_mv,batt_temp_dc,brightness,brightness_mode,power_save,refresh_hz"
         const val EXIT_HEADER = "time,epoch_ms,reason,detail,process"
 
         fun reasonName(reason: Int): String = when (reason) {
