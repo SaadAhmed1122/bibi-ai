@@ -16,6 +16,8 @@ None of these tools ship in the app. Bibi itself stays offline (PRD 0.4). Contex
 
 ## One-time setup (per machine)
 
+Full laptop setup and how to resume from your phone or the cloud: [local-setup.md](local-setup.md).
+
 1. **Graphify:**
    ```bash
    uv tool install graphifyy
