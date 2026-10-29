@@ -15,7 +15,7 @@ Details: [docs/project_status.md](docs/project_status.md) → Test devices.
 | S1 — Overlay | [#4](https://github.com/SaadAhmed1122/bibi-ai/issues/4) | `spike/S1-overlay` (PR [#10](https://github.com/SaadAhmed1122/bibi-ai/pull/10)) | `spikes/s1-overlay/` | **Yes** | One run CSV per run (four runs), the start % of each, exit reasons at the end, and the kill/restart check files. Post on #4. |
 | S2 — Local LLM | [#5](https://github.com/SaadAhmed1122/bibi-ai/issues/5) | `spike/S2-llm` (the S2 draft PR on branch `spike/S2-llm`; number not assigned yet) | `spikes/s2-llm/` | **Yes** — app written; first build happens in Android Studio (not built here) | One run CSV per model (plus its summary) and `exit_reasons.csv`. Post on #5. |
 | S3a + S3b — Voice | [#6](https://github.com/SaadAhmed1122/bibi-ai/issues/6), [#7](https://github.com/SaadAhmed1122/bibi-ai/issues/7) | `spike/S3-voice` | Not on the branch yet | No — being built now; steps added when the app lands | Defined when the app lands |
-| S4 — Tools and permissions | [#8](https://github.com/SaadAhmed1122/bibi-ai/issues/8) | `spike/S4-tools` | Not on the branch yet | No — being built now; steps added when the app lands | Defined when the app lands |
+| S4 — Tools and permissions | [#8](https://github.com/SaadAhmed1122/bibi-ai/issues/8) | `spike/S4-tools` (the S4 draft PR on branch `spike/S4-tools`; number not assigned yet) | `spikes/s4-tools/` | **Yes** — app written; first build happens in Android Studio (not built here) | The benchmark CSV and a note of what each action did on the phone (which clock app opened, whether the confirmation showed for dial). Post on #8. |
 
 ## Before any test
 - [ ] **Android Studio** installed (any 2026 stable release). It offers to install the Android SDK platform a spike needs.
@@ -112,7 +112,18 @@ Question: can the phone run a Gemma 3 1B-class model and a 0.5B Qwen-class model
 Steps will be filled in from the spike's "Owner test steps" when its app lands on the branch.
 
 ## S4 — Tools and permissions (issue #8, branch `spike/S4-tools`)
-Steps will be filled in from the spike's "Owner test steps" when its app lands on the branch.
+Full steps: `spikes/s4-tools/README.md` → "Owner test steps" on the S4 branch. Gate: each of the five actions on the shortcut path, 20 benchmark runs, **p95 < 300 ms** (SPEC §2–3). The real-LLM path is **not** part of this test yet; it waits for S2. The **Fake LLM path** switch stands in for it.
+
+1. [ ] Install **Bibi S4 spike** from Android Studio. Open it, wait for `Launcher apps: N` and the handler line, and **write down** the handler line (`NONE` means no app handles that action).
+2. [ ] With **Dry run** and **Fake LLM path** off, try each of the five commands with the quick buttons (3 times each, Back to return): open settings, wake me at 7:30, set a timer for 5 minutes, flashlight on/off, call 0123 456 789. Note which clock app opened and whether it showed a screen.
+3. [ ] Try the same five commands by typing them in the text box and pressing Submit.
+4. [ ] Dial check: tapping **call 0123 456 789** must show a confirmation card with the number. **Open dialer** fills in the number and does **not** call.
+5. [ ] Tap call again and **Cancel**: nothing is dialed. Tap it once more and leave the card alone for 30 s: it must close by itself, say it was cancelled, and **not** dial.
+6. [ ] Turn **Fake LLM path** on and repeat the commands, plus "it's dark in here", "broken timer test" (timer after one repair) and "send a text to mum" (must be rejected). Then do the taint and kill-switch checks (README steps 7–8).
+7. [ ] Close other apps and press **Benchmark** (about 30 s, don't touch the phone).
+8. [ ] Read the results panel: the `S4 shortcut gate:` line (PASS, FAIL or INCOMPLETE, with its reason) and the p50/p95 of the five `bench shortcut` rows against 300 ms.
+9. [ ] Tap **Refresh results**, then **Share log (CSV)**.
+10. [ ] Post on issue #8: the CSV, the phone, the handler line and a note of what each action did (which clock app opened, whether the dial confirmation showed, any safety check that did not behave as above). Then delete the "Bibi S4 test" alarms and timers.
 
 ## How to send results
 1. In the spike app, tap **Share log** (S1: **Share log (CSV)**, plus **Share exit reasons** at the end) and send the file to yourself or straight to the browser.
