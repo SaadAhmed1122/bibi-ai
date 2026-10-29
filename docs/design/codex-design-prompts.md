@@ -3,7 +3,7 @@
 These are copy-paste prompts for generating Bibi's character art and UI design system with Codex (or another coding agent).
 - **Name:** the app is **Bibi AI** and the character is **Bibi** (owner decision, 2026-10-28).
 - **Grounded in the PRD:** §17 (avatar, emotions), §20 (UX, motion, tone, accessibility).
-- **Character:** Bibi is a fluffy mochi puff with an AI screen-face (owner decision, 2026-10-29). The character brief, palette, and Gemini image prompts are in [bibi-character-gemini.md](bibi-character-gemini.md). Make the concept art there first, then use these prompts to turn the approved images into vector assets.
+- **Character:** Bibi is a cute hand-drawn cartoon kitten, deliberately not robotic, so the assistant feels safe and comfortable (owner decision, 2026-10-29). The character brief, palette, and Gemini image prompts are in [bibi-character-gemini.md](bibi-character-gemini.md). Make the concept art there first, then use these prompts to turn the approved images into vector assets.
 - **Vector first.** Codex produces code, so the prompts ask for SVG, Compose `ImageVector`, and Canvas output that a coding agent can actually make and that you can edit by hand. Prompt 1b is a plain-language version for an image model if you'd rather explore raster concept art first.
 - **Engine-agnostic.** The avatar tech is still [OPEN] (sprite sheet or Rive, OD-03), so these prompts produce assets either path can use.
 
@@ -23,7 +23,7 @@ Design principles (non-negotiable):
 - Accessibility: never use color alone to show emotion. Each state also differs in shape or pose. Contrast ≥ 4.5:1 for any text.
 - Performance: sprite atlas ≤ 4 MB GPU memory; idle animation 12 fps, interaction 24 fps, Calm mode ≤ 2 fps.
 - It is always clearly an AI helper: no realistic human features, no romantic styling.
-- Character: Bibi is a round fluffy mochi puff (lavender-white fur #F3EEFF, shading #D6CCF5) with a glossy deep-indigo oval screen-face (#1E1B3A) set into the fur, big glowing cyan pill eyes (#4FE3FF), pink glow cheeks (#FF9EC7), one curly tuft on top whose glowing tip shows state (cyan idle, violet #7C5CFF thinking, amber #FFB547 doing a task), two tiny round mitten paws, no legs, floating. It must look like a plush toy, not a real animal (no snout, no ears) and not a plant or health app (no green as main color). Draw the fur as a stylized scalloped cloud outline with a few tuft strokes, never per-hair detail.
+- Character: Bibi is a small sitting kitten with a big round head: warm orange fur (#F4A54A) with tabby stripes (#E07B2A), cream chest/muzzle/paws (#FFF4E0), a cream crescent-moon patch on the forehead, big dark-brown eyes (#4A1E14) with white highlights, pink nose and inner ears (#F2A7A0), a striped curled tail, and a violet collar (#7C5CFF) with a speech-bubble charm whose soft glow shows state (gold idle, light blue listening, violet thinking, amber doing a task). Warm-brown hand-drawn outline (#5A2E1E). No robot, screen, antenna or glowing-eye elements; no sharp teeth or claws. Suggest fur with a few line strokes, never per-hair detail.
 Do not add network calls, analytics, or third-party asset sources. All output must be original and license-clean.
 ```
 
@@ -35,7 +35,7 @@ Do not add network calls, analytics, or third-party asset sources. All output mu
 Using the shared context, recreate Bibi as a hand-editable SVG from the approved concept image design/character/gemini/01-master.png (and 02-three-quarter.png for depth).
 Produce in design/character/master/:
 - front_neutral.svg (viewBox 0 0 256 256, centered, 16 px padding, anchor bottom-center at 128,240)
-- Separate named groups/layers: body, body-shading, fur-edge (scalloped outline), screen-face, eye-left, eye-right, cheek-left, cheek-right, mouth (hidden by default), tuft, tuft-glow, paw-left, paw-right, glow-shadow, outline. The animator needs to move each part; squash-and-stretch scales body + fur-edge together.
+- Separate named groups/layers: body, stripes, chest, head, ear-left, ear-right, eye-left, eye-right, eyelids (hidden by default), nose, mouth, whiskers, moon-patch, collar, charm, charm-glow, paw-left, paw-right, tail, ground-shadow, outline. The animator moves ears, eyes, tail and paws independently; the tail needs 3–4 segments so it can curl.
 - silhouette.svg (single-color fill, to check readability)
 - palette.json with the roles and hex values from the shared context
 - 64x64 and 128x128 preview PNGs rendered via a small Node script using sharp or resvg-js (script in tools/, not in the asset folder)
