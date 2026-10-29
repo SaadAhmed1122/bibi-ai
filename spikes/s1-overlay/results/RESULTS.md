@@ -26,7 +26,11 @@
 | Stable 1 h | **Likely pass.** 53 min clean in run B; needs one full 60-min logged run |
 | Bibi's extra drain ≤ 3 %/h | **Not measured.** Needs a baseline run |
 
-## Next runs needed (same conditions: brightness, app, Wi-Fi)
-1. **Baseline:** *Start baseline (no Bibi)*, 60 min.
-2. **Bibi at 12 fps:** check the *Calm mode* button says **off (12 fps)** before *Start Bibi*, and don't press it during the run. 60 min.
-3. **Bibi Calm:** the same with Calm **ON**. Run B can count if its conditions match the baseline.
+## Next runs needed
+Protocol and conditions checklist: [SPEC.md §5](../SPEC.md#5-test-protocol-owner-runs-on-the-device). Rebuild the app first (v2: fixed run modes, one file per run, `VALID for gate` line). Each run 60 min, each starting within ±5 % battery of the others, battery 90–40 %, screen timeout at max, no touches.
+1. **Baseline:** *Start baseline (no Bibi)*.
+2. **Bibi 12:** *Start Bibi 12 fps*.
+3. **Baseline:** *Start baseline (no Bibi)*.
+4. **Bibi Calm:** *Start Bibi Calm 2 fps*.
+
+Run B doesn't count toward the gate: it was 53 min, had a screen-off, and its mode changed during the run. Separately, a short kill/restart check (not a gate run).

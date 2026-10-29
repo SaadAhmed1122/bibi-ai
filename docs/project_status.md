@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — S1 battery gate is measured as the mean-current delta: Bibi cost (mA) = time-weighted mean current of a Bibi run − that of a baseline run, pass at ≤ 150 mA (≈ 3 %/h at 5000 mAh [VERIFY capacity]), from alternating 60-min runs (baseline → Bibi 12 → baseline → Bibi Calm) within ±5 % charge of each other. Percent-based drain is secondary. — 1 % steps are too coarse (±1–2 %/h per hour) and the vivo charge counter is derived from %; current- and percent-based %/h differed (18.6 vs 15.8) at Checkpoint A [VERIFY]. — spikes/s1-overlay/SPEC.md §2 and §5, issue #4.
 - 2026-10-29 — S1 first device results: stable 53 min in Calm mode (no kill), total drain 15.8 %/h; gate not decided until a baseline run exists. vivo charge counter found unusable (derived from %), use current_ua. — spikes/s1-overlay/results/RESULTS.md, issue #4.
 - 2026-10-29 — GitHub milestones P0–P4 and spike issues #4–#8 created; issues are now the tracker for spikes (CLAUDE.md §10). — Owner approval.
 - 2026-10-29 — S1 battery gate interpreted as Bibi's extra drain over a same-conditions baseline run (screen-on drain alone exceeds 3 %/h) [VERIFY with owner]. — spikes/s1-overlay/SPEC.md §2.
@@ -69,7 +70,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-29: S1 spike app written on branch `spike/S1-overlay` (spikes/s1-overlay/). Kotlin type-checked against the Android 16 framework jar; not yet built with AGP or run on a device, because this environment can't reach Google's Maven repository.
+2026-10-29: S1 spike v2 on branch `spike/S1-overlay` (plan: spikes/s1-overlay/tasks/plan.md, issue #4, draft PR #10). T1–T5 done (fixed run modes, one log file per run, conditions columns and 10 s sampling, mean-current summary with `VALID for gate`, restart and start-failure fixes); type-check and the JVM summary tests pass. T6 (vsync-aligned frame timing, snap-cancel and position-clamp fixes in `BibiView.kt`) was in progress. T7 docs done: SPEC.md §2/§3/§5/§6, README, RESULTS "Next runs needed". T8 (final review) not started.
 
 ## Next step
-Owner: build `spikes/s1-overlay` in Android Studio, install on the vivo Y17s, and run the protocol in spikes/s1-overlay/SPEC.md §5 (baseline, Bibi, Calm, kill/restart). Post the CSV logs on issue #4; then record the S1 gate result here.
+1. Finish T6 and T8 (final review), then mark PR #10 ready for device runs.
+2. Owner: rebuild `spikes/s1-overlay` in Android Studio, install on the vivo Y17s, and run the spikes/s1-overlay/SPEC.md §5 sequence (baseline → Bibi 12 → baseline → Bibi Calm, 60 min each, conditions checklist). Share each valid run file and the exit reasons on issue #4; then record the S1 gate result here.

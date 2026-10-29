@@ -19,20 +19,36 @@ Or from a terminal in this folder:
 ./gradlew :app:installDebug
 ```
 
-**What was verified before this reached you:** the Kotlin sources type-check against the Android 16 framework classes, and the results math was tested on a fake log. It has **not** been built with AGP or run on a device yet. If the first build fails, paste the error into the issue.
+**What was verified before this reached you:** v1 was built and run on the vivo Y17s. The v2 changes (fixed run modes, per-run logs, the new summary) type-check against the Android 16 framework classes, and the summary was tested on synthetic logs and the real vivo log. v2 has **not** been built with AGP or run on a device yet. If the build fails, paste the error into the issue.
 
 ## Using the app
 1. Tap **1. Allow drawing over other apps** and enable it for "Bibi S1 spike".
 2. Tap **2. Allow notifications**.
-3. Tap **Start Bibi**. Bibi appears on the right edge. Drag it, release it (it snaps to the nearest side), tap it (it says hi).
-4. The notification has **Hide**, **Calm** and **Stop**.
+3. Start **one** run with one of the three buttons. The mode is fixed until **Stop**:
+   - **Start baseline (no Bibi):** same service and logging, no overlay.
+   - **Start Bibi 12 fps:** Bibi appears on the right edge and animates at 12 fps.
+   - **Start Bibi Calm 2 fps:** the same at 2 fps, no breathing.
+4. To try Bibi, drag it, release it (it snaps to the nearest side) and tap it (it says hi). Do this **before** a measured run, not during one.
+5. The notification shows the mode and has **Hide/Show** (Bibi modes) and **Stop**. Hiding Bibi makes the run invalid for the gate.
+
+**Files (in the app's private storage):**
+- `files/runs/s1_<yyyyMMdd-HHmm>_<model>_<mode>.csv`: one file per run, a sample row every 10 s plus events, including the test conditions (brightness, refresh rate, battery saver, battery temperature and voltage). Columns are listed in [SPEC.md §3](SPEC.md#3-what-the-spike-app-does).
+- `files/exit_reasons.csv`: Android's recorded process exits (OS kills, crashes) and blocked starts, kept across runs.
+
+**Buttons for results:**
+- **Refresh results:** recomputes the summary of the newest run.
+- **Share log (CSV):** sends the **newest** run file (what's written so far, if it's still running).
+- **Share exit reasons:** sends `exit_reasons.csv`.
 
 ## Running the measurements
-Follow [SPEC.md §5](SPEC.md#5-test-protocol-owner-runs-on-the-device): a 60-minute **baseline** run (no Bibi), a 60-minute **Bibi** run, a 60-minute **Calm** run, and a short kill/restart check, all under the same conditions. After each run, tap **Share log (CSV)** and attach it to issue #4.
+Follow [SPEC.md §5](SPEC.md#5-test-protocol-owner-runs-on-the-device): four 60-minute runs in the order **baseline → Bibi 12 → baseline → Bibi Calm**, each starting within ±5 % battery of the others (battery 90–40 %), screen timeout at max, no touches during the hour, and the same conditions every time. The kill/restart check is a separate short test, not a gate run. After each run, tap **Share log (CSV)** and attach it to issue #4.
 
-The results panel shows each run's duration, battery drain (%/h and mAh/h from the charge counter), average fps, peak memory, events, and any OS kill reasons.
+**Reading the summary:**
+- **Mean current** (mA, time-weighted over sample rows) is the number the gate uses. **Drain (current)** converts it to %/h at 5000 mAh [VERIFY capacity]; **Drain (pct)** is the coarse 1 %-step figure.
+- **Conditions** lists brightness, refresh rate, battery saver, temperature and voltage. Compare them between runs.
+- **`VALID for gate: yes`** means the run counts. **`no`** lists why: shorter than 60 min, screen off, charging, a restart or blocked start, an overlay window error, mixed modes, or Bibi hidden. Repeat an invalid run.
 
-**Gate:** Bibi's cost = the Bibi run's drain − the baseline run's drain ≤ 3 %/h, plus 60 minutes with no kill.
+**Gate:** Bibi's cost = mean current of the Bibi run − mean current of the baseline run ≤ 150 mA (≈ 3 %/h at 5000 mAh), plus 60 minutes with no kill.
 
 ## vivo notes
 vivo's Funtouch/OriginOS limits background apps aggressively (PRD §12.4). Run everything with the **default** battery settings first. If Bibi gets killed, note it, then repeat with *Settings → Battery → Background power consumption management → Bibi S1 spike → Allow* (menu names vary by version), and record both results.
