@@ -1,0 +1,6 @@
+# S3a TTS benchmark sentences: id|text. Fixed for every model and run; edit only between test
+# series, never in the middle of one. Common English words only: sherpa-onnx 2.x reads English
+# through a lexicon file, and words missing from it may be skipped [VERIFY]. No digits.
+short|Good morning. How can I help you today?
+medium|I set an alarm for seven in the morning, and I will remind you to call your mother after lunch.
+long|Here is a short summary of your day. You have three meetings in the afternoon, and the weather will be cloudy with some rain in the evening. You asked me to remember that the library closes early on Fridays. Would you like me to read your notes now?
