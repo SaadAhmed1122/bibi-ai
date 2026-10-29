@@ -41,7 +41,7 @@ Produce in docs/design/character/master/:
 - palette.json with the roles and hex values from the shared context
 - 64x64 and 128x128 preview PNGs rendered via a small Node script using sharp or resvg-js (script in tools/, not in the asset folder)
 Use only flat shapes and simple gradients (no filters heavier than a soft glow) so the art can be ported to Compose ImageVector or Rive.
-Write design/character/master/README.md noting any place where the vector differs from the Gemini image, and check readability at 64 px.
+Write docs/design/character/master/README.md noting any place where the vector differs from the Gemini image, and check readability at 64 px.
 ```
 
 ### 1b. Concept art
@@ -64,7 +64,7 @@ listening (eyes wide, soft ring), happy (smile + small bounce pose), excited, sl
 Rules:
 - Same viewBox, anchor point (feet/bottom-center at 128,240) and outline weight across all files, so frames can be swapped without jitter.
 - Each state must be distinguishable in grayscale (check with silhouette exports).
-- Write design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
+- Write docs/design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
 ```
 
 ---
@@ -80,7 +80,7 @@ Loops:
 - confused: 1 s one-shot, "?" pops in with overshoot, then holds.
 - drag: squash on grab, stretch on release (spring: stiffness 400, damping ratio 0.65).
 Output:
-- design/character/anim/<loop>/frame_###.svg
+- docs/design/character/anim/<loop>/frame_###.svg
 - tools/build_atlas.(js|py): renders frames at 1x/2x/3x (base 96 px), packs them into power-of-two PNG atlases with premultiplied alpha, and writes atlas.json (frame rects, durations, anchor).
 - Report the total atlas memory (width*height*4 bytes) and fail the build if it exceeds 4 MB.
 Also produce a Calm-mode variant: static poses only, a blink every 8 s, no particles.
