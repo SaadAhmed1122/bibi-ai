@@ -6,7 +6,8 @@
 #
 # The jar is Robolectric's android-all for API 36 (Maven Central: org.robolectric:android-all).
 # R is stubbed from res/values/strings.xml and the drawable file names (if any).
-# No external libraries: the classpath is android-all + kotlin-stdlib only.
+# Since the real-LLM path (Decisions 2026-10-30) the app uses LiteRT-LM, MediaPipe tasks-decision
+# and kotlinx-coroutines: put their classes.jar files on EXTRA_CP (colon-separated), or use Gradle.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
@@ -43,7 +44,7 @@ done
 STDLIB="$(ls "$KLIB"/kotlin-stdlib-*.jar | head -1)"
 
 java -cp "$CP" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler -no-reflect -jvm-target 17 \
-  -classpath "$JAR:$STDLIB" -d "$WORK/out" \
+  -classpath "$JAR:$STDLIB${EXTRA_CP:+:$EXTRA_CP}" -d "$WORK/out" \
   "$WORK/R.kt" $(find "$SRC/java" -name '*.kt') 2>&1 \
   | grep -v -e 'JAVA_TOOL_OPTIONS' -e 'Kotlin home directory' || true
 test -n "$(find "$WORK/out" -name 'MainActivity.class' 2>/dev/null)" && echo "TYPECHECK OK" || { echo "TYPECHECK FAILED"; exit 1; }
