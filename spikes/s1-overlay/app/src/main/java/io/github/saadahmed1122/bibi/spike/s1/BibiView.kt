@@ -25,7 +25,8 @@ import kotlin.random.Random
 /**
  * Draws Bibi from pre-rendered frames on a Canvas, driven by a single Choreographer clock (PRD §17.5).
  *
- * - The clock only wakes at the target rate (12 fps, or 2 fps in Calm mode) and stops when not running.
+ * - The clock only wakes at the target rate (12 fps, or 2 fps in Calm mode) and stops when not running;
+ *   [FrameSchedule] keeps frames on a fixed grid aligned to vsync.
  * - Breathing: 3.5 s scale cycle, off in Calm mode. Blink: every 3–6 s, every 8 s in Calm (PRD §20.13).
  * - Drag moves the overlay window; release snaps to the nearest side edge in ~280 ms.
  */
@@ -55,11 +56,16 @@ class BibiView(
     var calm: Boolean = false
         set(value) {
             field = value
+            schedule.intervalNanos = frameIntervalNanos(value)
             scheduleNextBlink(System.nanoTime())
             invalidate()
         }
 
     private val frameIntervalMs: Long get() = if (calm) 500L else 1000L / 12
+    private val schedule = FrameSchedule(frameIntervalNanos(calm = false))
+
+    /** One vsync period; read from the display when the clock starts, 60 Hz until then. */
+    private var vsyncNanos = 1_000_000_000L / 60
 
     init {
         contentDescription = "Bibi, your companion. Double-tap to say hi."
@@ -74,6 +80,8 @@ class BibiView(
         running = run
         val choreographer = Choreographer.getInstance()
         if (run) {
+            display?.refreshRate?.takeIf { it > 0f }?.let { vsyncNanos = (1e9f / it).toLong() }
+            schedule.reset()
             choreographer.postFrameCallback(this)
         } else {
             choreographer.removeFrameCallback(this)
@@ -82,13 +90,16 @@ class BibiView(
 
     override fun doFrame(frameTimeNanos: Long) {
         if (!running) return
-        if (frameTimeNanos >= nextBlinkNanos) {
-            // In Calm mode a frame lasts 500 ms, so the blink frame is shown for one frame.
-            blinkUntilNanos = frameTimeNanos + max(160L, frameIntervalMs) * 1_000_000L
-            scheduleNextBlink(frameTimeNanos)
+        if (schedule.onFrame(frameTimeNanos, vsyncNanos)) {
+            if (frameTimeNanos >= nextBlinkNanos) {
+                // In Calm mode a frame lasts 500 ms, so the blink frame is shown for one frame.
+                blinkUntilNanos = frameTimeNanos + max(160L, frameIntervalMs) * 1_000_000L
+                scheduleNextBlink(frameTimeNanos)
+            }
+            invalidate()
         }
-        invalidate()
-        Choreographer.getInstance().postFrameCallbackDelayed(this, frameIntervalMs)
+        // Runs on the first vsync after the delay; FrameSchedule subtracts one vsync so that is the due one.
+        Choreographer.getInstance().postFrameCallbackDelayed(this, schedule.delayMs)
     }
 
     private fun scheduleNextBlink(fromNanos: Long) {
@@ -160,6 +171,7 @@ class BibiView(
         val screen = windowManager.currentWindowMetrics.bounds
         val targetX = if (params.x + width / 2 < screen.width() / 2) 0 else screen.width() - width
         params.y = params.y.coerceIn(0, (screen.height() - height).coerceAtLeast(0))
+        var cancelled = false
         snapAnimator = ValueAnimator.ofInt(params.x, targetX).apply {
             duration = 280L
             interpolator = DecelerateInterpolator()
@@ -168,7 +180,14 @@ class BibiView(
                 if (isAttachedToWindow) moveWindow()
             }
             addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) = onMoved(params.x, params.y)
+                // cancel() (a new touch, or detach) also calls onAnimationEnd: don't save a half-way x.
+                override fun onAnimationCancel(animation: Animator) {
+                    cancelled = true
+                }
+
+                override fun onAnimationEnd(animation: Animator) {
+                    if (!cancelled) onMoved(params.x, params.y)
+                }
             })
             start()
         }
@@ -188,5 +207,9 @@ class BibiView(
         setRunning(false)
         snapAnimator?.cancel()
         super.onDetachedFromWindow()
+    }
+
+    private companion object {
+        fun frameIntervalNanos(calm: Boolean): Long = if (calm) 500_000_000L else 1_000_000_000L / 12
     }
 }

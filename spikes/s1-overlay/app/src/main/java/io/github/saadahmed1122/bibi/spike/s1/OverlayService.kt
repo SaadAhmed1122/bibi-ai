@@ -23,7 +23,7 @@ import android.view.WindowManager
 import android.widget.Toast
 
 /**
- * Foreground service (type specialUse) that hosts the Bibi overlay window and samples metrics every minute.
+ * Foreground service (type specialUse) that hosts the Bibi overlay window and samples metrics every 10 seconds.
  *
  * The [RunMode] comes from the start intent ([EXTRA_MODE]) and is fixed for the whole run; it is
  * persisted so a START_STICKY restart resumes the same mode and appends to the same run file
@@ -257,8 +257,11 @@ class OverlayService : Service() {
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = prefs.x.takeIf { it >= 0 } ?: (screen.width() - size)
-            y = prefs.y.takeIf { it >= 0 } ?: (screen.height() / 2)
+            // Clamp the saved spot to today's bounds: a rotation or display change can leave it off-screen.
+            val maxX = (screen.width() - size).coerceAtLeast(0)
+            val maxY = (screen.height() - size).coerceAtLeast(0)
+            x = (prefs.x.takeIf { it >= 0 } ?: maxX).coerceIn(0, maxX)
+            y = (prefs.y.takeIf { it >= 0 } ?: (screen.height() / 2)).coerceIn(0, maxY)
         }
         val view = BibiView(
             context = this,
@@ -374,7 +377,7 @@ class OverlayService : Service() {
         val builder = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_bibi)
             .setContentTitle(getString(if (mode.showsBibi) R.string.notif_running else R.string.notif_baseline))
-            .setContentText("Mode: ${mode.label} (${mode.logName}), logging every minute")
+            .setContentText("Mode: ${mode.label} (${mode.logName}), logging every 10 seconds")
             .setOngoing(true)
             .setCategory(Notification.CATEGORY_SERVICE)
             .setContentIntent(open)
