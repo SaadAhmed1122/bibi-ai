@@ -1,0 +1,15 @@
+{
+  "name": "bibi-ai",
+  "description": "Bibi AI project plugins (agent-board).",
+  "owner": {
+    "name": "Saad Ahmed",
+    "url": "https://github.com/SaadAhmed1122"
+  },
+  "plugins": [
+    {
+      "name": "agent-board",
+      "source": "./plugins/agent-board",
+      "description": "Shows which Claude subagents are working, on what, and when they finish: an Agents pane, toasts and a status-line count."
+    }
+  ]
+}

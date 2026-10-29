@@ -97,3 +97,6 @@ node_modules/
 .claude/settings.local.json
 
 # NOTE: Room exported schemas (app/schemas/ or core/database/schemas/) MUST be committed (PRD §18.1).
+
+# Engine-generated plugin types (rewritten on every load)
+plugins/*/.claude-plugin/types/

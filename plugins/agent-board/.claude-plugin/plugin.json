@@ -1,0 +1,1 @@
+{"name":"agent-board","version":"0.1.0","description":"Shows which Claude subagents are working, on what, and when they finish: a live Agents pane, toasts and a status-line count.","types":"./types/index.d.ts","license":"MIT"}

@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — agent-board mod moved into the repo (plugins/agent-board, listed by .claude-plugin/marketplace.json, enabled in .claude/settings.json) so it loads on the owner's laptop and in cloud sessions; docs/local-setup.md added. — Owner request.
 - 2026-10-29 — Added `repo-keeper` subagent for all git/GitHub work under CLAUDE.md §10 (REST-only GitHub API in cloud sessions; never merges or force-pushes main). — Owner request.
 - 2026-10-29 — Project subagents added in .claude/agents/ (spike-analyst, android-engineer, scope-guard, docs-keeper); CLAUDE.md §11 says when to use each and that delegation is announced to the owner. — Owner request.
 - 2026-10-29 — Base MVP avatar states fixed as idle (plus blink frame), thinking, speaking, confused. Generated from the vector master by tools/build_states.py. Resolves open question "which four emotion states" (overlay.md). — Owner approval of master; Claude build.
