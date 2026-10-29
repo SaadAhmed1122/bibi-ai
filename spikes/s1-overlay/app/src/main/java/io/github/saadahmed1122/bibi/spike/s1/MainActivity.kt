@@ -28,7 +28,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
         log = SpikeLog(this)
-        log.logNewExitReasons(prefs)
+        log.logNewExitReasons()
 
         val pad = (16 * resources.displayMetrics.density).toInt()
         val column = LinearLayout(this).apply {
@@ -60,14 +60,7 @@ class MainActivity : Activity() {
         button("Stop") { send(OverlayService.ACTION_STOP) }
         button("Refresh results") { refresh() }
         button("Share log (CSV)") { shareLog() }
-        button("Clear log") {
-            if (OverlayService.isRunning) {
-                toast("Stop the run first")
-            } else {
-                log.clear()
-                refresh()
-            }
-        }
+        button("Share exit reasons") { shareExitReasons() }
         results = text(13f).apply { typeface = Typeface.MONOSPACE }
 
         setContentView(ScrollView(this).apply { addView(column) })
@@ -119,21 +112,45 @@ class MainActivity : Activity() {
             val running = prefs.runMode?.takeIf { OverlayService.isRunning }
             append("Service: ${if (running != null) "running, mode ${running.logName} (${running.label})" else "stopped"}")
         }
-        results.text = Summary.from(log.read()).describe()
+        val runs = log.runFiles()
+        val exits = log.readExitReasons().lineSequence().drop(1).filter { it.isNotBlank() }.toList()
+        results.text = buildString {
+            appendLine("Run files: ${runs.size}${runs.lastOrNull()?.let { " (newest: ${it.name})" } ?: ""}")
+            appendLine()
+            appendLine(Summary.from(log.readNewestRun()).describe())
+            appendLine()
+            appendLine("Last exit reasons (${exits.size} total; time,epoch_ms,reason,detail,process):")
+            if (exits.isEmpty()) appendLine("  none")
+            exits.takeLast(5).forEach { appendLine("  $it") }
+        }
     }
 
+    /** Shares the newest run file; if that run is still going, shares what is written so far. */
     private fun shareLog() {
-        val csv = log.read()
-        if (csv.isEmpty()) {
-            toast("Log is empty")
+        val newest = log.runFiles().lastOrNull()
+        if (newest == null) {
+            toast("No run files yet")
             return
         }
+        shareText("Bibi S1 run ${newest.name}", newest.readText())
+    }
+
+    private fun shareExitReasons() {
+        val csv = log.readExitReasons()
+        if (csv.isEmpty()) {
+            toast("No exit reasons recorded")
+            return
+        }
+        shareText("Bibi S1 exit reasons — ${Build.MODEL}", csv)
+    }
+
+    private fun shareText(subject: String, body: String) {
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "Bibi S1 log — ${Build.MODEL}")
-            putExtra(Intent.EXTRA_TEXT, csv)
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
         }
-        startActivity(Intent.createChooser(send, "Share S1 log"))
+        startActivity(Intent.createChooser(send, subject))
     }
 
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

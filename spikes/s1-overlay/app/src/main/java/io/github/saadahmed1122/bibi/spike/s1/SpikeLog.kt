@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Debug
 import android.os.PowerManager
 import java.io.File
@@ -12,16 +13,37 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Appends one CSV row per sample or event to files/s1_log.csv.
- * Samples carry frame counts; events (start, stop, restart, screen_on, ...) carry a detail string.
+ * Writes one CSV per run to files/runs/ (one row per sample or event) and process exits to
+ * files/exit_reasons.csv. The current run's file name and id live in [Prefs], so a START_STICKY
+ * restart keeps appending to the same file.
  */
 class SpikeLog(context: Context) {
 
     private val appContext = context.applicationContext
-    val file = File(appContext.filesDir, "s1_log.csv")
+    private val prefs = Prefs(appContext)
+    val runsDir = File(appContext.filesDir, "runs")
+    val exitFile = File(appContext.filesDir, "exit_reasons.csv")
     private val battery = appContext.getSystemService(BatteryManager::class.java)
     private val power = appContext.getSystemService(PowerManager::class.java)
     private val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+
+    /** Starts a new run file `s1_<yyyyMMdd-HHmm>_<model>_<mode>.csv` and makes it current. */
+    @Synchronized
+    fun beginRun(mode: RunMode) {
+        val now = System.currentTimeMillis()
+        val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date(now))
+        val model = Build.MODEL.replace(Regex("[^A-Za-z0-9-]"), "-")
+        val base = "s1_${stamp}_${model}_${mode.logName}"
+        runsDir.mkdirs()
+        var name = "$base.csv"
+        var n = 2
+        while (File(runsDir, name).exists()) name = "${base}_${n++}.csv" // two starts in one minute
+        prefs.runFile = name
+        prefs.runId = now.toString()
+    }
+
+    /** True if a run file was begun; false e.g. after an update from a build without per-run files. */
+    val hasRun: Boolean get() = prefs.runFile != null
 
     fun sample(frames: Int, intervalMs: Long, screenOn: Boolean, mode: RunMode) {
         val fps = if (intervalMs > 0) frames * 1000.0 / intervalMs else 0.0
@@ -31,17 +53,19 @@ class SpikeLog(context: Context) {
     fun event(kind: String, detail: String, screenOn: Boolean, mode: RunMode) =
         write(kind, detail, "", "", screenOn, mode)
 
+    /** Appends a row to the current run file; does nothing if no run was begun. */
     @Synchronized
-    /** [mode] null = row outside any run (exit reasons): `calm` is empty and `mode` is "-". */
-    private fun write(kind: String, detail: String, frames: String, fps: String, screenOn: Boolean, mode: RunMode?) {
+    private fun write(kind: String, detail: String, frames: String, fps: String, screenOn: Boolean, mode: RunMode) {
+        val file = prefs.runFile?.let { File(runsDir, it) } ?: return
         val now = System.currentTimeMillis()
         val charge = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
         val current = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
         val row = listOf(
             time.format(Date(now)),
             now.toString(),
+            prefs.runId ?: "",
             kind,
-            detail.replace(',', ';').replace('\n', ' '),
+            clean(detail),
             battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).toString(),
             if (charge == Int.MIN_VALUE) "" else charge.toString(), // MIN_VALUE = not supported
             if (current == Int.MIN_VALUE) "" else current.toString(),
@@ -51,35 +75,59 @@ class SpikeLog(context: Context) {
             frames,
             fps,
             Debug.getPss().toString(),
-            mode?.calm?.toString() ?: "",
-            mode?.logName ?: "-",
+            mode.calm.toString(),
+            mode.logName,
         ).joinToString(",")
+        runsDir.mkdirs()
         if (!file.exists()) file.writeText(HEADER + "\n")
         file.appendText(row + "\n")
     }
 
-    fun read(): String = if (file.exists()) file.readText() else ""
+    /** All run files, newest last (by modification time, then name). */
+    fun runFiles(): List<File> =
+        (runsDir.listFiles { f -> f.isFile && f.name.endsWith(".csv") } ?: emptyArray())
+            .sortedWith(compareBy<File>({ it.lastModified() }, { it.name }))
 
-    fun clear() {
-        file.delete()
-    }
+    /** Text of the newest run file, or "" if there is none. Works while the run is still writing. */
+    fun readNewestRun(): String = runFiles().lastOrNull()?.readText() ?: ""
 
-    /** Logs process exits Android recorded since the last check (OS kills show up here). */
-    fun logNewExitReasons(prefs: Prefs) {
+    fun readExitReasons(): String = if (exitFile.exists()) exitFile.readText() else ""
+
+    /**
+     * Copies process exits Android recorded since the last check (OS kills show up here) to
+     * exit_reasons.csv. Called from both the activity and the service; [exitLock] keeps the
+     * read-filter-write of [Prefs.lastExitTimestamp] atomic so no exit is logged twice.
+     */
+    fun logNewExitReasons() = synchronized(exitLock) {
         val am = appContext.getSystemService(ActivityManager::class.java)
         val reasons = am.getHistoricalProcessExitReasons(appContext.packageName, 0, 10)
         val lastSeen = prefs.lastExitTimestamp
         val fresh = reasons.filter { it.timestamp > lastSeen }.sortedBy { it.timestamp }
-        for (info in fresh) {
-            val detail = "${reasonName(info.reason)}|${time.format(Date(info.timestamp))}|${info.description ?: ""}"
-            write("exit_reason", detail, "", "", power.isInteractive, null)
-        }
-        fresh.maxOfOrNull { it.timestamp }?.let { prefs.lastExitTimestamp = it }
+        if (fresh.isEmpty()) return@synchronized
+        if (!exitFile.exists()) exitFile.writeText(EXIT_HEADER + "\n")
+        exitFile.appendText(
+            fresh.joinToString("") { info ->
+                listOf(
+                    time.format(Date(info.timestamp)),
+                    info.timestamp.toString(),
+                    reasonName(info.reason),
+                    clean(info.description ?: ""),
+                    clean(info.processName ?: ""),
+                ).joinToString(",") + "\n"
+            },
+        )
+        prefs.lastExitTimestamp = fresh.last().timestamp
     }
 
+    private fun clean(s: String) = s.replace(',', ';').replace('\n', ' ').replace('\r', ' ')
+
     companion object {
+        /** Shared by every [SpikeLog] instance in the process. */
+        private val exitLock = Any()
+
         const val HEADER =
-            "time,epoch_ms,kind,detail,battery_pct,charge_uah,current_ua,charging,screen_on,thermal,frames,fps,pss_kb,calm,mode"
+            "time,epoch_ms,run_id,kind,detail,battery_pct,charge_uah,current_ua,charging,screen_on,thermal,frames,fps,pss_kb,calm,mode"
+        const val EXIT_HEADER = "time,epoch_ms,reason,detail,process"
 
         fun reasonName(reason: Int): String = when (reason) {
             ApplicationExitInfo.REASON_EXIT_SELF -> "EXIT_SELF"

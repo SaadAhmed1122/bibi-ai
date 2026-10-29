@@ -26,7 +26,8 @@ import android.widget.Toast
  * Foreground service (type specialUse) that hosts the Bibi overlay window and samples metrics every minute.
  *
  * The [RunMode] comes from the start intent ([EXTRA_MODE]) and is fixed for the whole run; it is
- * persisted so a START_STICKY restart resumes the same mode (see SPEC.md §2).
+ * persisted so a START_STICKY restart resumes the same mode and appends to the same run file
+ * (see SPEC.md §2).
  */
 class OverlayService : Service() {
 
@@ -63,6 +64,7 @@ class OverlayService : Service() {
         windowManager = getSystemService(WindowManager::class.java)
         prefs = Prefs(this)
         log = SpikeLog(this)
+        log.logNewExitReasons()
         screenOn = getSystemService(PowerManager::class.java).isInteractive
         createChannel()
         val filter = IntentFilter().apply {
@@ -83,6 +85,7 @@ class OverlayService : Service() {
                     return START_NOT_STICKY
                 }
                 mode = saved
+                if (!log.hasRun) log.beginRun(mode)
                 if (!startInForeground(restart = true)) return START_NOT_STICKY
             }
             ACTION_START -> {
@@ -99,6 +102,7 @@ class OverlayService : Service() {
                 }
                 mode = requested
                 prefs.runMode = mode
+                log.beginRun(mode)
                 if (!startInForeground(restart = false)) return START_NOT_STICKY
             }
             ACTION_TOGGLE_VISIBLE -> if (isRunning) toggleVisible() else stopSelf()
