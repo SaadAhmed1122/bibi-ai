@@ -1,6 +1,6 @@
 # Design prompts for Codex (character + UI)
 
-These are copy-paste prompts for generating Bibi's character art and UI design system with Codex (or another coding agent).
+These are copy-paste prompts for generating Bibi's character art and UI design system with Codex or Claude (any coding agent).
 - **Name:** the app is **Bibi AI** and the character is **Bibi** (owner decision, 2026-10-28).
 - **Grounded in the PRD:** §17 (avatar, emotions), §20 (UX, motion, tone, accessibility).
 - **Character:** Bibi is a cute hand-drawn cartoon kitten, deliberately not robotic, so the assistant feels safe and comfortable (owner decision, 2026-10-29). The character brief, palette, and Gemini image prompts are in [bibi-character-gemini.md](bibi-character-gemini.md). Make the concept art there first, then use these prompts to turn the approved images into vector assets.
@@ -33,14 +33,15 @@ Do not add network calls, analytics, or third-party asset sources. All output mu
 
 ```
 Using the shared context, recreate Bibi as a hand-editable SVG from the approved concept image docs/design/character/gemini/01-master.jpeg (and 02-three-quarter.jpeg for depth).
-Produce in design/character/master/:
+Produce in docs/design/character/master/:
+(Done 2026-10-29 by Claude: v1 is in docs/design/character/master/.)
 - front_neutral.svg (viewBox 0 0 256 256, centered, 16 px padding, anchor bottom-center at 128,240)
 - Separate named groups/layers: body, stripes, chest, head, ear-left, ear-right, eye-left, eye-right, eyelids (hidden by default), nose, mouth, whiskers, collar, charm, charm-glow, paw-left, paw-right, tail, ground-shadow, outline. The animator moves ears, eyes, tail and paws independently; the tail needs 3–4 segments so it can curl.
 - silhouette.svg (single-color fill, to check readability)
 - palette.json with the roles and hex values from the shared context
 - 64x64 and 128x128 preview PNGs rendered via a small Node script using sharp or resvg-js (script in tools/, not in the asset folder)
 Use only flat shapes and simple gradients (no filters heavier than a soft glow) so the art can be ported to Compose ImageVector or Rive.
-Write design/character/master/README.md noting any place where the vector differs from the Gemini image, and check readability at 64 px.
+Write docs/design/character/master/README.md noting any place where the vector differs from the Gemini image, and check readability at 64 px.
 ```
 
 ### 1b. Concept art
@@ -52,7 +53,7 @@ Use the Gemini prompts in [bibi-character-gemini.md](bibi-character-gemini.md): 
 ## 2. Expression and state set
 
 ```
-Using the shared context and design/character/master/front_neutral.svg (keep its layer names), create the state set as SVGs in design/character/states/. Match the approved Gemini state images in docs/design/character/gemini/ where they exist.
+Using the shared context and docs/design/character/master/front_neutral.svg (keep its layer names), create the state set as SVGs in docs/design/character/states/. Match the approved Gemini state images in docs/design/character/gemini/ where they exist.
 Base MVP states (exactly these four first):
 1. idle: relaxed, eyes open, slight smile
 2. thinking: head tilted, eyes looking up-left, three small thought dots
@@ -63,7 +64,7 @@ listening (eyes wide, soft ring), happy (smile + small bounce pose), excited, sl
 Rules:
 - Same viewBox, anchor point (feet/bottom-center at 128,240) and outline weight across all files, so frames can be swapped without jitter.
 - Each state must be distinguishable in grayscale (check with silhouette exports).
-- Write design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
+- Write docs/design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
 ```
 
 ---
@@ -79,7 +80,7 @@ Loops:
 - confused: 1 s one-shot, "?" pops in with overshoot, then holds.
 - drag: squash on grab, stretch on release (spring: stiffness 400, damping ratio 0.65).
 Output:
-- design/character/anim/<loop>/frame_###.svg
+- docs/design/character/anim/<loop>/frame_###.svg
 - tools/build_atlas.(js|py): renders frames at 1x/2x/3x (base 96 px), packs them into power-of-two PNG atlases with premultiplied alpha, and writes atlas.json (frame rects, durations, anchor).
 - Report the total atlas memory (width*height*4 bytes) and fail the build if it exceeds 4 MB.
 Also produce a Calm-mode variant: static poses only, a blink every 8 s, no particles.
@@ -106,7 +107,7 @@ Include a debug overlay showing current fps and frame time, and a JankStats hook
 
 ```
 Create a Material 3 design system for Bibi in a module named core/designsystem (Kotlin, Compose).
-Inputs: design/character/master/palette.json. Use violet #7C5CFF as the seed color; cyan and amber are accents.
+Inputs: docs/design/character/master/palette.json. Use violet #7C5CFF as the seed color; cyan and amber are accents.
 Deliver:
 - Color: light and dark ColorSchemes generated from the character's main color as the seed (tonal palettes), plus dynamic color support (Android 12+) with the brand scheme as the fallback. Keep one "character accent" color constant across dynamic color so Bibi stays recognizable.
 - Verify contrast ≥ 4.5:1 for text roles. Write a unit test that computes the contrast ratios and fails below the threshold.
