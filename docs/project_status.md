@@ -54,6 +54,8 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — GitHub milestones P0–P4 and spike issues #4–#8 created; issues are now the tracker for spikes (CLAUDE.md §10). — Owner approval.
+- 2026-10-29 — S1 battery gate interpreted as Bibi's extra drain over a same-conditions baseline run (screen-on drain alone exceeds 3 %/h) [VERIFY with owner]. — spikes/s1-overlay/SPEC.md §2.
 - 2026-10-29 — Vector master v1 built by Claude instead of Codex (docs/design/character/master/). Hand-built layered SVG from the Gemini master; checked at 64 px. — Owner request.
 - 2026-10-29 — Forehead moon patch removed from Bibi's design; the signature is now the violet collar with the speech-bubble charm. 17 Gemini concept images approved (master = 01), except 15-in-context-phone (regenerate). Review in docs/design/bibi-character-gemini.md §6. — Owner decision and review.
 - 2026-10-29 — Character changed to a cute hand-drawn cartoon kitten (orange tabby, cream chest, crescent-moon forehead patch, violet collar with a speech-bubble charm that glows to show state). Nothing robotic, so the assistant feels safe. Supersedes the mochi-puff and seed directions. The owner's reference image is used for mood only, not copied. — Owner request.
@@ -65,9 +67,7 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-28: scaffold committed ("Scaffold project structure and planning docs"). No Gradle project or app code exists yet. The spike tracker spreadsheet is still missing from `reference/`.
+2026-10-29: S1 spike app written on branch `spike/S1-overlay` (spikes/s1-overlay/). Kotlin type-checked against the Android 16 framework jar; not yet built with AGP or run on a device, because this environment can't reach Google's Maven repository.
 
 ## Next step
-Create the private GitHub repository `bibi-ai` and push the initial history (gh can't authenticate from the cloud session, so the owner creates the empty repo and Claude pushes). Then open issues for milestones P0–P4 and spikes S1–S4.
-Run spike S1: foreground-service overlay on the Galaxy A23.
-First confirm the A23's RAM and Android version (Settings → About phone), because Android < 14 rules the device out.
+Owner: build `spikes/s1-overlay` in Android Studio, install on the vivo Y17s, and run the protocol in spikes/s1-overlay/SPEC.md §5 (baseline, Bibi, Calm, kill/restart). Post the CSV logs on issue #4; then record the S1 gate result here.
