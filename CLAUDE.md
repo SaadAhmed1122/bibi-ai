@@ -27,6 +27,7 @@ CLAUDE.md                   this file
 .env.example                required variable names (no values)
 .env                        local values; git-ignored
 .gitignore
+TESTING.md                  owner's on-phone test checklist (all spikes)
 .mcp.json                   project MCP servers (context7, 21st); keys come from env
 .claude/settings.json       agent-skills plugin, MCP approval, graphify hooks
 .claude/skills/             graphify + Strix skills (pinned in skills-lock.json)

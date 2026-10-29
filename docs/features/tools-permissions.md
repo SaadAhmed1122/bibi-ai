@@ -49,7 +49,7 @@ Let Bibi perform a small set of phone actions safely. Every action goes through 
   |---|---|---|---|
   | `open_app` | Launch intent; `<queries>` for launcher intents (not `QUERY_ALL_PACKAGES`) | none | SAFE (banking apps → CRITICAL, open only) |
   | `set_alarm` | `AlarmClock.ACTION_SET_ALARM` | `com.android.alarm.permission.SET_ALARM` | SAFE |
-  | `start_timer` | `AlarmClock.ACTION_SET_TIMER` | none | SAFE |
+  | `start_timer` | `AlarmClock.ACTION_SET_TIMER` | `com.android.alarm.permission.SET_ALARM` (per developer.android.com AlarmClock reference, 2026-10-29) | SAFE |
   | `flashlight` | `CameraManager.setTorchMode` | none | SAFE |
   | `call_contact` (dial prefilled number) | `Intent.ACTION_DIAL` | none | **SENSITIVE** in §16.3, "Safe" in 0.8 — see Open questions |
 

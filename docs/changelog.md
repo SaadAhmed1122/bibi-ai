@@ -30,3 +30,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - `repo-keeper` subagent for git and GitHub housekeeping.
 - `docs/project_status.md`: S3 results row, S3a/S3b decisions, P0 milestone status, vivo Y17s device facts confirmed on device (Android 15 / API 35, model V2310), new open items 11–13, local environment notes, stopping point and next steps.
 - agent-board plugin in the repo (`plugins/agent-board`, repo marketplace) and `docs/local-setup.md` for laptop setup and resuming from phone or cloud.
+- `TESTING.md` at the repo root: the owner's single on-phone testing checklist (devices, spike status table, common settings, S1 overlay protocol and kill/restart check, how to send results). S2–S4 sections get their steps when each spike app lands.
