@@ -6,14 +6,10 @@ import android.content.Context
 class Prefs(context: Context) {
     private val sp = context.applicationContext.getSharedPreferences("s1", Context.MODE_PRIVATE)
 
-    var calm: Boolean
-        get() = sp.getBoolean("calm", false)
-        set(value) = sp.edit().putBoolean("calm", value).apply()
-
-    /** True when the last started run was a baseline run (no overlay). */
-    var baseline: Boolean
-        get() = sp.getBoolean("baseline", false)
-        set(value) = sp.edit().putBoolean("baseline", value).apply()
+    /** Mode of the last started run, reused when the system restarts the service (START_STICKY). */
+    var runMode: RunMode?
+        get() = RunMode.fromLogName(sp.getString("run_mode", null))
+        set(value) = sp.edit().putString("run_mode", value?.logName).apply()
 
     var x: Int
         get() = sp.getInt("x", -1)

@@ -23,7 +23,6 @@ class MainActivity : Activity() {
     private lateinit var log: SpikeLog
     private lateinit var status: TextView
     private lateinit var results: TextView
-    private lateinit var calmButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,9 +54,9 @@ class MainActivity : Activity() {
         button("2. Allow notifications") {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
-        button("Start Bibi") { start(OverlayService.ACTION_START) }
-        button("Start baseline (no Bibi)") { start(OverlayService.ACTION_BASELINE) }
-        calmButton = button("") { toggleCalm() }
+        for (mode in RunMode.entries) {
+            button("Start ${mode.label}") { start(mode) }
+        }
         button("Stop") { send(OverlayService.ACTION_STOP) }
         button("Refresh results") { refresh() }
         button("Share log (CSV)") { shareLog() }
@@ -84,8 +83,8 @@ class MainActivity : Activity() {
         refresh()
     }
 
-    private fun start(action: String) {
-        if (action == OverlayService.ACTION_START && !Settings.canDrawOverlays(this)) {
+    private fun start(mode: RunMode) {
+        if (mode.showsBibi && !Settings.canDrawOverlays(this)) {
             toast("Allow drawing over other apps first (step 1)")
             return
         }
@@ -93,7 +92,11 @@ class MainActivity : Activity() {
             toast("Already running — stop first to switch modes")
             return
         }
-        startForegroundService(Intent(this, OverlayService::class.java).setAction(action))
+        startForegroundService(
+            Intent(this, OverlayService::class.java)
+                .setAction(OverlayService.ACTION_START)
+                .putExtra(OverlayService.EXTRA_MODE, mode.logName),
+        )
         results.postDelayed({ refresh() }, 500)
     }
 
@@ -106,20 +109,6 @@ class MainActivity : Activity() {
         results.postDelayed({ refresh() }, 500)
     }
 
-    private fun toggleCalm() {
-        val calm = !prefs.calm
-        if (OverlayService.isRunning) {
-            startService(
-                Intent(this, OverlayService::class.java)
-                    .setAction(OverlayService.ACTION_SET_CALM)
-                    .putExtra(OverlayService.EXTRA_CALM, calm),
-            )
-        } else {
-            prefs.calm = calm
-        }
-        results.postDelayed({ refresh() }, 300)
-    }
-
     private fun refresh() {
         val overlay = Settings.canDrawOverlays(this)
         val notifications = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
@@ -127,9 +116,9 @@ class MainActivity : Activity() {
             appendLine("Device: ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
             appendLine("Overlay permission: ${if (overlay) "yes" else "NO"}")
             appendLine("Notifications: ${if (notifications) "yes" else "NO"}")
-            append("Service: ${if (OverlayService.isRunning) "running (${if (prefs.baseline) "baseline" else "Bibi"})" else "stopped"}")
+            val running = prefs.runMode?.takeIf { OverlayService.isRunning }
+            append("Service: ${if (running != null) "running, mode ${running.logName} (${running.label})" else "stopped"}")
         }
-        calmButton.text = "Calm mode: ${if (prefs.calm) "ON (2 fps)" else "off (12 fps)"}"
         results.text = Summary.from(log.read()).describe()
     }
 

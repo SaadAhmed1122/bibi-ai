@@ -23,16 +23,17 @@ class SpikeLog(context: Context) {
     private val power = appContext.getSystemService(PowerManager::class.java)
     private val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
 
-    fun sample(frames: Int, intervalMs: Long, screenOn: Boolean, calm: Boolean, mode: String) {
+    fun sample(frames: Int, intervalMs: Long, screenOn: Boolean, mode: RunMode) {
         val fps = if (intervalMs > 0) frames * 1000.0 / intervalMs else 0.0
-        write("sample", "", frames.toString(), "%.2f".format(Locale.US, fps), screenOn, calm, mode)
+        write("sample", "", frames.toString(), "%.2f".format(Locale.US, fps), screenOn, mode)
     }
 
-    fun event(kind: String, detail: String, screenOn: Boolean, calm: Boolean, mode: String) =
-        write(kind, detail, "", "", screenOn, calm, mode)
+    fun event(kind: String, detail: String, screenOn: Boolean, mode: RunMode) =
+        write(kind, detail, "", "", screenOn, mode)
 
     @Synchronized
-    private fun write(kind: String, detail: String, frames: String, fps: String, screenOn: Boolean, calm: Boolean, mode: String) {
+    /** [mode] null = row outside any run (exit reasons): `calm` is empty and `mode` is "-". */
+    private fun write(kind: String, detail: String, frames: String, fps: String, screenOn: Boolean, mode: RunMode?) {
         val now = System.currentTimeMillis()
         val charge = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
         val current = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
@@ -50,8 +51,8 @@ class SpikeLog(context: Context) {
             frames,
             fps,
             Debug.getPss().toString(),
-            calm.toString(),
-            mode,
+            mode?.calm?.toString() ?: "",
+            mode?.logName ?: "-",
         ).joinToString(",")
         if (!file.exists()) file.writeText(HEADER + "\n")
         file.appendText(row + "\n")
@@ -71,7 +72,7 @@ class SpikeLog(context: Context) {
         val fresh = reasons.filter { it.timestamp > lastSeen }.sortedBy { it.timestamp }
         for (info in fresh) {
             val detail = "${reasonName(info.reason)}|${time.format(Date(info.timestamp))}|${info.description ?: ""}"
-            write("exit_reason", detail, "", "", power.isInteractive, prefs.calm, "-")
+            write("exit_reason", detail, "", "", power.isInteractive, null)
         }
         fresh.maxOfOrNull { it.timestamp }?.let { prefs.lastExitTimestamp = it }
     }

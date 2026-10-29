@@ -25,8 +25,8 @@ import android.widget.Toast
 /**
  * Foreground service (type specialUse) that hosts the Bibi overlay window and samples metrics every minute.
  *
- * Modes: "bibi" (overlay shown) or "baseline" (same service and logging, no overlay) so Bibi's own
- * battery cost can be separated from the screen's (see SPEC.md §2).
+ * The [RunMode] comes from the start intent ([EXTRA_MODE]) and is fixed for the whole run; it is
+ * persisted so a START_STICKY restart resumes the same mode (see SPEC.md §2).
  */
 class OverlayService : Service() {
 
@@ -36,12 +36,10 @@ class OverlayService : Service() {
     private val handler = Handler(Looper.getMainLooper())
 
     private var bibi: BibiView? = null
-    private var baseline = false
+    private var mode = RunMode.BASELINE
     private var hidden = false
     private var screenOn = true
     private var lastSampleAt = 0L
-
-    private val mode get() = if (baseline) "baseline" else "bibi"
 
     private val sampler = object : Runnable {
         override fun run() {
@@ -54,7 +52,7 @@ class OverlayService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             screenOn = intent.action == Intent.ACTION_SCREEN_ON
             updateRendering()
-            log.event(if (screenOn) "screen_on" else "screen_off", "", screenOn, prefs.calm, mode)
+            log.event(if (screenOn) "screen_on" else "screen_off", "", screenOn, mode)
         }
     }
 
@@ -79,17 +77,31 @@ class OverlayService : Service() {
         when (intent?.action) {
             null -> {
                 // Restarted by the system after the process was killed (START_STICKY).
-                baseline = prefs.baseline
+                val saved = prefs.runMode
+                if (saved == null) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                mode = saved
                 if (!startInForeground(restart = true)) return START_NOT_STICKY
             }
-            ACTION_START, ACTION_BASELINE -> {
-                baseline = intent.action == ACTION_BASELINE
-                prefs.baseline = baseline
+            ACTION_START -> {
+                if (isRunning) {
+                    // The mode can't change during a run. Re-post the same foreground notification
+                    // to answer this startForegroundService() call; the requested mode is ignored.
+                    startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+                    return START_STICKY
+                }
+                val requested = RunMode.fromLogName(intent.getStringExtra(EXTRA_MODE))
+                if (requested == null) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                mode = requested
+                prefs.runMode = mode
                 if (!startInForeground(restart = false)) return START_NOT_STICKY
             }
             ACTION_TOGGLE_VISIBLE -> if (isRunning) toggleVisible() else stopSelf()
-            ACTION_TOGGLE_CALM -> if (isRunning) setCalm(!prefs.calm) else stopSelf()
-            ACTION_SET_CALM -> if (isRunning) setCalm(intent.getBooleanExtra(EXTRA_CALM, false)) else stopSelf()
             ACTION_STOP -> {
                 stopEverything()
                 return START_NOT_STICKY
@@ -104,24 +116,24 @@ class OverlayService : Service() {
      * exactly the situation after a START_STICKY restart. Any refusal is logged as restart_blocked.
      */
     private fun startInForeground(restart: Boolean): Boolean {
-        if (!baseline) addOverlay()
+        if (mode.showsBibi) addOverlay()
         return try {
             startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             if (!isRunning) {
                 isRunning = true
                 val kind = when {
                     restart -> "restart"
-                    baseline -> "start_baseline"
+                    mode == RunMode.BASELINE -> "start_baseline"
                     else -> "start"
                 }
-                log.event(kind, "", screenOn, prefs.calm, mode)
+                log.event(kind, "", screenOn, mode)
                 lastSampleAt = System.currentTimeMillis()
                 handler.postDelayed(sampler, SAMPLE_INTERVAL_MS)
             }
             true
         } catch (e: Exception) {
             // ForegroundServiceStartNotAllowedException or SecurityException
-            log.event(if (restart) "restart_blocked" else "start_blocked", e.javaClass.simpleName, screenOn, prefs.calm, mode)
+            log.event(if (restart) "restart_blocked" else "start_blocked", e.javaClass.simpleName, screenOn, mode)
             removeOverlay()
             stopSelf()
             false
@@ -131,7 +143,7 @@ class OverlayService : Service() {
     private fun addOverlay() {
         if (bibi != null) return
         if (!Settings.canDrawOverlays(this)) {
-            log.event("no_overlay_permission", "", screenOn, prefs.calm, mode)
+            log.event("no_overlay_permission", "", screenOn, mode)
             return
         }
         val size = (BIBI_SIZE_DP * resources.displayMetrics.density).toInt()
@@ -157,10 +169,10 @@ class OverlayService : Service() {
             },
             onTap = {
                 Toast.makeText(this, R.string.tap_hello, Toast.LENGTH_SHORT).show()
-                log.event("tap", "", screenOn, prefs.calm, mode)
+                log.event("tap", "", screenOn, mode)
             },
         )
-        view.calm = prefs.calm
+        view.calm = mode.calm
         windowManager.addView(view, params)
         bibi = view
         updateRendering()
@@ -182,28 +194,21 @@ class OverlayService : Service() {
         hidden = !hidden
         bibi?.visibility = if (hidden) View.GONE else View.VISIBLE
         updateRendering()
-        log.event(if (hidden) "hide" else "show", "", screenOn, prefs.calm, mode)
-        refreshNotification()
-    }
-
-    private fun setCalm(calm: Boolean) {
-        prefs.calm = calm
-        bibi?.calm = calm
-        log.event("calm", calm.toString(), screenOn, calm, mode)
+        log.event(if (hidden) "hide" else "show", "", screenOn, mode)
         refreshNotification()
     }
 
     private fun sample() {
         val now = System.currentTimeMillis()
         val frames = bibi?.takeFrameCount() ?: 0
-        log.sample(frames, now - lastSampleAt, screenOn, prefs.calm, mode)
+        log.sample(frames, now - lastSampleAt, screenOn, mode)
         lastSampleAt = now
     }
 
     private fun stopEverything() {
         if (isRunning) {
             sample()
-            log.event("stop", "", screenOn, prefs.calm, mode)
+            log.event("stop", "", screenOn, mode)
         }
         handler.removeCallbacks(sampler)
         removeOverlay()
@@ -235,14 +240,13 @@ class OverlayService : Service() {
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val builder = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_bibi)
-            .setContentTitle(getString(if (baseline) R.string.notif_baseline else R.string.notif_running))
-            .setContentText(if (baseline) "Logging every minute" else "Calm: ${if (prefs.calm) "on (2 fps)" else "off (12 fps)"}")
+            .setContentTitle(getString(if (mode.showsBibi) R.string.notif_running else R.string.notif_baseline))
+            .setContentText("Mode: ${mode.label} (${mode.logName}), logging every minute")
             .setOngoing(true)
             .setCategory(Notification.CATEGORY_SERVICE)
             .setContentIntent(open)
-        if (!baseline) {
+        if (mode.showsBibi) {
             builder.addAction(action(ACTION_TOGGLE_VISIBLE, if (hidden) R.string.action_show else R.string.action_hide, 1))
-            builder.addAction(action(ACTION_TOGGLE_CALM, R.string.action_calm, 2))
         }
         builder.addAction(action(ACTION_STOP, R.string.action_stop, 3))
         return builder.build()
@@ -261,12 +265,10 @@ class OverlayService : Service() {
 
     companion object {
         const val ACTION_START = "io.github.saadahmed1122.bibi.spike.s1.START"
-        const val ACTION_BASELINE = "io.github.saadahmed1122.bibi.spike.s1.BASELINE"
         const val ACTION_TOGGLE_VISIBLE = "io.github.saadahmed1122.bibi.spike.s1.TOGGLE_VISIBLE"
-        const val ACTION_TOGGLE_CALM = "io.github.saadahmed1122.bibi.spike.s1.TOGGLE_CALM"
-        const val ACTION_SET_CALM = "io.github.saadahmed1122.bibi.spike.s1.SET_CALM"
         const val ACTION_STOP = "io.github.saadahmed1122.bibi.spike.s1.STOP"
-        const val EXTRA_CALM = "calm"
+        /** [RunMode.logName] of the run to start; required with [ACTION_START]. */
+        const val EXTRA_MODE = "mode"
 
         private const val CHANNEL_ID = "bibi_overlay"
         private const val NOTIFICATION_ID = 1
