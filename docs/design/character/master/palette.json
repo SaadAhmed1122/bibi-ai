@@ -1,0 +1,24 @@
+{
+  "source": "Sampled from docs/design/character/gemini/01-master.jpeg on 2026-10-29",
+  "colors": {
+    "fur":            { "hex": "#FEB367", "role": "Main fur (head, body, tail)" },
+    "stripes":        { "hex": "#E9833B", "role": "Tabby stripes on forehead, cheeks, body, tail" },
+    "cream":          { "hex": "#FDEDD3", "role": "Muzzle, chest bib, paws" },
+    "eye":            { "hex": "#773923", "role": "Iris" },
+    "eye_lower":      { "hex": "#8E4A30", "role": "Lighter lower crescent inside the iris" },
+    "highlight":      { "hex": "#FFFFFF", "role": "Eye sparkles, charm shine" },
+    "pink":           { "hex": "#FDB4B3", "role": "Nose, inner ears" },
+    "outline":        { "hex": "#6C3316", "role": "All outlines, mouth, whiskers" },
+    "collar":         { "hex": "#BEA5E8", "role": "Collar band (brand violet, light tint)" },
+    "collar_shade":   { "hex": "#A588C5", "role": "Collar lower shade, charm ring" },
+    "charm":          { "hex": "#FEC67A", "role": "Speech-bubble charm, edge (gradient to #FFF4C4 at center)" },
+    "charm_glow":     { "hex": "#FFD36B", "role": "Idle glow behind the charm; swapped per state" },
+    "ground_shadow":  { "hex": "#ECDBC6", "role": "Shadow ellipse under the paws" }
+  },
+  "state_glow": {
+    "idle": "#FFD36B", "listening": "#8FD3FF", "thinking": "#7C5CFF",
+    "doing_task": "#FFB547", "done": "#FFB547", "confused": "#7C5CFF",
+    "needs_confirmation": "#FFB547", "sleeping": "#FFD36B"
+  },
+  "brand_primary": { "hex": "#7C5CFF", "role": "UI seed color; the collar uses a lighter tint of it" }
+}
