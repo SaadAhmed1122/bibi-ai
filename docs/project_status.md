@@ -82,7 +82,7 @@ Notes on the vivo Y17s:
 2026-10-29 local session: S3 run on the vivo Y17s; results committed to `spike/S3-voice` (`spikes/s3-voice/results/`); issues #5, #6, #7 commented. S2: smoke runs only (open item 11). Worktrees at `/Users/saadahmed/bibi-wt/{S2-llm,S3-voice,S4-tools}`.
 
 ## Next step
-1. S3: re-record clip1 and re-run Parakeet (t4) on battery; do the Piper Play-on listening check; measure Parakeet + the S2 LLM loaded together (memory headroom for the override).
+1. S3: clip1 re-recorded and Parakeet re-run (t4 median RTF 0.336, t2 0.426, PSS ~900 MiB; transcripts exact, RESULTS.md §4.3). Still to do: one Parakeet run on battery; the Piper Play-on listening check; Parakeet + the S2 LLM loaded together (memory headroom for the override).
 2. Owner: download `gemma3-1b-it-int4.litertlm`, confirm the Qwen file (open item 11), and run S2 Soak 50 for both under soak conditions (#5).
 3. S4 on-phone steps and benchmark.
 4. S1: four measured runs (app on `main`, `spikes/s1-overlay`, #4).
