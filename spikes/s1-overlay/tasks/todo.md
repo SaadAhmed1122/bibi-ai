@@ -3,7 +3,7 @@
 Plan: [plan.md](plan.md) · Issue #4 · Branch `spike/S1-overlay`
 
 - [x] T1 Run modes fixed at start (3 start buttons; no Calm toggle) — android-engineer
-- [ ] T2 One log file per run + run_id + persistent exit reasons — android-engineer
+- [x] T2 One log file per run + run_id + persistent exit reasons — android-engineer
 - [ ] T3 Conditions columns + 10 s sampling — android-engineer
 - [ ] T4 Summary: mean current, %/h, VALID for gate — android-engineer
 - [ ] Checkpoint A: type-check + synthetic summary tests + push + owner update
