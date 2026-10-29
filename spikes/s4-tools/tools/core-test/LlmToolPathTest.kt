@@ -54,6 +54,12 @@ fun llmToolPathTests() {
     val lowReason = (ToolRouting.select("flashlight", 0.2f) as ToolSelection.NoAction).reason
     check("low-confidence reason names the value", lowReason.contains("0.20")) { lowReason }
 
+    for (t in ToolName.entries) {
+        val sys = ToolRouting.systemInstruction(t)
+        val others = ToolName.entries.filter { it != t }.map { it.wire }
+        check("system instruction for ${t.wire} names only that tool", sys.contains(t.wire) && others.none { sys.contains(it) }) { sys }
+    }
+
     // ---- LiteRT-LM ToolCall (name + arguments map) → ToolCallParser input ----------------------
     checkEq(
         "encode set_alarm",

@@ -51,6 +51,17 @@ object ToolRouting {
         return ToolSelection.Expose(tool)
     }
 
+    /**
+     * System instruction for the LLM when [tool] is the only tool exposed. LiteRT-LM also renders the
+     * tool's schema through the model's prompt template; the line here is a fallback for templates
+     * that ignore tools [VERIFY with gemma3-1b-it-int4].
+     */
+    fun systemInstruction(tool: ToolName): String =
+        "You are the action step of Bibi, a phone assistant. If the user's request asks for it, call the " +
+            "tool ${tool.wire} with arguments taken from the request; times use a 24-hour clock. Reply with " +
+            "the tool call only. If the request does not ask for this action, reply with one short sentence " +
+            "and no tool call. Tool: ${schemaLine(tool)}"
+
     /** One-line schema of [tool], for the system instruction and the repair message. */
     fun schemaLine(tool: ToolName): String = when (tool) {
         ToolName.OPEN_APP -> "open_app {\"app\": string}  app name (e.g. \"maps\") or package name"
