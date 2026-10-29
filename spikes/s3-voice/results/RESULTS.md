@@ -10,15 +10,13 @@ Verdict rules follow SPEC.md §2 (`Summary.kt`): median RTF over all measured it
 | **S3a TTS: Kokoro** (en v0.19 fp32, multi-lang v1.1 int8) | **FAIL** | Best Kokoro is en v0.19 at 4 threads: median RTF 3.769 (complete run only). That is about 3.8× slower than real time; the gate is ≤ 1.0. |
 | **S3a TTS: Piper en_US amy low** (PRD 0.7 fallback voice) | **PASS** on speed; listening check not done | Median RTF 0.248 at 4 threads (p95 0.271), 0.297 at 2 threads (p95 0.331). Speech quality hasn't been heard yet: no *Play*-on run in the logs. |
 | **S3b STT: small streaming Zipformer en 20M** | **PASS** on the numeric gate; **not usable as the default recognizer** | Median RTF 0.177 at 2 threads (p95 0.191), peak PSS 119.3 MiB, peak RSS 196.2 MiB. But the model itself drops the first ~1–2 s of every fresh stream, so it loses the start of each utterance (§4.2). |
-| **S3b STT: Parakeet TDT 0.6B v2 int8** | **FAIL** on memory | RTF passes: median 0.324 at 4 threads, 0.433 at 2 threads. But peak PSS is 903.3 MiB (≈ 947 MB), well above the 600 MB limit. |
+| **S3b STT: Parakeet TDT 0.6B v2 int8** | **FAIL** on memory; **default by owner override (2026-10-29)** | RTF passes: median 0.324 at 4 threads, 0.433 at 2 threads. But peak PSS is 903.3 MiB (≈ 947 MB), well above the 600 MB limit. |
 
 **PRD 0.7 outcomes:**
 - **S3a:** Kokoro fails, so on this tier we switch to the lighter voice. Piper passes on speed. Kokoro is out for the 6 GB Helio G85 tier, and very likely for the Galaxy A23 too [VERIFY on A23].
-- **S3b:** the default recognizer is **[OPEN]**.
-  - Zipformer 20M passes RTF and memory, but it can't be the default because it loses utterance starts.
-  - Parakeet is off by default on this tier, since it fails the memory limit.
-  - Measuring a different streaming model is a candidate swap. It needs the owner's decision and a dated Decisions entry before any measuring.
-  - Until a candidate passes on device, PRD 0.7's fallback applies: push-to-talk short clips with typed input.
+- **S3b:** default recognizer is **Parakeet TDT 0.6B v2 int8, by owner override (2026-10-29)** of the PRD 0.7 memory limit: it fails only on memory (peak PSS 903 MiB vs 600 MB), passes RTF and transcribes best. Recorded in `docs/project_status.md` → Decisions.
+  - Zipformer 20M passes RTF and memory but can't be the default because it loses utterance starts.
+  - Risk accepted with the override: memory headroom on the 4 GB Galaxy A23 and with the S2 LLM loaded at the same time [VERIFY].
 
 Caveat: this is one device and one session, with the phone charging, and only one complete run per model and thread count. The Galaxy A23 floor device wasn't tested (§6).
 
@@ -176,7 +174,7 @@ Measuring either one would change the S3b model list (SPEC §5). That needs the 
 - **Extended-RAM setting** on the vivo isn't recorded [VERIFY].
 
 ## 7. Next runs
-1. **Owner decision first:** whether to swap the S3b streaming candidate (for example to `streaming-zipformer-en-2023-06-26`). Record it in Decisions before measuring. If approved:
+1. **Parakeet (default by override):** re-record clip1, re-run Parakeet at 4 threads on battery, and measure it with the S2 LLM loaded to see the memory headroom. A streaming candidate such as `streaming-zipformer-en-2023-06-26` is now optional; if measured:
    - Re-record clip1 (only "Set a timer for ten minutes.", about 2–4 s) and, if needed, clip2.
    - Run the new candidate at 2 and 4 threads and *Parakeet* at 2 threads, so the new model and the reference transcripts hear the same clips.
    - Check RTF ≤ 0.7, PSS ≤ 600 MB, and that the utterance starts are kept.
