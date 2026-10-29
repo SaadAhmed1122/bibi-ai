@@ -122,6 +122,7 @@ Gate measurements also go in `reference/Pip_Spike_Tracker.xlsx`.
 | `android-engineer` | Kotlin, Gradle, manifest and resource changes |
 | `scope-guard` | Read-only check of new work against PRD 0.8 before it starts |
 | `docs-keeper` | Status, changelog and feature docs at session end |
+| `repo-keeper` | Git and GitHub: branches, commits, pushes, syncing with main, conflicts, PRs, issues (never merges) |
 | `agent-skills:code-reviewer` / `security-auditor` / `test-engineer` (plugin) | Review before a PR; security pass; test plans |
 
 - Before delegating, tell the owner **which agent** gets **which task**; report each result as it arrives. Run independent agents in parallel.
