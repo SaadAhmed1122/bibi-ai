@@ -160,6 +160,27 @@ After the override decision, clip1 was re-recorded (4.4 s, only "Set a timer for
 
 All 9 transcripts per run are identical across rounds; clip1 now reads exactly "Set a timer for ten minutes." Numbers match the first runs (0.324 / 0.433), so the verdict and the override stand. Files: `raw/2026-10-29-vivo-y17s/s3_20261029-234458_…_t4.csv` and `…-234809_…_t2.csv`. The battery run is still not done (the phone stays on USB for adb).
 
+### 4.4 Battery runs and Parakeet with the LLM loaded (23:51–00:01)
+**On battery** (owner unplugged the phone and started the runs; `charging=false` in the logs, battery 66–67 %):
+
+| Run | Median RTF | p95 RTF | Peak PSS | Clean stop |
+|---|---|---|---|---|
+| Parakeet t4 (23:53:09) | 0.358 | 0.415 | 896 MiB | yes |
+| Parakeet t4 (23:53:50) | 0.346 | 0.398 | 896 MiB | yes |
+| Piper t2, Play on (23:55:14) | 0.297 | 0.350 | 329 MiB | yes |
+| Piper t2, charging, Play off (23:51:03) | 0.281 | 0.292 | 323 MiB | yes |
+
+On battery Parakeet is slightly slower than charging (0.35 vs 0.34), still about half the 0.7 gate. Transcripts unchanged.
+
+**Piper listening check:** the owner heard the Play-on run and reported no problems [VERIFY: no word-level notes were recorded].
+
+**Parakeet with an LLM resident (00:00, charging):** the S2 app's `:inference` process held Qwen3-0.6B (`Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm`) loaded and idle at about 1,478 MiB PSS while Parakeet t4 ran in S3's `:inference`.
+- Parakeet: median RTF 0.349 (9 items), peak PSS ~900 MiB, clean stop.
+- The LLM process survived the whole run (same PID); no low-memory kills in logcat.
+- System `MemAvailable` fell from about 2,940 MB to a minimum of **2,023 MB**.
+- Limits of this check [VERIFY]: the LLM was idle, not generating; it was the 0.6B Qwen file, not Gemma 3 1B; the two models were in two apps, not one `:inference` process; and this is the 6 GB vivo, not the 4 GB Galaxy A23.
+Files: `raw/2026-10-29-vivo-y17s/s3_20261030-000012_…_t4.csv`, `memory_parakeet_with_llm_20261030-0000.log` (1 s samples of MemAvailable and both processes' PSS).
+
 ## 5. Process exits and anomalies
 `exit_reasons.csv` (copied unchanged):
 - **21:20–21:31: two `CRASH` and four `USER_REQUESTED` (REMOVE TASK / FORCE STOP) exits of the main process.** They happened before the first run file (22:22). No run data comes from that window. Most likely setup or debugging [VERIFY with the owner].
@@ -184,7 +205,7 @@ All 9 transcripts per run are identical across rounds; clip1 now reads exactly "
 - **Extended-RAM setting** on the vivo isn't recorded [VERIFY].
 
 ## 7. Next runs
-1. **Parakeet (default by override):** clip1 re-recorded and Parakeet re-run (§4.3, done). Still to do: one run on battery, and Parakeet with the S2 LLM loaded to see the memory headroom. A streaming candidate such as `streaming-zipformer-en-2023-06-26` is now optional; if measured:
+1. **Parakeet (default by override):** clip1 re-recorded and Parakeet re-run (§4.3, done). Battery runs and a first LLM-resident check are done (§4.4). Still to do: Parakeet while the LLM is *generating*, with Gemma 3 1B, and on the Galaxy A23. A streaming candidate such as `streaming-zipformer-en-2023-06-26` is now optional; if measured:
    - Re-record clip1 (only "Set a timer for ten minutes.", about 2–4 s) and, if needed, clip2.
    - Run the new candidate at 2 and 4 threads and *Parakeet* at 2 threads, so the new model and the reference transcripts hear the same clips.
    - Check RTF ≤ 0.7, PSS ≤ 600 MB, and that the utterance starts are kept.
