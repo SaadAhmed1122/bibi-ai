@@ -14,6 +14,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Agent tooling: `.mcp.json` (Context7, 21st), `.claude/settings.json` (Agent Skills plugin, Graphify hooks), `.claude/skills/` (Graphify, Strix), `docs/tooling.md`, and CLAUDE.md §9 usage rules.
 - Expanded `.gitignore` for Android/Kotlin/Gradle, native builds, model files, Python eval harness, and agent tooling outputs.
 - CLAUDE.md §10 "Repository Etiquette & Git Rules" (branch-per-change, Issues as source of truth, PR before merge).
+- S3 voice results on the vivo Y17s: `spikes/s3-voice/results/RESULTS.md`, `analyze.py` and raw logs on branch `spike/S3-voice` (Kokoro fails, Piper passes; S3b default recognizer open).
+- S2 Qwen3-0.6B LiteRT-LM smoke results on the vivo Y17s recorded in `docs/project_status.md` (open item 11; not a gate run).
 
 ### Changed
 - Renamed the product from the working name "Pip" to **Bibi AI** across all docs, config, and the repo folder (`bibi-ai/`). The PRD in `reference/` is unchanged.
@@ -25,3 +27,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Design: Bibi MVP state SVGs (idle, idle blink, thinking, speaking, confused) in `docs/design/character/states/` with `states.json` and a preview sheet; generator `tools/build_states.py`; SVG render helper `tools/render_svg.js`.
 - Claude subagents for the project (`.claude/agents/`) and CLAUDE.md §11.
 - `repo-keeper` subagent for git and GitHub housekeeping.
+- `docs/project_status.md`: S3 results row, S3a/S3b decisions, P0 milestone status, vivo Y17s device facts confirmed on device (Android 15 / API 35, model V2310), new open items 11–13, local environment notes, stopping point and next steps.
