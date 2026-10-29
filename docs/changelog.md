@@ -23,3 +23,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Design: 17 Gemini concept images added under `docs/design/character/gemini/`, renamed by state; review table added to the character brief. Forehead moon patch removed at the owner's request.
 - Design: Bibi vector master v1 (`docs/design/character/master/`): layered `front_neutral.svg`, `silhouette.svg`, `palette.json` sampled from the Gemini master, 64/128/512 px previews, README with layers and known differences.
 - Design: Bibi MVP state SVGs (idle, idle blink, thinking, speaking, confused) in `docs/design/character/states/` with `states.json` and a preview sheet; generator `tools/build_states.py`; SVG render helper `tools/render_svg.js`.
+- Claude subagents for the project (`.claude/agents/`) and CLAUDE.md §11.
+- `repo-keeper` subagent for git and GitHub housekeeping.
