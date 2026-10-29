@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — Base MVP avatar states fixed as idle (plus blink frame), thinking, speaking, confused. Generated from the vector master by tools/build_states.py. Resolves open question "which four emotion states" (overlay.md). — Owner approval of master; Claude build.
 - 2026-10-29 — Vector master v1 built by Claude instead of Codex (docs/design/character/master/). Hand-built layered SVG from the Gemini master; checked at 64 px. — Owner request.
 - 2026-10-29 — Forehead moon patch removed from Bibi's design; the signature is now the violet collar with the speech-bubble charm. 17 Gemini concept images approved (master = 01), except 15-in-context-phone (regenerate). Review in docs/design/bibi-character-gemini.md §6. — Owner decision and review.
 - 2026-10-29 — Character changed to a cute hand-drawn cartoon kitten (orange tabby, cream chest, crescent-moon forehead patch, violet collar with a speech-bubble charm that glows to show state). Nothing robotic, so the assistant feels safe. Supersedes the mochi-puff and seed directions. The owner's reference image is used for mood only, not copied. — Owner request.
