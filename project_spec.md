@@ -189,7 +189,7 @@ Source: PRD 0.12, plus inconsistencies found while writing this spec.
 | 7 | Dial action risk class: 0.8 calls it "Safe", §16.3 rates `call_contact` SENSITIVE | Treat it as **Sensitive** (confirmation card), since the stricter rule is safer | Tool UX |
 | 8 | Decision log location: 0.11 says `DECISIONS.md`; the owner chose `docs/project_status.md` → "Decisions" | Use `docs/project_status.md` (recorded as a decision) | Process |
 | 9 | Memory search type: keyword (FTS5) only, or semantic too (§14.3 embedding index) | FTS5 keyword search first. Semantic search needs an embedding model in the RAM budget [VERIFY]. | RAM, scope |
-| 10 | Which four emotion states are in base MVP | Proposed: Idle, Thinking, Speaking/Responding, Confused (error), mapped from §20.6.1 [OPEN] | Avatar asset scope |
+| 10 | Which four emotion states are in base MVP | **Decided 2026-10-29:** idle (plus blink frame), thinking, speaking, confused (`docs/design/character/states/`) | Avatar asset scope |
 | 11 | LLM runtime | Decided by S2 [OPEN] | Architecture |
 | 12 | Avatar rendering tech (OD-03) | Decide during S1 [OPEN] | Overlay performance |
 
