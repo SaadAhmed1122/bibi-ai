@@ -1,0 +1,40 @@
+{
+  "source": "tools/build_states.py",
+  "states": [
+    {
+      "id": "idle",
+      "file": "idle.svg",
+      "group": "Ambient",
+      "charm_glow": "#FFD36B",
+      "a11y": "Bibi sits calmly, ready to help."
+    },
+    {
+      "id": "idle_blink",
+      "file": "idle_blink.svg",
+      "group": "Ambient",
+      "charm_glow": "#FFD36B",
+      "a11y": "Bibi slowly blinks, a friendly cat hello."
+    },
+    {
+      "id": "thinking",
+      "file": "thinking.svg",
+      "group": "Interaction",
+      "charm_glow": "#7C5CFF",
+      "a11y": "Bibi tilts its head with a paw on its chin, thinking."
+    },
+    {
+      "id": "speaking",
+      "file": "speaking.svg",
+      "group": "Interaction",
+      "charm_glow": "#FFD36B",
+      "a11y": "Bibi is talking and gesturing with one paw."
+    },
+    {
+      "id": "confused",
+      "file": "confused.svg",
+      "group": "Reaction",
+      "charm_glow": "#7C5CFF",
+      "a11y": "Bibi tilts its head, puzzled; something didn't work."
+    }
+  ]
+}

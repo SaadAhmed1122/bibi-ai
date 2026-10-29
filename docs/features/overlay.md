@@ -45,7 +45,7 @@ Bibi's main surface is a small animated character that floats over other apps (P
 - **The OS hiding overlays** on sensitive screens is expected behavior, not a bug.
 
 ## Open questions
-- Which four emotion states are in base MVP? Proposed: Idle, Thinking, Speaking/Responding, Confused/Error [OPEN].
+- ~~Which four emotion states are in base MVP?~~ Decided 2026-10-29: idle (with a blink frame), thinking, speaking, confused. Art in `docs/design/character/states/`.
 - Sprite sheet or Rive (OD-03)? [OPEN]
 - Is `specialUse` still the right foreground-service type under current Play policy? [VERIFY]
 - How aggressive is battery management on the A23's One UI version? [VERIFY]
