@@ -22,7 +22,7 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 |---|---|---|---|---|
 | S1 Overlay | Stable 1 h; battery ≤ 3%/h, screen on | **Partial:** 53 min Calm run with no kill (stability likely pass); Bibi's extra drain not measured yet (baseline run missing). Total drain 15.8 %/h at ~930 mA. [Details](../spikes/s1-overlay/results/RESULTS.md) | vivo Y17s | 2026-10-29 |
 | S2 LLM | ≥ 5 tokens/s; first token ≤ 3 s; 0 OOM kills in a 50-prompt soak | Not measured. Smoke runs only (not gate), see open item 11 | vivo Y17s (smoke) | 2026-10-29 |
-| S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | **S3a:** Kokoro FAIL (best median RTF 3.769, en v0.19 t4); Piper PASS (0.248 t4, p95 0.271). **S3b:** Zipformer 20M passes numbers (RTF 0.177 t2, PSS 119 MiB) but drops utterance starts (model limit), so not usable as default; Parakeet FAIL memory (PSS 903 MiB, RTF 0.324). S3b default [OPEN]. [Details](https://github.com/SaadAhmed1122/bibi-ai/blob/spike/S3-voice/spikes/s3-voice/results/RESULTS.md) (branch `spike/S3-voice`) | vivo Y17s (charging; A23 not tested) | 2026-10-29 |
+| S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | **S3a:** Kokoro FAIL (best median RTF 3.769, en v0.19 t4); Piper PASS (0.248 t4, p95 0.271). **S3b:** Zipformer 20M passes numbers (RTF 0.177 t2, PSS 119 MiB) but drops utterance starts (model limit), so not usable as default; Parakeet FAIL memory (PSS 903 MiB, RTF 0.324); **owner override 2026-10-29: Parakeet is the S3b default despite memory**. [Details](https://github.com/SaadAhmed1122/bibi-ai/blob/spike/S3-voice/spikes/s3-voice/results/RESULTS.md) (branch `spike/S3-voice`) | vivo Y17s (charging; A23 not tested) | 2026-10-29 |
 | S4 Tools | Shortcut path < 300 ms | Not measured | — | — |
 
 ## Test devices
@@ -53,7 +53,7 @@ Notes on the vivo Y17s:
 | 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Open — owner to confirm |
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 | 11 | S2 model files (SPEC [VERIFY]) | Smoke runs on vivo Y17s, LiteRT-LM 0.16.1: `litert-community/Qwen3-0.6B` `qwen3_0_6b_mixed_int4.litertlm` (497,516,544 bytes) loads; decode 7.2–8.1 tok/s, engine TTFT 4.4–6.0 s, PSS ~2.1 GB (smoke, not gate). `Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm`: ~2.2 tok/s, TTFT 7.6–8.6 s, not recommended. Proposed soak file: mixed_int4. Gemma 3 1B int4 needs the owner to accept the Gemma terms and download it. The phone also holds non-SPEC models (gemma-4-E2B-it 2.59 GB, Qwen2.5-1.5B q8); the earlier Qwen2.5-1.5B soak is invalid (25/50 prompts, 3.7 tok/s). See #5. | Open [OPEN] — owner to confirm the Qwen file |
-| 12 | S3b default recognizer | None passes on device. PRD 0.7 fallback applies: push-to-talk short clips and typed input. A candidate swap (e.g. streaming-zipformer-en-2023-06-26) needs an owner decision first. See #7. | Open [OPEN] |
+| 12 | S3b default recognizer | Parakeet TDT 0.6B v2 int8, by owner override of the 600 MB limit (Decisions, 2026-10-29). Still to check: memory headroom on the Galaxy A23 and with the S2 model loaded. See #7. | Resolved (override) [VERIFY on A23] |
 | 13 | Spike JVM test scripts (`tools/*/run.sh` on the spike branches) hard-code `/opt/gradle-*/lib` (cloud path) | Locally run via a copy pointed at `~/.gradle/wrapper/dists/gradle-9.1.0-bin/.../lib` plus trove4j from gradle-8.11 | Open — small chore |
 
 ## Local environment (2026-10-29)
@@ -62,6 +62,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-29 — S3b STT default recognizer: **Parakeet TDT 0.6B v2 int8**, accepted although it fails the PRD 0.7 STT memory limit (peak PSS 903 MiB ≈ 947 MB > 600 MB); it passes RTF (median 0.324 t4, 0.433 t2) and gives near-perfect transcripts, while Zipformer 20M loses utterance starts. Override of PRD 0.7 for the memory part of S3b only. Risks: may be killed or crowd out the LLM on the 4 GB Galaxy A23 floor device and when loaded alongside the S2 model in `:inference` [VERIFY on A23 and with LLM loaded]; load 10–11 s. Supersedes the [OPEN] default in the S3b line below. — Owner decision ("if it fails only on memory then ignore and use it") — #7
 - 2026-10-29 — S3b STT: small streaming Zipformer en 20M (2023-02-17) passes the numeric gate on vivo Y17s (median RTF 0.177 t2, p95 0.191; peak PSS 119 MiB) but is NOT usable as the default recognizer: the model drops the first ~1–2 s of every fresh stream (cold encoder state; desktop repro with sherpa-onnx 2.0.1/1.12.34/1.13.8, matches upstream docs; adapter correct). Parakeet TDT 0.6B v2 int8 FAILS on memory (peak PSS 903 MiB ≈ 947 MB > 600 MB; RTF 0.324 t4 would pass) and is off by default on this tier. S3b default recognizer [OPEN]; until a candidate passes on device, the PRD 0.7 fallback (push-to-talk short clips, typed input) applies. Swapping to another streaming model (e.g. streaming-zipformer-en-2023-06-26) needs an owner decision and its own Decisions entry before measuring. — spikes/s3-voice/results/RESULTS.md (branch `spike/S3-voice`), #7
 - 2026-10-29 — S3a TTS: Kokoro FAILS on vivo Y17s (en v0.19 fp32 median RTF 4.305 t2 / 3.769 t4; multi-lang v1.1 int8 4.936 t2 / 4.853 t4; gate ≤ 1.0). Per PRD 0.7, switch to the lighter voice on this tier: Piper en_US amy low PASSES (median RTF 0.248 t4, p95 0.271; 0.297 t2; PSS 326 MiB). Kokoro-en verdict computed from complete runs only; 3 runs the owner interrupted (REMOVE TASK) excluded, verdict unchanged. Listening check and Galaxy A23 not done [VERIFY]. — spikes/s3-voice/results/RESULTS.md (branch `spike/S3-voice`), #6
 - 2026-10-29 — Added `repo-keeper` subagent for all git/GitHub work under CLAUDE.md §10 (REST-only GitHub API in cloud sessions; never merges or force-pushes main). — Owner request.
@@ -81,7 +82,7 @@ Notes on the vivo Y17s:
 2026-10-29 local session: S3 run on the vivo Y17s; results committed to `spike/S3-voice` (`spikes/s3-voice/results/`); issues #5, #6, #7 commented. S2: smoke runs only (open item 11). Worktrees at `/Users/saadahmed/bibi-wt/{S2-llm,S3-voice,S4-tools}`.
 
 ## Next step
-1. Owner: decide the S3b candidate swap (e.g. streaming-zipformer-en-2023-06-26) and record a Decision; re-record clip1; do the Piper Play-on listening check.
+1. S3: re-record clip1 and re-run Parakeet (t4) on battery; do the Piper Play-on listening check; measure Parakeet + the S2 LLM loaded together (memory headroom for the override).
 2. Owner: download `gemma3-1b-it-int4.litertlm`, confirm the Qwen file (open item 11), and run S2 Soak 50 for both under soak conditions (#5).
 3. S4 on-phone steps and benchmark.
 4. S1: four measured runs (app on `main`, `spikes/s1-overlay`, #4).

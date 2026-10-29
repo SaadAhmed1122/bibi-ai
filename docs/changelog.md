@@ -15,6 +15,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Expanded `.gitignore` for Android/Kotlin/Gradle, native builds, model files, Python eval harness, and agent tooling outputs.
 - CLAUDE.md §10 "Repository Etiquette & Git Rules" (branch-per-change, Issues as source of truth, PR before merge).
 - S3 voice results on the vivo Y17s: `spikes/s3-voice/results/RESULTS.md`, `analyze.py` and raw logs on branch `spike/S3-voice` (Kokoro fails, Piper passes; S3b default recognizer open).
+- Decision: Parakeet TDT 0.6B v2 int8 is the S3b default recognizer by owner override of the PRD 0.7 STT memory limit.
 - S2 Qwen3-0.6B LiteRT-LM smoke results on the vivo Y17s recorded in `docs/project_status.md` (open item 11; not a gate run).
 
 ### Changed
