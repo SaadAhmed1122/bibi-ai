@@ -1,61 +1,154 @@
 package io.github.saadahmed1122.bibi.spike.s1
 
 import java.util.Locale
+import kotlin.math.abs
 
-/** Computes run results from one run file written by [SpikeLog] (exit reasons are kept separately). */
+/**
+ * Computes run results and gate validity from one run file written by [SpikeLog]
+ * (exit reasons are kept separately). Uses only the Kotlin stdlib and java.util, so it can be
+ * tested on a plain JVM (tools/summary-test). Columns are found by header name.
+ */
 class Summary private constructor(
-    private val mode: String,
-    private val minutes: Double,
-    private val startPct: Int?,
-    private val endPct: Int?,
-    private val chargeDropMah: Double?,
-    private val avgFpsScreenOn: Double?,
-    private val maxPssMb: Double?,
-    private val events: Map<String, Int>,
+    val mode: String,
+    val minutes: Double,
+    val startPct: Int?,
+    val endPct: Int?,
+    /** Time-weighted mean of |current_ua| over sample rows, in mA; null with fewer than two samples. */
+    val meanCurrentMa: Double?,
+    val avgFpsScreenOn: Double?,
+    val maxPssMb: Double?,
+    val events: Map<String, Int>,
+    val invalidReasons: List<String>,
+    val conditions: List<String>,
 ) {
+
+    val valid: Boolean get() = invalidReasons.isEmpty()
+
+    /** Battery %/h estimated from [meanCurrentMa] and [CAPACITY_MAH]. */
+    val pctPerHourFromCurrent: Double? get() = meanCurrentMa?.let { it / CAPACITY_MAH * 100.0 }
+
+    /** Coarse %/h from the 1 % battery_pct steps, first to last row. */
+    val pctPerHourCoarse: Double?
+        get() = if (startPct != null && endPct != null && minutes > 0.0) {
+            (startPct - endPct) / (minutes / 60.0)
+        } else {
+            null
+        }
+
+    fun validityLine(): String =
+        if (valid) "VALID for gate: yes" else "VALID for gate: no — ${invalidReasons.joinToString("; ")}"
 
     fun describe(): String {
         if (minutes <= 0.0) return "No samples yet. A sample is written every 10 s while running."
-        val hours = minutes / 60.0
         fun f(v: Double?, digits: Int = 2) = v?.let { "%.${digits}f".format(Locale.US, it) } ?: "n/a"
-        val pctDrop = if (startPct != null && endPct != null) (startPct - endPct).toDouble() else null
         return buildString {
             appendLine("Run mode:        $mode")
             appendLine("Duration:        ${f(minutes, 1)} min")
+            appendLine("Mean current:    ${f(meanCurrentMa, 1)} mA (time-weighted, sample rows)")
+            appendLine("Drain (current): ${f(pctPerHourFromCurrent)} %/h (at $CAPACITY_MAH mAh)")
             appendLine("Battery:         ${startPct ?: "?"}% → ${endPct ?: "?"}%")
-            appendLine("Drain:           ${f(pctDrop?.div(hours))} %/h (1% steps; coarse)")
-            appendLine("Charge counter:  ${f(chargeDropMah?.div(hours), 1)} mAh/h")
+            appendLine("Drain (pct):     ${f(pctPerHourCoarse)} %/h (1% steps; coarse)")
             appendLine("Avg fps (screen on): ${f(avgFpsScreenOn, 1)}")
             appendLine("Max PSS:         ${f(maxPssMb, 1)} MB")
             appendLine("Events:          ${events.entries.joinToString { "${it.key}=${it.value}" }.ifEmpty { "none" }}")
+            appendLine("Conditions:")
+            conditions.forEach { appendLine("  $it") }
+            appendLine(validityLine())
             appendLine()
-            appendLine("Gate (SPEC.md §2): Bibi cost = Bibi run drain − baseline run drain ≤ 3 %/h,")
-            append("and 60 min with no kill. Compare this run with a baseline run.")
+            appendLine("Gate (SPEC.md §2): Bibi cost = mean current (Bibi run) − mean current (baseline run);")
+            append("3 %/h ≈ 150 mA on $CAPACITY_MAH mAh. Needs 60 min with no kill.")
         }
     }
 
     companion object {
+        /** vivo Y17s rated capacity (GSMArena) [VERIFY]; the charge counter can't confirm it (RESULTS.md). */
+        const val CAPACITY_MAH = 5000
+
+        const val MIN_MINUTES = 60.0
+
         fun from(csv: String): Summary {
-            // Columns: see SpikeLog.HEADER (0 time, 1 epoch_ms, 2 run_id, 3 kind, 4 detail, 5 battery_pct,
-            // 6 charge_uah, 7 current_ua, 8 charging, 9 screen_on, 10 thermal, 11 frames, 12 fps, 13 pss_kb (blank on event rows), 14 calm, 15 mode;
-            // 16+ test conditions, unused here)
-            val rows = csv.lineSequence().drop(1).filter { it.isNotBlank() }.map { it.split(",") }
-                .filter { it.size >= 16 }.toList()
-            val samples = rows.filter { it[3] == "sample" || it[3].startsWith("start") || it[3] == "stop" || it[3] == "restart" }
-            val epochs = samples.map { it[1].toLong() }
-            val minutes = if (epochs.size >= 2) (epochs.last() - epochs.first()) / 60_000.0 else 0.0
-            val charges = samples.mapNotNull { it[6].toIntOrNull() }
-            val fps = rows.filter { it[3] == "sample" && it[9] == "true" }.mapNotNull { it[12].toDoubleOrNull() }
+            val lines = csv.lineSequence().filter { it.isNotBlank() }.toList()
+            val header = lines.firstOrNull()?.split(",").orEmpty()
+            val idx = header.withIndex().associate { it.value.trim() to it.index }
+            val rows = lines.drop(1).map { Row(it.split(","), idx) }.filter { it.long("epoch_ms") != null }
+
+            val epochs = rows.mapNotNull { it.long("epoch_ms") }
+            val minutes = if (epochs.size >= 2) (epochs.max() - epochs.min()) / 60_000.0 else 0.0
+            val samples = rows.filter { it["kind"] == "sample" }
+            val pcts = rows.mapNotNull { it.int("battery_pct") }
+            val modes = rows.map { it["mode"] }.filter { it.isNotEmpty() && it != "-" }.distinct()
+            val kinds = rows.map { it["kind"] }
+
+            val reasons = mutableListOf<String>()
+            if (minutes < MIN_MINUTES) reasons += "shorter than 60 min (%.1f min)".format(Locale.US, minutes)
+            if ("screen_off" in kinds || samples.any { it["screen_on"] == "false" }) reasons += "screen off during run"
+            if (samples.any { it["charging"] == "true" }) reasons += "charging during run"
+            val restarts = kinds.filter {
+                it == "restart" || it == "restart_blocked" || it == "start_blocked" || it.startsWith("baseline_restart")
+            }.distinct()
+            if (restarts.isNotEmpty()) reasons += "restart or blocked start (${restarts.joinToString("/")})"
+            if (modes.size > 1) reasons += "mixed modes (${modes.joinToString("/")})"
+            if ("hide" in kinds) reasons += "Bibi hidden during run"
+
             return Summary(
-                mode = rows.lastOrNull { it[15] != "-" }?.get(15) ?: "-",
+                mode = modes.lastOrNull() ?: "-",
                 minutes = minutes,
-                startPct = samples.firstOrNull()?.get(5)?.toIntOrNull(),
-                endPct = samples.lastOrNull()?.get(5)?.toIntOrNull(),
-                chargeDropMah = if (charges.size >= 2) (charges.first() - charges.last()) / 1000.0 else null,
-                avgFpsScreenOn = fps.takeIf { it.isNotEmpty() }?.average(),
-                maxPssMb = rows.mapNotNull { it[13].toLongOrNull() }.maxOrNull()?.div(1024.0),
-                events = rows.map { it[3] }.filter { it != "sample" }.groupingBy { it }.eachCount(),
+                startPct = pcts.firstOrNull(),
+                endPct = pcts.lastOrNull(),
+                meanCurrentMa = timeWeightedMeanMa(samples),
+                avgFpsScreenOn = samples.filter { it["screen_on"] == "true" }.mapNotNull { it.double("fps") }
+                    .takeIf { it.isNotEmpty() }?.average(),
+                maxPssMb = samples.mapNotNull { it.long("pss_kb") }.maxOrNull()?.div(1024.0),
+                events = kinds.filter { it != "sample" }.groupingBy { it }.eachCount(),
+                invalidReasons = reasons,
+                conditions = conditions(rows),
             )
         }
+
+        /** Each sample's |current| is weighted by the time to the next sample; the last one has no weight. */
+        private fun timeWeightedMeanMa(samples: List<Row>): Double? {
+            val points = samples.mapNotNull { r ->
+                val t = r.long("epoch_ms") ?: return@mapNotNull null
+                val ua = r.long("current_ua") ?: return@mapNotNull null
+                t to abs(ua) / 1000.0
+            }.sortedBy { it.first }
+            var weighted = 0.0
+            var total = 0L
+            for (i in 0 until points.size - 1) {
+                val dt = points[i + 1].first - points[i].first
+                weighted += points[i].second * dt
+                total += dt
+            }
+            return if (total > 0) weighted / total else null
+        }
+
+        private fun conditions(rows: List<Row>): List<String> {
+            fun range(values: List<Double>, digits: Int, unit: String = ""): String =
+                if (values.isEmpty()) {
+                    "n/a"
+                } else {
+                    val fmt = "%.${digits}f"
+                    "${fmt.format(Locale.US, values.min())}–${fmt.format(Locale.US, values.max())}$unit"
+                }
+            fun distinct(col: String) = rows.map { it[col] }.filter { it.isNotEmpty() }.distinct()
+                .joinToString("/").ifEmpty { "n/a" }
+            val powerSave = rows.map { it["power_save"] }.filter { it.isNotEmpty() }
+            return listOf(
+                "brightness: ${range(rows.mapNotNull { it.double("brightness") }, 0)}" +
+                    " (mode ${distinct("brightness_mode")})",
+                "refresh_hz: ${distinct("refresh_hz")}",
+                "power_save ever on: ${if (powerSave.isEmpty()) "n/a" else ("true" in powerSave).toString()}",
+                "batt temp: ${range(rows.mapNotNull { it.double("batt_temp_dc")?.div(10.0) }, 1, " °C")}",
+                "voltage: ${range(rows.mapNotNull { it.double("voltage_mv") }, 0, " mV")}",
+            )
+        }
+    }
+
+    /** A CSV row read by column name; missing columns or cells read as "". */
+    private class Row(private val cells: List<String>, private val idx: Map<String, Int>) {
+        operator fun get(col: String): String = idx[col]?.let { cells.getOrNull(it) }?.trim().orEmpty()
+        fun long(col: String) = get(col).toLongOrNull()
+        fun int(col: String) = get(col).toIntOrNull()
+        fun double(col: String) = get(col).toDoubleOrNull()
     }
 }
