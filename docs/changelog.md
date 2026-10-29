@@ -23,7 +23,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Design: 17 Gemini concept images added under `docs/design/character/gemini/`, renamed by state; review table added to the character brief. Forehead moon patch removed at the owner's request.
 - Design: Bibi vector master v1 (`docs/design/character/master/`): layered `front_neutral.svg`, `silhouette.svg`, `palette.json` sampled from the Gemini master, 64/128/512 px previews, README with layers and known differences.
 - Design: Bibi MVP state SVGs (idle, idle blink, thinking, speaking, confused) in `docs/design/character/states/` with `states.json` and a preview sheet; generator `tools/build_states.py`; SVG render helper `tools/render_svg.js`.
-- Spike S1 overlay test app (`spikes/s1-overlay/`): specialUse foreground service, Canvas-rendered Bibi with drag/snap, Calm mode, baseline mode, per-minute battery/fps/memory/exit-reason CSV log, results panel. GitHub milestones P0–P4 and spike issues #4–#8 created.
-- S1 first device results (vivo Y17s) in `spikes/s1-overlay/results/`.
-- Spike S1 v2 (`spikes/s1-overlay/`): run modes fixed at start (baseline, Bibi 12 fps, Bibi Calm 2 fps); one log file per run plus a persistent `exit_reasons.csv`; test-condition columns (voltage, battery temperature, brightness, power save, refresh rate) and 10 s sampling; summary with time-weighted mean current, %/h and a `VALID for gate` line; safe restarts (overlay first, `startForeground` after the first frame, guarded `addView`, blocked starts logged); vsync-aligned frame timing. SPEC.md, README and RESULTS updated: the gate is the mean-current delta from alternating baseline/Bibi runs.
-- S1 v2 review fixes: a run counts only with a clean start→stop and no touches; per-run pct_per_ma for a relative gate check; protocol charges to 85 % before each run.
+- Claude subagents for the project (`.claude/agents/`) and CLAUDE.md §11.
+- `repo-keeper` subagent for git and GitHub housekeeping.

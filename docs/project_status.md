@@ -54,10 +54,8 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
-- 2026-10-29 — S1 battery gate is measured as the mean-current delta: Bibi cost (mA) = time-weighted mean current of a Bibi run − that of a baseline run, pass at ≤ 150 mA (≈ 3 %/h at 5000 mAh [VERIFY capacity]), from alternating 60-min runs (baseline → Bibi 12 → baseline → Bibi Calm) within ±5 % charge of each other. Percent-based drain is secondary. — 1 % steps are too coarse (±1–2 %/h per hour) and the vivo charge counter is derived from %; current- and percent-based %/h differed (18.6 vs 15.8) at Checkpoint A [VERIFY]. — spikes/s1-overlay/SPEC.md §2 and §5, issue #4.
-- 2026-10-29 — S1 first device results: stable 53 min in Calm mode (no kill), total drain 15.8 %/h; gate not decided until a baseline run exists. vivo charge counter found unusable (derived from %), use current_ua. — spikes/s1-overlay/results/RESULTS.md, issue #4.
-- 2026-10-29 — GitHub milestones P0–P4 and spike issues #4–#8 created; issues are now the tracker for spikes (CLAUDE.md §10). — Owner approval.
-- 2026-10-29 — S1 battery gate interpreted as Bibi's extra drain over a same-conditions baseline run (screen-on drain alone exceeds 3 %/h) [VERIFY with owner]. — spikes/s1-overlay/SPEC.md §2.
+- 2026-10-29 — Added `repo-keeper` subagent for all git/GitHub work under CLAUDE.md §10 (REST-only GitHub API in cloud sessions; never merges or force-pushes main). — Owner request.
+- 2026-10-29 — Project subagents added in .claude/agents/ (spike-analyst, android-engineer, scope-guard, docs-keeper); CLAUDE.md §11 says when to use each and that delegation is announced to the owner. — Owner request.
 - 2026-10-29 — Base MVP avatar states fixed as idle (plus blink frame), thinking, speaking, confused. Generated from the vector master by tools/build_states.py. Resolves open question "which four emotion states" (overlay.md). — Owner approval of master; Claude build.
 - 2026-10-29 — Vector master v1 built by Claude instead of Codex (docs/design/character/master/). Hand-built layered SVG from the Gemini master; checked at 64 px. — Owner request.
 - 2026-10-29 — Forehead moon patch removed from Bibi's design; the signature is now the violet collar with the speech-bubble charm. 17 Gemini concept images approved (master = 01), except 15-in-context-phone (regenerate). Review in docs/design/bibi-character-gemini.md §6. — Owner decision and review.
