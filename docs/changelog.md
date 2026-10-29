@@ -29,3 +29,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Claude subagents for the project (`.claude/agents/`) and CLAUDE.md §11.
 - `repo-keeper` subagent for git and GitHub housekeeping.
 - `docs/project_status.md`: S3 results row, S3a/S3b decisions, P0 milestone status, vivo Y17s device facts confirmed on device (Android 15 / API 35, model V2310), new open items 11–13, local environment notes, stopping point and next steps.
+- agent-board plugin in the repo (`plugins/agent-board`, repo marketplace) and `docs/local-setup.md` for laptop setup and resuming from phone or cloud.

@@ -5,12 +5,22 @@
         "source": "github",
         "repo": "addyosmani/agent-skills"
       }
+    },
+    "bibi-ai": {
+      "source": {
+        "source": "github",
+        "repo": "SaadAhmed1122/bibi-ai"
+      }
     }
   },
   "enabledPlugins": {
-    "agent-skills@addy-agent-skills": true
+    "agent-skills@addy-agent-skills": true,
+    "agent-board@bibi-ai": true
   },
-  "enabledMcpjsonServers": ["context7", "21st"],
+  "enabledMcpjsonServers": [
+    "context7",
+    "21st"
+  ],
   "hooks": {
     "PreToolUse": [
       {

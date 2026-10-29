@@ -31,6 +31,8 @@ CLAUDE.md                   this file
 .claude/settings.json       agent-skills plugin, MCP approval, graphify hooks
 .claude/skills/             graphify + Strix skills (pinned in skills-lock.json)
 .claude/agents/             project subagents (see §11)
+.claude-plugin/             marketplace listing the repo's plugins
+plugins/agent-board/        Agents pane + toasts for subagent activity
 reference/
   Pip_PRD_Final.md          source PRD; Part 0 is binding
   Pip_Spike_Tracker.xlsx    spike measurements (source of truth for results)
@@ -41,6 +43,7 @@ docs/
   design/bibi-character-gemini.md  character brief + Gemini image prompts
   design/codex-design-prompts.md   prompts to turn the art into vector assets + UI
   tooling.md                setup and when-to-use for agent tools
+  local-setup.md            same setup on your laptop; resuming from phone/cloud
   features/overlay.md       floating character, foreground service (S1)
   features/model-runtime.md LLM runtime, gates, decision rule (S2)
   features/memory.md        memory, retention, export/delete
