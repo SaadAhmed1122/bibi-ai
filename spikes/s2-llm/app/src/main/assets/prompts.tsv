@@ -1,0 +1,54 @@
+# S2 benchmark prompt set. One prompt per line: <id><TAB><text>. Lines starting with # are comments.
+# The "system" line is the system instruction for every prompt. Each prompt is a fresh single-turn chat.
+# Keep every prompt well under 200 tokens (PRD feature doc model-runtime.md, test plan item 2).
+system	You are Bibi, a friendly assistant on the user's phone. Answer in plain English, in at most three short sentences.
+p01	What is a good way to start my morning if I want more energy?
+p02	Give me three ideas for a quick, healthy lunch.
+p03	How do I boil an egg so the yolk is still soft?
+p04	What's the difference between weather and climate?
+p05	Suggest a name for a small orange kitten.
+p06	How can I fall asleep faster tonight?
+p07	Explain what a battery's mAh rating means.
+p08	Write a short, polite text telling my friend I'll be ten minutes late.
+p09	What are two tips for keeping my phone's battery healthy?
+p10	How many minutes are there in a week? Show the math briefly.
+p11	Give me a simple stretch I can do at my desk.
+p12	What does "offline first" mean for an app?
+p13	Remind me how to convert Celsius to Fahrenheit.
+p14	Suggest a fun indoor activity for a rainy afternoon with kids.
+p15	How do I politely decline a meeting invitation?
+p16	What is photosynthesis, in one or two sentences?
+p17	Give me a quick packing checklist for a weekend trip.
+p18	Why is the sky blue?
+p19	Write a one-line birthday wish for my sister.
+p20	How long should I steep green tea?
+p21	What is a good habit for saving a little money each week?
+p22	Explain the difference between RAM and storage on a phone.
+p23	How can I make my to-do list less overwhelming?
+p24	Give me a short motivational sentence for studying.
+p25	What should I do if I feel stressed before an exam?
+p26	Summarize this note in one sentence: "Buy milk, eggs and bread. Pick up the dry cleaning before six. Call the dentist to move Thursday's appointment to next week. Water the plants on the balcony."
+p27	Rewrite this more politely: "Send me the report now, I've been waiting all day."
+p28	Turn this into a short shopping list: "We're out of rice, the coffee is almost gone, and we need something for dinner on Friday, maybe pasta and tomatoes."
+p29	My friend wrote: "Hey, are you free on Saturday? A few of us are going hiking near the lake in the morning and then having lunch in town. No pressure if you're busy!" Write a short friendly reply saying yes.
+p30	Here is a paragraph: "Small language models can run on phones without the internet. They are slower and less knowledgeable than large cloud models, but they keep your data on the device and work anywhere." What is the main advantage it describes?
+p31	What is a good way to remember people's names?
+p32	Give me a two-sentence bedtime story about a moon and a cat.
+p33	How do I set a healthy screen-time limit for myself?
+p34	What's the capital of Canada, and one fact about it?
+p35	Suggest a quick ten-minute workout without equipment.
+p36	How do I clean a laptop keyboard safely?
+p37	Explain what an alarm and a timer are for, and when to use each.
+p38	What are three things to check before a long drive?
+p39	Give me a tip to drink more water during the day.
+p40	How do I write a good subject line for an email?
+p41	I have chicken, rice, onions and a lemon. What could I cook tonight?
+p42	Help me plan my evening: I need to cook dinner, answer two emails, do thirty minutes of reading, and I want to be in bed by eleven. It is now six o'clock. Give a short schedule.
+p43	What is the difference between a virus and bacteria?
+p44	Suggest a short, kind message to a coworker who is feeling unwell.
+p45	How can I focus better when working from home?
+p46	What is compound interest, explained simply?
+p47	Recommend a calm way to spend a Sunday morning.
+p48	Read this and tell me the date and time: "The parent-teacher meeting has been moved from Tuesday the 4th to Thursday the 6th at 5:30 pm in room 12. Please bring the signed form."
+p49	Give me two ways to reduce food waste at home.
+p50	Say goodnight to me in a cheerful way.
