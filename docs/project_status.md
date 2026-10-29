@@ -20,7 +20,7 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 
 | Spike | Pass threshold | Result | Device | Date |
 |---|---|---|---|---|
-| S1 Overlay | Stable 1 h; battery ≤ 3%/h, screen on | Not measured | — | — |
+| S1 Overlay | Stable 1 h; battery ≤ 3%/h, screen on | **Partial:** 53 min Calm run with no kill (stability likely pass); Bibi's extra drain not measured yet (baseline run missing). Total drain 15.8 %/h at ~930 mA. [Details](../spikes/s1-overlay/results/RESULTS.md) | vivo Y17s | 2026-10-29 |
 | S2 LLM | ≥ 5 tokens/s; first token ≤ 3 s; 0 OOM kills in a 50-prompt soak | Not measured | — | — |
 | S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | Not measured | — | — |
 | S4 Tools | Shortcut path < 300 ms | Not measured | — | — |
@@ -68,9 +68,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-28: scaffold committed ("Scaffold project structure and planning docs"). No Gradle project or app code exists yet. The spike tracker spreadsheet is still missing from `reference/`.
+2026-10-29: S1 spike v2 on branch `spike/S1-overlay` (plan: spikes/s1-overlay/tasks/plan.md, issue #4, draft PR #10). T1–T5 done (fixed run modes, one log file per run, conditions columns and 10 s sampling, mean-current summary with `VALID for gate`, restart and start-failure fixes); type-check and the JVM summary tests pass. T6 (vsync-aligned frame timing, snap-cancel and position-clamp fixes in `BibiView.kt`) was in progress. T7 docs done: SPEC.md §2/§3/§5/§6, README, RESULTS "Next runs needed". T8 (final review) not started.
 
 ## Next step
-Create the private GitHub repository `bibi-ai` and push the initial history (gh can't authenticate from the cloud session, so the owner creates the empty repo and Claude pushes). Then open issues for milestones P0–P4 and spikes S1–S4.
-Run spike S1: foreground-service overlay on the Galaxy A23.
-First confirm the A23's RAM and Android version (Settings → About phone), because Android < 14 rules the device out.
+1. Finish T6 and T8 (final review), then mark PR #10 ready for device runs.
+2. Owner: rebuild `spikes/s1-overlay` in Android Studio, install on the vivo Y17s, and run the spikes/s1-overlay/SPEC.md §5 sequence (baseline → Bibi 12 → baseline → Bibi Calm, 60 min each, conditions checklist). Share each valid run file and the exit reasons on issue #4; then record the S1 gate result here.
