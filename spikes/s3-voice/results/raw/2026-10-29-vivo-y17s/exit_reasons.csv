@@ -1,0 +1,16 @@
+time,epoch_ms,reason,detail,process
+2026-10-29 21:20:13,1793305213381,CRASH,crash,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 21:20:19,1793305219493,CRASH,crash,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 21:25:44,1793305544785,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 21:28:22,1793305702232,USER_REQUESTED,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s3 due to stop by 19296,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 21:29:06,1793305746887,USER_REQUESTED,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s3 due to stop by 19444,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 21:30:57,1793305857618,USER_REQUESTED,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s3 due to stop by 19749,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 22:28:00,1793309280031,EXIT_SELF,,io.github.saadahmed1122.bibi.spike.s3:inference
+2026-10-29 22:33:17,1793309597473,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 22:33:17,1793309597480,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3:inference
+2026-10-29 22:35:43,1793309743885,run_abandoned,activity destroyed during s3_20261029-223337_vivo-V2310_tts_kokoro-en-v0_19_t2.csv,app_event
+2026-10-29 22:35:43,1793309743884,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 22:35:43,1793309743890,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3:inference
+2026-10-29 22:37:07,1793309827793,run_abandoned,activity destroyed during s3_20261029-223605_vivo-V2310_tts_kokoro-en-v0_19_t2.csv,app_event
+2026-10-29 22:37:07,1793309827795,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3
+2026-10-29 22:37:07,1793309827800,USER_REQUESTED,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s3:inference

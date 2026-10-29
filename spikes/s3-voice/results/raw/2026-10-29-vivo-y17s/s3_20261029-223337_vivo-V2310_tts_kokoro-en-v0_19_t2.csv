@@ -1,0 +1,6 @@
+time,epoch_ms,run_id,kind,device,task,model,family,threads,item,round,chars,audio_s,compute_ms,rtf,pss_peak_kb,vmhwm_kb,thermal,battery_pct,charging,detail,reference
+2026-10-29 22:33:38,1793309618275,1793309617950,start,vivo-V2310,tts,kokoro-en-v0_19,kokoro,2,,,,,,,,,0,61,true,runtime=sherpa-onnx 2.0.1; sid=2; rounds=3; play=false,
+2026-10-29 22:33:44,1793309624963,1793309617950,load,vivo-V2310,tts,kokoro-en-v0_19,kokoro,2,,,,,6625.8,,493980,578984,0,61,true,,
+2026-10-29 22:33:58,1793309638513,1793309617950,warmup,vivo-V2310,tts,kokoro-en-v0_19,kokoro,2,short,0,39,2.636,13504.0,5.1231,577434,657276,0,61,true,,
+2026-10-29 22:34:11,1793309651933,1793309617950,item,vivo-V2310,tts,kokoro-en-v0_19,kokoro,2,short,1,39,2.634,13359.6,5.0715,646988,726216,0,61,true,,
+2026-10-29 22:34:45,1793309685178,1793309617950,item,vivo-V2310,tts,kokoro-en-v0_19,kokoro,2,medium,1,95,6.564,33207.1,5.0591,677259,757436,0,61,true,,
