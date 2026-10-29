@@ -9,7 +9,7 @@ Plan: [plan.md](plan.md) · Issue #4 · Branch `spike/S1-overlay`
 - [x] Checkpoint A: type-check + synthetic summary tests + push + owner update
 - [x] T5 Restart and start-failure fixes (+ T1 follow-up: bad-mode start must call startForeground before stopSelf) — android-engineer
 - [ ] T6 Renderer timing and position fixes — android-engineer
-- [ ] T7 SPEC/README/status/changelog — docs-keeper
+- [x] T7 SPEC/README/status/changelog — docs-keeper
 - [ ] T8 Final review — agent-skills:code-reviewer
 
 ## Checkpoint A notes (2026-10-29)
