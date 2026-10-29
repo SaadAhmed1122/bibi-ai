@@ -1,0 +1,4 @@
+# The sherpa-onnx AAR is a ~40+ MB third-party binary the owner downloads (README.md).
+app/libs/*.aar
+# Model files and recordings never go into git.
+*.wav
