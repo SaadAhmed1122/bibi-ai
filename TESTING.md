@@ -13,9 +13,9 @@ Details: [docs/project_status.md](docs/project_status.md) → Test devices.
 | Spike | Issue | Branch | App folder | Ready to test? | What to send back |
 |---|---|---|---|---|---|
 | S1 — Overlay | [#4](https://github.com/SaadAhmed1122/bibi-ai/issues/4) | `spike/S1-overlay` (PR [#10](https://github.com/SaadAhmed1122/bibi-ai/pull/10)) | `spikes/s1-overlay/` | **Yes** | One run CSV per run (four runs), the start % of each, exit reasons at the end, and the kill/restart check files. Post on #4. |
-| S2 — Local LLM | [#5](https://github.com/SaadAhmed1122/bibi-ai/issues/5) | `spike/S2-llm` (the S2 draft PR on branch `spike/S2-llm`; number not assigned yet) | `spikes/s2-llm/` | **Yes** — app written; first build happens in Android Studio (not built here) | One run CSV per model (plus its summary) and `exit_reasons.csv`. Post on #5. |
-| S3a + S3b — Voice | [#6](https://github.com/SaadAhmed1122/bibi-ai/issues/6), [#7](https://github.com/SaadAhmed1122/bibi-ai/issues/7) | `spike/S3-voice` | Not on the branch yet | No — being built now; steps added when the app lands | Defined when the app lands |
-| S4 — Tools and permissions | [#8](https://github.com/SaadAhmed1122/bibi-ai/issues/8) | `spike/S4-tools` (the S4 draft PR on branch `spike/S4-tools`; number not assigned yet) | `spikes/s4-tools/` | **Yes** — app written; first build happens in Android Studio (not built here) | The benchmark CSV and a note of what each action did on the phone (which clock app opened, whether the confirmation showed for dial). Post on #8. |
+| S2 — Local LLM | [#5](https://github.com/SaadAhmed1122/bibi-ai/issues/5) | `spike/S2-llm` (PR [#12](https://github.com/SaadAhmed1122/bibi-ai/pull/12)) | `spikes/s2-llm/` | **Yes** — app written; first build happens in Android Studio (not built here) | One run CSV per model (plus its summary) and `exit_reasons.csv`. Post on #5. |
+| S3a + S3b — Voice | [#6](https://github.com/SaadAhmed1122/bibi-ai/issues/6), [#7](https://github.com/SaadAhmed1122/bibi-ai/issues/7) | `spike/S3-voice` (the S3 draft PR on branch `spike/S3-voice`) | `spikes/s3-voice/` | **Yes** — app written; first build happens in Android Studio (not built here) | The run CSVs for each model (*Share all runs (CSV)*), the summary, `exit_reasons.csv`, and the transcripts (in the STT CSVs' `detail` column). Post the TTS parts on #6 and the STT parts on #7. |
+| S4 — Tools and permissions | [#8](https://github.com/SaadAhmed1122/bibi-ai/issues/8) | `spike/S4-tools` (PR [#13](https://github.com/SaadAhmed1122/bibi-ai/pull/13)) | `spikes/s4-tools/` | **Yes** — app written; first build happens in Android Studio (not built here) | The benchmark CSV and a note of what each action did on the phone (which clock app opened, whether the confirmation showed for dial). Post on #8. |
 
 ## Before any test
 - [ ] **Android Studio** installed (any 2026 stable release). It offers to install the Android SDK platform a spike needs.
@@ -109,7 +109,58 @@ Question: can the phone run a Gemma 3 1B-class model and a 0.5B Qwen-class model
 - [ ] Repeat everything on each test phone (Galaxy A23 first if available, then the vivo Y17s). The gate passes on a device only if both models pass there.
 
 ## S3a + S3b — Voice (issues #6, #7, branch `spike/S3-voice`)
-Steps will be filled in from the spike's "Owner test steps" when its app lands on the branch.
+Question: can the phone speak a reply (S3a TTS, real-time factor ≤ 1.0) and transcribe speech (S3b STT, real-time factor ≤ 0.7 **and** peak memory ≤ 600 MB) fully offline? S3 can fail without stopping the project; it decides whether voice ships in P2. Full protocol: `spikes/s3-voice/SPEC.md` §2, §5 and §7, and `spikes/s3-voice/README.md` → "Owner test steps" on the branch.
+
+> **Build warning.** The sherpa-onnx adapter (`SherpaEngines.kt`) has only been type-checked against sherpa-onnx's v2.0.1 Kotlin API sources. Nothing has been built with Gradle, linked with the real AAR, or run on a phone. The first Android Studio build may show errors: paste them on issue #6. Model licenses have not been reviewed yet [VERIFY]; the spike doesn't ship models, but check them before any release.
+
+**One-time setup**
+1. [ ] Download **`sherpa-onnx-2.0.1.aar`** from the sherpa-onnx [v2.0.1 GitHub release](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1) and put it at `spikes/s3-voice/app/libs/sherpa-onnx-2.0.1.aar` (exact name; it is git-ignored, don't commit it). Its size is not checked [VERIFY].
+2. [ ] Check out `spike/S3-voice`, open `spikes/s3-voice` in Android Studio, let Gradle sync, press **Run** on the vivo Y17s. Open the app once: it creates its models folder.
+3. [ ] From https://github.com/k2-fsa/sherpa-onnx/releases download these five archives (names per SPEC §5 [VERIFY names and sizes on download]) and unpack each (e.g. `tar xf kokoro-en-v0_19.tar.bz2`):
+   - `tts-models/kokoro-en-v0_19.tar.bz2`
+   - `tts-models/kokoro-int8-multi-lang-v1_1.tar.bz2`
+   - `tts-models/vits-piper-en_US-amy-low.tar.bz2`
+   - `asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2`
+   - `asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2`
+4. [ ] Download `tts-models/lexicon-en-us.txt` and copy it into **both** `kokoro-en-v0_19/` and `vits-piper-en_US-amy-low/`. Optional: delete the `espeak-ng-data/` and `test_wavs/` folders to save space.
+5. [ ] Push the five folders, keeping their unpacked names (Android Studio's Device Explorer works too):
+   ```bash
+   M=/sdcard/Android/data/io.github.saadahmed1122.bibi.spike.s3/files/models
+   adb shell mkdir -p $M
+   adb push kokoro-en-v0_19 $M/
+   adb push kokoro-int8-multi-lang-v1_1 $M/
+   adb push vits-piper-en_US-amy-low $M/
+   adb push sherpa-onnx-streaming-zipformer-en-20M-2023-02-17 $M/
+   adb push sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8 $M/
+   ```
+6. [ ] Tap **Refresh results**: all five models must show `ready` (otherwise the run button names the missing files).
+7. [ ] Record the 3 test clips in the app, in a quiet room at normal speaking speed: tap **Record clip1**, read the sentence shown, tap again to stop; same for `clip2` and `clip3`. The first tap asks for the microphone; that is the only time the app asks, and it never listens in the background. The clip list should show about 2, 6 and 10 s.
+
+**Before every run**
+- [ ] Battery **above 50 %**; note whether it is charging.
+- [ ] **Battery saver off**, other apps closed.
+- [ ] Phone cool: wait about **2 min** between runs.
+- [ ] Screen on, app in front for the whole run (leaving it can let Android kill the inference process, which counts as a death).
+- [ ] **Play off** for gate runs.
+
+**Runs: one model at a time, threads `2` then `4`**
+1. [ ] **S3a TTS:** *Run TTS: Kokoro en v0.19 (fp32)* with threads `2`, wait for "Finished", wait 2 min, set threads `4`, run again.
+2. [ ] Repeat step 1 for *Kokoro multi-lang v1.1 (int8)*, then for *Piper en_US amy low*.
+3. [ ] Once per voice, turn **Play** on and run with 2 threads to listen. Note any mispronounced or skipped words on issue #6.
+4. [ ] **S3b STT:** *Run STT: Streaming Zipformer en 20M* with threads `2`, then `4` (2 min apart); then the same for *Parakeet TDT 0.6B v2*. If Parakeet dies (likely an out-of-memory kill), that is a result, not a broken test.
+
+**Read the summary after each run**
+- [ ] Each model and thread count shows median and p95 RTF, peak memory (PSS, plus RSS for reference) and a verdict:
+  - `PASS`: median RTF within the gate (TTS ≤ 1.0, STT ≤ 0.7) and, for STT, peak PSS ≤ 600 MB.
+  - `FAIL`: RTF or memory above the gate, or the inference process died.
+  - `BORDERLINE [VERIFY]`: median passes but p95 doesn't, or (STT) PSS passes but RSS is above 600 MB. Repeat the run.
+  - `INCOMPLETE`: repeat that run.
+- [ ] The summary also prints the PRD 0.7 recommendation per gate (keep Kokoro / switch to Piper / no spoken replies; small streaming STT / Parakeet optional / push-to-talk with typed fallback).
+
+**Share**
+- [ ] Tap **Share all runs (CSV)**, **Share summary** and **Share exit reasons** (`exit_reasons.csv`). The transcripts are in the STT runs' `detail` column.
+- [ ] Post the TTS parts on issue **#6** and the STT parts on issue **#7**, with the phone model and anything unusual (heat, charging, a call during the run).
+- [ ] If the Galaxy A23 is available, repeat everything on it; the summary keeps the two phones apart.
 
 ## S4 — Tools and permissions (issue #8, branch `spike/S4-tools`)
 Full steps: `spikes/s4-tools/README.md` → "Owner test steps" on the S4 branch. Gate: each of the five actions on the shortcut path, 20 benchmark runs, **p95 < 300 ms** (SPEC §2–3). The real-LLM path is **not** part of this test yet; it waits for S2. The **Fake LLM path** switch stands in for it.
