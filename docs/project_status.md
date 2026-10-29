@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — Project subagents added in .claude/agents/ (spike-analyst, android-engineer, scope-guard, docs-keeper); CLAUDE.md §11 says when to use each and that delegation is announced to the owner. — Owner request.
 - 2026-10-29 — Base MVP avatar states fixed as idle (plus blink frame), thinking, speaking, confused. Generated from the vector master by tools/build_states.py. Resolves open question "which four emotion states" (overlay.md). — Owner approval of master; Claude build.
 - 2026-10-29 — Vector master v1 built by Claude instead of Codex (docs/design/character/master/). Hand-built layered SVG from the Gemini master; checked at 64 px. — Owner request.
 - 2026-10-29 — Forehead moon patch removed from Bibi's design; the signature is now the violet collar with the speech-bubble charm. 17 Gemini concept images approved (master = 01), except 15-in-context-phone (regenerate). Review in docs/design/bibi-character-gemini.md §6. — Owner decision and review.

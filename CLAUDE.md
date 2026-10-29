@@ -30,6 +30,7 @@ CLAUDE.md                   this file
 .mcp.json                   project MCP servers (context7, 21st); keys come from env
 .claude/settings.json       agent-skills plugin, MCP approval, graphify hooks
 .claude/skills/             graphify + Strix skills (pinned in skills-lock.json)
+.claude/agents/             project subagents (see §11)
 reference/
   Pip_PRD_Final.md          source PRD; Part 0 is binding
   Pip_Spike_Tracker.xlsx    spike measurements (source of truth for results)
@@ -113,6 +114,18 @@ Gate measurements also go in `reference/Pip_Spike_Tracker.xlsx`.
   - A `TODO` in code must cite an issue: `// TODO(#N): ...`.
 - **Pull Requests:** when a feature is complete and verified (tests pass, `/review` done, status and changelog updated), open a PR against `main` with `gh pr create`. Never merge without the owner's explicit confirmation.
 - **Commits:** small and focused, imperative subject line (≤ 72 chars), no secrets, no generated outputs. Never force-push to `main`. Never rewrite pushed history on shared branches without asking.
+
+## 11. Subagents (`.claude/agents/`)
+| Agent | Use for |
+|---|---|
+| `spike-analyst` | Device logs and benchmarks → gate verdicts, RESULTS.md, status |
+| `android-engineer` | Kotlin, Gradle, manifest and resource changes |
+| `scope-guard` | Read-only check of new work against PRD 0.8 before it starts |
+| `docs-keeper` | Status, changelog and feature docs at session end |
+| `agent-skills:code-reviewer` / `security-auditor` / `test-engineer` (plugin) | Review before a PR; security pass; test plans |
+
+- Before delegating, tell the owner **which agent** gets **which task**; report each result as it arrives. Run independent agents in parallel.
+- Agents follow this file and the git rules (§10); none commits to `main`.
 
 ## graphify
 
