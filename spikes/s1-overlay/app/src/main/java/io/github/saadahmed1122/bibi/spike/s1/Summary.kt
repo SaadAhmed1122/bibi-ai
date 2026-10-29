@@ -35,6 +35,20 @@ class Summary private constructor(
             null
         }
 
+    /**
+     * Battery-percent drain per mA of mean current for this run: [pctPerHourCoarse] / [meanCurrentMa].
+     * Only for runs of at least 60 min with a drop of at least [MIN_PCT_DROP] points (1 % steps are too
+     * coarse otherwise); null then. On a baseline run it converts a mA difference into %/h without
+     * trusting the rated capacity.
+     */
+    val pctPerMa: Double?
+        get() {
+            val drop = if (startPct != null && endPct != null) startPct - endPct else return null
+            val ma = meanCurrentMa ?: return null
+            val pctH = pctPerHourCoarse ?: return null
+            return if (minutes >= MIN_MINUTES && drop >= MIN_PCT_DROP && ma > 0.0) pctH / ma else null
+        }
+
     fun validityLine(): String =
         if (valid) "VALID for gate: yes" else "VALID for gate: no — ${invalidReasons.joinToString("; ")}"
 
@@ -48,6 +62,7 @@ class Summary private constructor(
             appendLine("Drain (current): ${f(pctPerHourFromCurrent)} %/h (at $CAPACITY_MAH mAh)")
             appendLine("Battery:         ${startPct ?: "?"}% → ${endPct ?: "?"}%")
             appendLine("Drain (pct):     ${f(pctPerHourCoarse)} %/h (1% steps; coarse)")
+            appendLine("pct_per_ma:      ${f(pctPerMa, 5)} (%/h per mA; needs ≥ 60 min and ≥ $MIN_PCT_DROP points drop)")
             appendLine("Avg fps (screen on): ${f(avgFpsScreenOn, 1)}")
             appendLine("Max PSS:         ${f(maxPssMb, 1)} MB")
             appendLine("Events:          ${events.entries.joinToString { "${it.key}=${it.value}" }.ifEmpty { "none" }}")
@@ -56,7 +71,11 @@ class Summary private constructor(
             appendLine(validityLine())
             appendLine()
             appendLine("Gate (SPEC.md §2): Bibi cost = mean current (Bibi run) − mean current (baseline run);")
-            append("3 %/h ≈ 150 mA on $CAPACITY_MAH mAh. Needs 60 min with no kill.")
+            appendLine("3 %/h ≈ 150 mA on $CAPACITY_MAH mAh. Needs 60 min with no kill.")
+            append(
+                "Relative cost: Bibi cost %/h ≈ (Bibi mA − baseline mA) × baseline pct_per_ma " +
+                    "(each run's mean current and pct_per_ma are printed per run; compare the two by hand).",
+            )
         }
     }
 
@@ -66,8 +85,20 @@ class Summary private constructor(
 
         const val MIN_MINUTES = 60.0
 
-        /** Event kinds (written by OverlayService) that mean the run was not one clean start. */
-        val RESTART_KINDS = setOf("restart", "restart_blocked", "start_blocked", "baseline_restart", "baseline_restart_blocked")
+        /** Minimum battery_pct drop for [pctPerMa]. */
+        const val MIN_PCT_DROP = 3
+
+        /**
+         * Event kinds (written by OverlayService) that mean the run was not one clean start.
+         * `start_blocked` is not here: it only goes to exit_reasons.csv, never to a run file.
+         */
+        val RESTART_KINDS = setOf("restart", "restart_blocked", "baseline_restart", "baseline_restart_blocked")
+
+        /** A run file's first row must be one of these, and its last row `stop`. */
+        val START_KINDS = setOf("start", "start_baseline")
+
+        /** User touches on Bibi; they change what is measured (toast, window moves). */
+        val TOUCH_KINDS = setOf("tap", "move")
 
         fun from(csv: String): Summary {
             val lines = csv.lineSequence().filter { it.isNotBlank() }.toList()
@@ -91,6 +122,11 @@ class Summary private constructor(
             if ("overlay_error" in kinds) reasons += "overlay window error"
             if (modes.size > 1) reasons += "mixed modes (${modes.joinToString("/")})"
             if ("hide" in kinds) reasons += "Bibi hidden during run"
+            val touches = kinds.filter { it in TOUCH_KINDS }.distinct()
+            if (touches.isNotEmpty()) reasons += "touched during run (${touches.joinToString("/")})"
+            if (kinds.firstOrNull() !in START_KINDS || kinds.lastOrNull() != "stop") {
+                reasons += "no clean stop (process died?)"
+            }
 
             return Summary(
                 mode = modes.lastOrNull() ?: "-",

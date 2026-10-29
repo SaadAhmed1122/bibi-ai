@@ -99,12 +99,14 @@ class OverlayService : Service() {
                 if (isRunning) {
                     // The mode can't change during a run. Re-post the same foreground notification
                     // to answer this startForegroundService() call; the requested mode is ignored.
+                    log.diagnostic("start_ignored", "running mode=${mode.logName} requested=${intent.getStringExtra(EXTRA_MODE)}")
                     startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
                     return START_STICKY
                 }
                 if (awaitingFirstDraw) {
                     // A restart is waiting for Bibi's first frame; the app is visible now, so promote
                     // the restarted run (its mode wins) and answer this startForegroundService() call.
+                    log.diagnostic("start_ignored", "pending_restart mode=${mode.logName} requested=${intent.getStringExtra(EXTRA_MODE)}")
                     promoteRestart("activity_start")
                     return if (isRunning) START_STICKY else START_NOT_STICKY
                 }
@@ -268,8 +270,10 @@ class OverlayService : Service() {
             windowManager = windowManager,
             params = params,
             onMoved = { x, y ->
+                // Called after a completed snap; a touch during a run makes it invalid (Summary).
                 prefs.x = x
                 prefs.y = y
+                log.event("move", "x=$x y=$y", screenOn, mode)
             },
             onTap = {
                 Toast.makeText(this, R.string.tap_hello, Toast.LENGTH_SHORT).show()
@@ -343,6 +347,8 @@ class OverlayService : Service() {
             sample()
             log.event("stop", "", screenOn, mode)
         }
+        // `stop` is the run's last row: later events (e.g. a removeView error) go to exit_reasons.csv.
+        log.endRun()
         handler.removeCallbacks(sampler)
         handler.removeCallbacks(promoteFallback)
         awaitingFirstDraw = false

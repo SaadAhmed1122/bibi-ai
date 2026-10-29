@@ -51,51 +51,75 @@ class SpikeLog(context: Context) {
     /** True if a run file was begun; false e.g. after an update from a build without per-run files. */
     val hasRun: Boolean get() = prefs.runFile != null
 
+    /**
+     * Ends the current run: clears [Prefs.runFile] and [Prefs.runId], so a late event (e.g. an
+     * overlay error from a window removal after `stop`) can't land in the finished run's file.
+     * [write] sends such events to exit_reasons.csv as `late_event` rows instead.
+     */
+    @Synchronized
+    fun endRun() {
+        prefs.runFile = null
+        prefs.runId = null
+    }
+
     fun sample(frames: Int, intervalMs: Long, screenOn: Boolean, mode: RunMode) {
         val fps = if (intervalMs > 0) frames * 1000.0 / intervalMs else 0.0
-        // PSS is costly to read, so only sample rows carry it.
-        write("sample", "", frames.toString(), "%.2f".format(Locale.US, fps), Debug.getPss().toString(), screenOn, mode)
+        // PSS is costly to read, so only sample rows carry it; [write] reads it after the battery values.
+        write("sample", "", frames.toString(), "%.2f".format(Locale.US, fps), { Debug.getPss().toString() }, screenOn, mode)
     }
 
     fun event(kind: String, detail: String, screenOn: Boolean, mode: RunMode) =
-        write(kind, detail, "", "", "", screenOn, mode)
+        write(kind, detail, "", "", null, screenOn, mode)
 
-    /** Appends a row to the current run file; does nothing if no run was begun. */
+    /**
+     * Appends a row to the current run file. With no current run (none begun, or [endRun] done), a
+     * sample is dropped and an event goes to exit_reasons.csv as a `late_event` diagnostic row.
+     * Battery values are read first, then [pssKb] (Debug.getPss() is slow and would skew them).
+     */
     @Synchronized
     private fun write(
         kind: String,
         detail: String,
         frames: String,
         fps: String,
-        pssKb: String,
+        pssKb: (() -> String)?,
         screenOn: Boolean,
         mode: RunMode,
     ) {
-        val file = prefs.runFile?.let { File(runsDir, it) } ?: return
+        val file = prefs.runFile?.let { File(runsDir, it) }
+        if (file == null) {
+            if (kind != "sample") diagnostic("late_event", "$kind $detail mode=${mode.logName}")
+            return
+        }
         val now = System.currentTimeMillis()
+        val capacity = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         val charge = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
         val current = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+        val charging = battery.isCharging
         // Sticky broadcast: a null receiver just returns the last ACTION_BATTERY_CHANGED intent.
         val batteryIntent = appContext.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val voltage = batteryExtra(batteryIntent, BatteryManager.EXTRA_VOLTAGE)
+        val temperature = batteryExtra(batteryIntent, BatteryManager.EXTRA_TEMPERATURE)
+        val pss = pssKb?.invoke() ?: ""
         val row = listOf(
             time.format(Date(now)),
             now.toString(),
             prefs.runId ?: "",
             kind,
             clean(detail),
-            battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY).toString(),
+            capacity.toString(),
             if (charge == Int.MIN_VALUE) "" else charge.toString(), // MIN_VALUE = not supported
             if (current == Int.MIN_VALUE) "" else current.toString(),
-            battery.isCharging.toString(),
+            charging.toString(),
             screenOn.toString(),
             power.currentThermalStatus.toString(),
             frames,
             fps,
-            pssKb,
+            pss,
             mode.calm.toString(),
             mode.logName,
-            batteryExtra(batteryIntent, BatteryManager.EXTRA_VOLTAGE),
-            batteryExtra(batteryIntent, BatteryManager.EXTRA_TEMPERATURE),
+            voltage,
+            temperature,
             systemSetting(Settings.System.SCREEN_BRIGHTNESS),
             systemSetting(Settings.System.SCREEN_BRIGHTNESS_MODE),
             power.isPowerSaveMode.toString(),

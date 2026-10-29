@@ -30,15 +30,15 @@ fun row(
     ).joinToString(",")
 }
 
-/** start, a sample every 10 s up to [minutes], stop; [tweak] may alter rows by index. */
-fun cleanRun(minutes: Int, tweak: (Int, Long) -> String? = { _, _ -> null }): String {
+/** start, a sample every 10 s up to [minutes], stop, battery 80 % down by [drop]; [tweak] may alter rows by index. */
+fun cleanRun(minutes: Int, drop: Int = 18, tweak: (Int, Long) -> String? = { _, _ -> null }): String {
     val rows = mutableListOf(HEADER, row(0, "start"))
     val n = minutes * 6
     for (i in 1..n) {
         val t = i * 10_000L
-        rows += tweak(i, t) ?: row(t, "sample", pct = 80 - (i * 18 / n))
+        rows += tweak(i, t) ?: row(t, "sample", pct = 80 - (i * drop / n))
     }
-    rows += row(n * 10_000L, "stop")
+    rows += row(n * 10_000L, "stop", pct = 80 - drop)
     return rows.joinToString("\n") + "\n"
 }
 
@@ -88,6 +88,28 @@ fun main() {
     val g = Summary.from(cleanRun(60) { i, t -> if (i == 50) row(t, "overlay_error") else null })
     check("g) overlay_error invalid, names overlay window error",
         !g.valid && g.validityLine().contains("overlay window error"), g.validityLine())
+
+    val h = Summary.from(cleanRun(60).trimEnd().lines().dropLast(1).joinToString("\n"))
+    check("h) 60-min run without final stop invalid, no clean stop",
+        !h.valid && h.validityLine().contains("no clean stop (process died?)"), h.validityLine())
+
+    val i = Summary.from(cleanRun(60) { n, t -> if (n == 120) row(t, "sample", mode = "baseline") else null })
+    check("i) mixed modes invalid", !i.valid && i.validityLine().contains("mixed modes"), i.validityLine())
+
+    val j = Summary.from(cleanRun(60) { n, t -> if (n == 90) row(t, "hide") else null })
+    check("j) hide event invalid", !j.valid && j.validityLine().contains("hidden"), j.validityLine())
+
+    for (kind in listOf("tap", "move")) {
+        val k = Summary.from(cleanRun(60) { n, t -> if (n == 150) row(t, kind) else null })
+        check("k) $kind invalid, touched during run",
+            !k.valid && k.validityLine().contains("touched during run"), k.validityLine())
+    }
+
+    // cleanRun(60): 80 % -> 62 % in 60 min = 18 %/h at 900 mA -> 0.02 %/h per mA.
+    check("pct_per_ma computed for 60-min run", abs(a.pctPerMa!! - 0.02) < 1e-6, "pct_per_ma=${a.pctPerMa}")
+    check("pct_per_ma n/a under 60 min", b.pctPerMa == null, "pct_per_ma=${b.pctPerMa}")
+    val flat = Summary.from(cleanRun(60, drop = 2))
+    check("pct_per_ma n/a with < 3 points drop", flat.pctPerMa == null, "pct_per_ma=${flat.pctPerMa} end=${flat.endPct}")
 
     println(a.describe())
     println("ALL PASS")

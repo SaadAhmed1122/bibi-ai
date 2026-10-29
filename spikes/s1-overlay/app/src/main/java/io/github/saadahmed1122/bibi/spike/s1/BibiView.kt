@@ -64,7 +64,10 @@ class BibiView(
     private val frameIntervalMs: Long get() = if (calm) 500L else 1000L / 12
     private val schedule = FrameSchedule(frameIntervalNanos(calm = false))
 
-    /** One vsync period; read from the display when the clock starts, 60 Hz until then. */
+    /**
+     * One vsync period, read from the display in [onAttachedToWindow] ([getDisplay] is null before
+     * attach); 60 Hz until then.
+     */
     private var vsyncNanos = 1_000_000_000L / 60
 
     init {
@@ -80,7 +83,7 @@ class BibiView(
         running = run
         val choreographer = Choreographer.getInstance()
         if (run) {
-            display?.refreshRate?.takeIf { it > 0f }?.let { vsyncNanos = (1e9f / it).toLong() }
+            updateVsync() // no-op before attach; onAttachedToWindow reads it then
             schedule.reset()
             choreographer.postFrameCallback(this)
         } else {
@@ -100,6 +103,15 @@ class BibiView(
         }
         // Runs on the first vsync after the delay; FrameSchedule subtracts one vsync so that is the due one.
         Choreographer.getInstance().postFrameCallbackDelayed(this, schedule.delayMs)
+    }
+
+    private fun updateVsync() {
+        display?.refreshRate?.takeIf { it > 0f }?.let { vsyncNanos = (1e9f / it).toLong() }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        updateVsync()
     }
 
     private fun scheduleNextBlink(fromNanos: Long) {
