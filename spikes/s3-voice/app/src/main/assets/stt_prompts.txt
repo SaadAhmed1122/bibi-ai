@@ -1,0 +1,5 @@
+# S3b STT clips the owner records once in the app and re-uses for every model: id|text to read.
+# The text is stored as the reference next to each transcript; accuracy is judged by hand.
+clip1|Set a timer for ten minutes.
+clip2|What is the weather going to be like tomorrow morning, and should I take an umbrella?
+clip3|Remind me to buy milk, bread and eggs on the way home, then open my music app and play something calm while I cook dinner tonight.
