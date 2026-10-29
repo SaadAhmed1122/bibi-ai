@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — Forehead moon patch removed from Bibi's design; the signature is now the violet collar with the speech-bubble charm. 17 Gemini concept images approved (master = 01), except 15-in-context-phone (regenerate). Review in docs/design/bibi-character-gemini.md §6. — Owner decision and review.
 - 2026-10-29 — Character changed to a cute hand-drawn cartoon kitten (orange tabby, cream chest, crescent-moon forehead patch, violet collar with a speech-bubble charm that glows to show state). Nothing robotic, so the assistant feels safe. Supersedes the mochi-puff and seed directions. The owner's reference image is used for mood only, not copied. — Owner request.
 - 2026-10-29 — Character direction changed to a fluffy mochi puff (lavender-white plush fur, squashy mochi body) with three AI signatures: glossy screen-face with glowing cyan eyes, glowing spark tuft that shows state, mitten paws that hold tools. Supersedes the 2026-10-28 seed direction. In-app art uses stylized fluff (scalloped outline), not rendered fur, to stay inside PRD §17.5 budgets. — Owner request.
 - 2026-10-28 — Character direction: the seed concept, restyled as a tech helper (pearl shell, indigo face panel, cyan eyes, glowing sprout that shows state; violet/amber accents; no green or health cues). Brief and Gemini prompts in docs/design/bibi-character-gemini.md. — Owner feedback.

@@ -16,10 +16,9 @@ These prompts are for **Gemini image generation**: one prompt → **one image** 
 **Why a cat:** a familiar, soft animal feels safe and non-threatening, and lowers the "talking to a machine" anxiety. It also fits overlay behaviors naturally (PRD §17.3): sitting on the screen edge, napping in quiet hours, stretching, peeking. Bibi is still always **disclosed as an AI** in the app (PRD §17.7, FR-188). It never claims to be a real pet or to have real feelings.
 
 ### What makes Bibi recognizable (not just "a cat")
-Cat mascots are common, so Bibi gets three signature details:
+Cat mascots are common, so Bibi gets two signature details:
 1. **Chat-bubble charm:** a small round charm shaped like a **speech bubble** hangs from its collar. It **glows softly** to show what Bibi is doing. It's the only "assistant" hint, and it's subtle and cute, not techy.
-2. **Signature marking:** a small cream **crescent-moon patch** on the forehead between the ears.
-3. **Violet collar:** a soft violet collar (the brand color) against warm orange fur.
+2. **Violet collar:** a soft violet collar (the brand color) against warm orange fur.
 
 | Part | Design | Why |
 |---|---|---|
@@ -27,7 +26,6 @@ Cat mascots are common, so Bibi gets three signature details:
 | Fur | Warm orange (`#F4A54A`) with darker orange tabby stripes (`#E07B2A`), cream chest, muzzle and paws (`#FFF4E0`) | Warm, friendly, close to the reference mood |
 | Face | Big round **dark-brown eyes** (`#4A1E14`) with two white highlights each, small pink nose (`#F2A7A0`), small "w" mouth, a few thin whiskers | Gentle and trustworthy; no glowing or screen eyes |
 | Ears | Large triangular ears with pink insides | Very expressive: up when listening, down when sorry or sleepy |
-| Forehead | Cream crescent-moon patch | Signature marking |
 | Collar | Soft violet (`#7C5CFF`) with a **chat-bubble charm** | Brand color plus the assistant cue |
 | Tail | Striped, curled; very expressive | Shows state: question-mark curl when confused, wraps around the body when sleeping |
 | Paws | Cream mitten paws | Can hold small items (stopwatch, flashlight, card) |
@@ -39,7 +37,7 @@ Cat mascots are common, so Bibi gets three signature details:
 |---|---|---|
 | Fur | Warm orange | `#F4A54A` |
 | Stripes | Deep orange | `#E07B2A` |
-| Chest, muzzle, paws, moon patch | Cream | `#FFF4E0` |
+| Chest, muzzle, paws | Cream | `#FFF4E0` |
 | Eyes | Dark brown | `#4A1E14` |
 | Nose, inner ears | Soft pink | `#F2A7A0` |
 | Outline | Warm brown | `#5A2E1E` |
@@ -69,9 +67,9 @@ Cat mascots are common, so Bibi gets three signature details:
 
 1. Paste **Prompt A (style anchor)** plus **Prompt 1 (master)**. Generate several times and pick the best one. That image becomes **Bibi's reference**.
 2. For every later prompt, **attach Bibi's master image** (not the original reference cat) and start with:
-   `Use the attached character exactly — same kitten, fur colors, stripes, crescent-moon forehead patch, violet collar with chat-bubble charm, eyes and proportions. Change only what is described below.`
+   `Use the attached character exactly — same kitten, fur colors, stripes, violet collar with chat-bubble charm, eyes and proportions. Change only what is described below.`
 3. **One prompt per message, one image per prompt.** If Gemini returns a grid or several characters, reply: `Only one character, one single image, no panels, no grid.`
-4. Save each approved image as `design/character/gemini/<nn>-<state>.png` so Codex can trace it later.
+4. Save each approved image as `docs/design/character/gemini/<nn>-<state>.jpeg` so Codex can trace it later.
 5. Treat Gemini output as **concept art**. Final in-app assets are vector (see the Codex prompts). Check Gemini's terms for commercial use of generated images before using them in the store listing [VERIFY].
 
 ---
@@ -81,7 +79,7 @@ Cat mascots are common, so Bibi gets three signature details:
 ### A. Style anchor (put at the start of every prompt)
 ```
 Style: cute hand-drawn cartoon illustration, clean warm-brown outlines with slightly varied line weight, soft flat colors with gentle cel shading, cozy and friendly, high readability at small size. Single character only, centered, full body, plain white background, soft light-beige oval shadow under the character. No text, no letters, no logos, no watermark, no frame, no grid, no multiple panels, no extra characters.
-Character "Bibi": a small cute kitten with a big round head, warm orange fur (#F4A54A) with darker orange tabby stripes (#E07B2A), cream chest, muzzle and paws (#FFF4E0), a small cream crescent-moon shaped patch on its forehead, big round dark-brown eyes with two white highlights each, small pink nose, small smiling "w" mouth, thin whiskers, large ears with pink insides, a striped curled tail, and a soft violet collar (#7C5CFF) with a small round charm shaped like a speech bubble that glows softly.
+Character "Bibi": a small cute kitten with a big round head, warm orange fur (#F4A54A) with darker orange tabby stripes (#E07B2A), cream chest, muzzle and paws (#FFF4E0), no forehead marking, big round dark-brown eyes with two white highlights each, small pink nose, small smiling "w" mouth, thin whiskers, large ears with pink insides, a striped curled tail, and a soft violet collar (#7C5CFF) with a small round charm shaped like a speech bubble that glows softly.
 Avoid: robots, screens, antennas, glowing eyes, sci-fi elements, sharp teeth, claws, realistic anatomy, sad or crying expressions, heart-shaped pendant.
 ```
 
@@ -164,7 +162,7 @@ Same kitten sitting, turned 3/4 to the right, showing the tail, the collar and c
 
 ### 16. App icon concept
 ```
-[Attach Bibi master] ... App icon concept: only Bibi's face (big eyes, crescent-moon forehead patch, ears, small smile) centered on a rounded-square violet (#7C5CFF) background, bold and simple so it reads at 48 px. No text.
+[Attach Bibi master] ... App icon concept: only Bibi's face (big eyes, ears, small smile, violet collar with the speech-bubble charm) centered on a rounded-square violet (#7C5CFF) background, bold and simple so it reads at 48 px. No text.
 ```
 
 ### 17. Silhouette check
@@ -186,10 +184,40 @@ The in-app Bibi must fit the overlay budget (≤ 4 MB GPU memory, 12/24 fps, PRD
 
 ## 5. Review checklist (for each image)
 - [ ] Feels **warm, safe and friendly** in under a second, with nothing robotic.
-- [ ] Recognizably *Bibi*, not a generic cat: crescent-moon patch, violet collar and chat-bubble charm all visible.
+- [ ] Recognizably *Bibi*, not a generic cat: violet collar and speech-bubble charm visible.
 - [ ] Same proportions, colors and markings as Bibi's master image.
 - [ ] Still recognizable at 64 px (shrink the image and look).
 - [ ] The state is clear from ears, tail and pose, not only from the charm color.
 - [ ] No text, logos, extra characters, sharp teeth or claws.
 - [ ] Friendly, never sad, needy, or guilt-inducing (PRD §17.2.3, §17.7).
 - [ ] Not a copy of the reference image's exact markings or pendant.
+
+---
+
+## 6. Approved concept set (reviewed 2026-10-29)
+
+17 Gemini images are in [`docs/design/character/gemini/`](character/gemini/), named by state. The owner removed the forehead moon patch (none of the images have it).
+
+| # | File | Verdict | Notes |
+|---|---|---|---|
+| 01 | `01-master.jpeg` | ✅ Reference | Warm, safe, nothing robotic. Gold speech-bubble charm visible. Still readable at 64 px. |
+| 02 | `02-three-quarter.jpeg` | ⚠️ Usable | Only a slight turn. Fine for the animator, but a stronger 3/4 turn would show the tail and ears better. |
+| 03 | `03-idle-slow-blink.jpeg` | ✅ | |
+| 04 | `04-listening.jpeg` | ✅ | Light-blue charm. Ears could be perkier. |
+| 05 | `05-thinking.jpeg` | ✅ | Paw to chin, violet dots, violet charm. |
+| 06 | `06-speaking.jpeg` | ✅ | |
+| 07 | `07-task-timer.jpeg` | ✅ | The stopwatch is held in one paw, not both. Fine. |
+| 08 | `08-task-flashlight.jpeg` | ✅ | |
+| 09 | `09-task-open-app.jpeg` | ✅ | |
+| 10 | `10-done.jpeg` | ✅ | Tail straight up, sparkles. |
+| 11 | `11-confused.jpeg` | ✅ | Eyebrow up, tail curl. The charm is a dark violet ball, not a speech bubble; it reads as a bell [regenerate optional]. |
+| 12 | `12-needs-confirmation.jpeg` | ✅ | The card is held in one paw. |
+| 13 | `13-sleeping.jpeg` | ✅ | |
+| 14 | `14-being-dragged.jpeg` | ✅ | |
+| 15 | `15-in-context-phone.jpeg` | ❌ Regenerate | Bibi is blurred or garbled, and there is a grey bar on the right edge. |
+| 16 | `16-app-icon.jpeg` | ⚠️ Usable | Good face. The charm sticks out below the icon shape; keep it inside the safe zone for an adaptive icon. |
+| 17 | `17-silhouette.jpeg` | ✅ | Ears, head and tail read clearly. |
+
+**Consistency:** very good. Same colors, proportions, outline and collar across the set.
+**Distinctiveness:** without the moon patch, Bibi's only signature is the violet collar with the speech-bubble charm. That's fine for the app, but it's a fairly common "orange tabby kitten" look in stores. Keep the charm visible in every image and the icon [VERIFY against similar Play Store mascots].
+**Repo size:** the 17 images are 2048 px JPEGs (~22 MB). Codex only needs 01 and 02 at full size. Later concept images should be exported at 1024 px.

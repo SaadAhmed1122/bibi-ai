@@ -23,7 +23,7 @@ Design principles (non-negotiable):
 - Accessibility: never use color alone to show emotion. Each state also differs in shape or pose. Contrast ≥ 4.5:1 for any text.
 - Performance: sprite atlas ≤ 4 MB GPU memory; idle animation 12 fps, interaction 24 fps, Calm mode ≤ 2 fps.
 - It is always clearly an AI helper: no realistic human features, no romantic styling.
-- Character: Bibi is a small sitting kitten with a big round head: warm orange fur (#F4A54A) with tabby stripes (#E07B2A), cream chest/muzzle/paws (#FFF4E0), a cream crescent-moon patch on the forehead, big dark-brown eyes (#4A1E14) with white highlights, pink nose and inner ears (#F2A7A0), a striped curled tail, and a violet collar (#7C5CFF) with a speech-bubble charm whose soft glow shows state (gold idle, light blue listening, violet thinking, amber doing a task). Warm-brown hand-drawn outline (#5A2E1E). No robot, screen, antenna or glowing-eye elements; no sharp teeth or claws. Suggest fur with a few line strokes, never per-hair detail.
+- Character: Bibi is a small sitting kitten with a big round head: warm orange fur (#F4A54A) with tabby stripes (#E07B2A), cream chest/muzzle/paws (#FFF4E0), no forehead marking, big dark-brown eyes (#4A1E14) with white highlights, pink nose and inner ears (#F2A7A0), a striped curled tail, and a violet collar (#7C5CFF) with a speech-bubble charm whose soft glow shows state (gold idle, light blue listening, violet thinking, amber doing a task). Warm-brown hand-drawn outline (#5A2E1E). No robot, screen, antenna or glowing-eye elements; no sharp teeth or claws. Suggest fur with a few line strokes, never per-hair detail.
 Do not add network calls, analytics, or third-party asset sources. All output must be original and license-clean.
 ```
 
@@ -32,10 +32,10 @@ Do not add network calls, analytics, or third-party asset sources. All output mu
 ## 1. Master character in vector (from the approved Gemini reference)
 
 ```
-Using the shared context, recreate Bibi as a hand-editable SVG from the approved concept image design/character/gemini/01-master.png (and 02-three-quarter.png for depth).
+Using the shared context, recreate Bibi as a hand-editable SVG from the approved concept image docs/design/character/gemini/01-master.jpeg (and 02-three-quarter.jpeg for depth).
 Produce in design/character/master/:
 - front_neutral.svg (viewBox 0 0 256 256, centered, 16 px padding, anchor bottom-center at 128,240)
-- Separate named groups/layers: body, stripes, chest, head, ear-left, ear-right, eye-left, eye-right, eyelids (hidden by default), nose, mouth, whiskers, moon-patch, collar, charm, charm-glow, paw-left, paw-right, tail, ground-shadow, outline. The animator moves ears, eyes, tail and paws independently; the tail needs 3–4 segments so it can curl.
+- Separate named groups/layers: body, stripes, chest, head, ear-left, ear-right, eye-left, eye-right, eyelids (hidden by default), nose, mouth, whiskers, collar, charm, charm-glow, paw-left, paw-right, tail, ground-shadow, outline. The animator moves ears, eyes, tail and paws independently; the tail needs 3–4 segments so it can curl.
 - silhouette.svg (single-color fill, to check readability)
 - palette.json with the roles and hex values from the shared context
 - 64x64 and 128x128 preview PNGs rendered via a small Node script using sharp or resvg-js (script in tools/, not in the asset folder)
@@ -52,7 +52,7 @@ Use the Gemini prompts in [bibi-character-gemini.md](bibi-character-gemini.md): 
 ## 2. Expression and state set
 
 ```
-Using the shared context and design/character/master/front_neutral.svg (keep its layer names), create the state set as SVGs in design/character/states/. Match the approved Gemini state images in design/character/gemini/ where they exist.
+Using the shared context and design/character/master/front_neutral.svg (keep its layer names), create the state set as SVGs in design/character/states/. Match the approved Gemini state images in docs/design/character/gemini/ where they exist.
 Base MVP states (exactly these four first):
 1. idle: relaxed, eyes open, slight smile
 2. thinking: head tilted, eyes looking up-left, three small thought dots
