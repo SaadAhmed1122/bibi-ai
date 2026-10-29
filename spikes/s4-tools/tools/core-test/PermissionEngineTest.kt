@@ -63,6 +63,11 @@ fun permissionEngineTests() {
     check("open_app summary shows resolved target", appReq.summary.contains("com.google.android.apps.maps")) { appReq.summary }
     checkEq("deadline = now + 30 s", now + 30_000, dialReq.deadlineMs)
 
+    // The policy-table calls above left unanswered requests: once their deadline passes they all expire.
+    val leftOver = engine.pendingCount()
+    now += 30_000
+    checkEq("expire clears every unanswered request", leftOver, engine.expire().size)
+
     // Lifecycle: confirm within time → execute once.
     val r1 = (engine.evaluate(DIAL, typed) as Decision.NeedsConfirmation).request
     now += 5_000
