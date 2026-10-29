@@ -54,6 +54,7 @@ Notes on the vivo Y17s:
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 
 ## Decisions
+- 2026-10-29 — Spikes S2, S3a, S3b, S4 (#5–#8) run in parallel with S1 (#4) as throwaway apps under spikes/<name>/; no P1 code; P1 gate (S1+S2 pass or 0.5 rule) unchanged; S4 dial uses ACTION_DIAL with a literal number, no contacts, treated as Sensitive until open item 8 is decided. — Overrides CLAUDE.md §4 sequential order; PRD 0.7 gates only P1. — Owner decision.
 - 2026-10-29 — Added `repo-keeper` subagent for all git/GitHub work under CLAUDE.md §10 (REST-only GitHub API in cloud sessions; never merges or force-pushes main). — Owner request.
 - 2026-10-29 — Project subagents added in .claude/agents/ (spike-analyst, android-engineer, scope-guard, docs-keeper); CLAUDE.md §11 says when to use each and that delegation is announced to the owner. — Owner request.
 - 2026-10-29 — Base MVP avatar states fixed as idle (plus blink frame), thinking, speaking, confused. Generated from the vector master by tools/build_states.py. Resolves open question "which four emotion states" (overlay.md). — Owner approval of master; Claude build.
@@ -68,6 +69,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-29 (branch `docs/testing-guide`): `TESTING.md` added with the S1 owner protocol; S2 (#5), S3a/S3b (#6, #7) and S4 (#8) sections wait for each spike's "Owner test steps". Next step: when a spike app lands on its branch, copy its owner steps into `TESTING.md` and set its row to ready.
+
 2026-10-28: scaffold committed ("Scaffold project structure and planning docs"). No Gradle project or app code exists yet. The spike tracker spreadsheet is still missing from `reference/`.
 
 ## Next step
