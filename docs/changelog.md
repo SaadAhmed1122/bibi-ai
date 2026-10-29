@@ -17,3 +17,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Changed
 - Renamed the product from the working name "Pip" to **Bibi AI** across all docs, config, and the repo folder (`bibi-ai/`). The PRD in `reference/` is unchanged.
+- Design: chose the seed character, restyled so it reads as an AI phone helper rather than a plant or health app. New `docs/design/bibi-character-gemini.md` (brief, palette, one-image-per-prompt Gemini prompts). `codex-design-prompts.md` now builds the vector master from the approved Gemini reference.
+- Design: character changed to a fluffy mochi puff with an AI screen-face, glowing spark tuft and mitten paws. `docs/design/bibi-character-gemini.md` re-created with the new brief and 17 one-image Gemini prompts; Codex prompts updated to match (layer names, stylized fur).
+- Design: Bibi is now a cute cartoon kitten (no robot or AI look). `docs/design/bibi-character-gemini.md` rewritten with the cat brief, palette, state table (ears, tail, pose, charm glow), and 17 one-image Gemini prompts; Codex prompts updated (cat layer names, tail segments).
+- Design: 17 Gemini concept images added under `docs/design/character/gemini/`, renamed by state; review table added to the character brief. Forehead moon patch removed at the owner's request.
+- Design: Bibi vector master v1 (`docs/design/character/master/`): layered `front_neutral.svg`, `silhouette.svg`, `palette.json` sampled from the Gemini master, 64/128/512 px previews, README with layers and known differences.

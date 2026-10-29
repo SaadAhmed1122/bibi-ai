@@ -1,8 +1,9 @@
 # Design prompts for Codex (character + UI)
 
-These are copy-paste prompts for generating Bibi's character art and UI design system with Codex (or another coding agent).
+These are copy-paste prompts for generating Bibi's character art and UI design system with Codex or Claude (any coding agent).
 - **Name:** the app is **Bibi AI** and the character is **Bibi** (owner decision, 2026-10-28).
 - **Grounded in the PRD:** §17 (avatar, emotions), §20 (UX, motion, tone, accessibility).
+- **Character:** Bibi is a cute hand-drawn cartoon kitten, deliberately not robotic, so the assistant feels safe and comfortable (owner decision, 2026-10-29). The character brief, palette, and Gemini image prompts are in [bibi-character-gemini.md](bibi-character-gemini.md). Make the concept art there first, then use these prompts to turn the approved images into vector assets.
 - **Vector first.** Codex produces code, so the prompts ask for SVG, Compose `ImageVector`, and Canvas output that a coding agent can actually make and that you can edit by hand. Prompt 1b is a plain-language version for an image model if you'd rather explore raster concept art first.
 - **Engine-agnostic.** The avatar tech is still [OPEN] (sprite sheet or Rive, OD-03), so these prompts produce assets either path can use.
 
@@ -22,42 +23,37 @@ Design principles (non-negotiable):
 - Accessibility: never use color alone to show emotion. Each state also differs in shape or pose. Contrast ≥ 4.5:1 for any text.
 - Performance: sprite atlas ≤ 4 MB GPU memory; idle animation 12 fps, interaction 24 fps, Calm mode ≤ 2 fps.
 - It is always clearly an AI helper: no realistic human features, no romantic styling.
+- Character: Bibi is a small sitting kitten with a big round head: warm orange fur (#F4A54A) with tabby stripes (#E07B2A), cream chest/muzzle/paws (#FFF4E0), no forehead marking, big dark-brown eyes (#4A1E14) with white highlights, pink nose and inner ears (#F2A7A0), a striped curled tail, and a violet collar (#7C5CFF) with a speech-bubble charm whose soft glow shows state (gold idle, light blue listening, violet thinking, amber doing a task). Warm-brown hand-drawn outline (#5A2E1E). No robot, screen, antenna or glowing-eye elements; no sharp teeth or claws. Suggest fur with a few line strokes, never per-hair detail.
 Do not add network calls, analytics, or third-party asset sources. All output must be original and license-clean.
 ```
 
 ---
 
-## 1. Character concept sheet (3 directions)
+## 1. Master character in vector (from the approved Gemini reference)
 
 ```
-Using the shared context, create three distinct character directions for Bibi as hand-editable SVG files in design/character/concepts/:
-A) "Seed sprite": a round seed-like body with a tiny leaf sprout on top; the leaf droops when confused and perks up when happy.
-B) "Mochi blob": a soft squishy rounded-square body that squashes when dragged and stretches when it jumps.
-C) "Pocket bot": a small rounded robot with a single antenna light and a screen-face for eyes.
-For each direction produce:
-- front_neutral.svg (viewBox 0 0 256 256, centered, 16 px padding)
+Using the shared context, recreate Bibi as a hand-editable SVG from the approved concept image docs/design/character/gemini/01-master.jpeg (and 02-three-quarter.jpeg for depth).
+Produce in docs/design/character/master/:
+(Done 2026-10-29 by Claude: v1 is in docs/design/character/master/.)
+- front_neutral.svg (viewBox 0 0 256 256, centered, 16 px padding, anchor bottom-center at 128,240)
+- Separate named groups/layers: body, stripes, chest, head, ear-left, ear-right, eye-left, eye-right, eyelids (hidden by default), nose, mouth, whiskers, collar, charm, charm-glow, paw-left, paw-right, tail, ground-shadow, outline. The animator moves ears, eyes, tail and paws independently; the tail needs 3–4 segments so it can curl.
 - silhouette.svg (single-color fill, to check readability)
-- palette.json (4 body colors + outline + accent, hex values, each labeled with its role)
-- a 64x64 preview PNG rendered from the SVG via a small Node script using sharp or resvg-js (put the script in tools/, not in the asset folder).
-Then write design/character/concepts/README.md comparing the three on: readability at 64 px, ease of animation, expressiveness of eyes/mouth, and how distinct the silhouette is. Recommend one, but do not delete the others.
-Use only flat shapes and simple gradients (no filters heavier than a soft drop shadow) so the art can later be ported to Compose ImageVector or Rive.
+- palette.json with the roles and hex values from the shared context
+- 64x64 and 128x128 preview PNGs rendered via a small Node script using sharp or resvg-js (script in tools/, not in the asset folder)
+Use only flat shapes and simple gradients (no filters heavier than a soft glow) so the art can be ported to Compose ImageVector or Rive.
+Write docs/design/character/master/README.md noting any place where the vector differs from the Gemini image, and check readability at 64 px.
 ```
 
-### 1b. Image-model version (optional, for raster exploration)
+### 1b. Concept art
 
-```
-Character design sheet for a tiny cute AI companion mascot called Bibi, for a phone app.
-Three variations side by side: a round seed sprite with a small leaf on its head; a soft squishy mochi blob; a small rounded robot with one antenna light.
-Big friendly eyes, simple rounded silhouette, flat vector style, 4 colors plus a thin dark outline, soft pastel palette with one warm accent.
-Front view, neutral happy expression, plain white background, no text, no humans, no brand logos.
-```
+Use the Gemini prompts in [bibi-character-gemini.md](bibi-character-gemini.md): one prompt per image, with the master image attached as a reference for every state.
 
 ---
 
 ## 2. Expression and state set
 
 ```
-Using the shared context and the chosen direction in design/character/concepts/<chosen>/, create the state set as SVGs in design/character/states/.
+Using the shared context and docs/design/character/master/front_neutral.svg (keep its layer names), create the state set as SVGs in docs/design/character/states/. Match the approved Gemini state images in docs/design/character/gemini/ where they exist.
 Base MVP states (exactly these four first):
 1. idle: relaxed, eyes open, slight smile
 2. thinking: head tilted, eyes looking up-left, three small thought dots
@@ -68,7 +64,7 @@ listening (eyes wide, soft ring), happy (smile + small bounce pose), excited, sl
 Rules:
 - Same viewBox, anchor point (feet/bottom-center at 128,240) and outline weight across all files, so frames can be swapped without jitter.
 - Each state must be distinguishable in grayscale (check with silhouette exports).
-- Write design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
+- Write docs/design/character/states/states.json listing each state with: id, file(s), group (Ambient/Reaction/Interaction/Status/Direct manipulation per PRD §17.1.2), and a one-line accessibility description (e.g. "Thinking: Bibi tilts its head with thought dots").
 ```
 
 ---
@@ -84,7 +80,7 @@ Loops:
 - confused: 1 s one-shot, "?" pops in with overshoot, then holds.
 - drag: squash on grab, stretch on release (spring: stiffness 400, damping ratio 0.65).
 Output:
-- design/character/anim/<loop>/frame_###.svg
+- docs/design/character/anim/<loop>/frame_###.svg
 - tools/build_atlas.(js|py): renders frames at 1x/2x/3x (base 96 px), packs them into power-of-two PNG atlases with premultiplied alpha, and writes atlas.json (frame rects, durations, anchor).
 - Report the total atlas memory (width*height*4 bytes) and fail the build if it exceeds 4 MB.
 Also produce a Calm-mode variant: static poses only, a blink every 8 s, no particles.
@@ -111,7 +107,7 @@ Include a debug overlay showing current fps and frame time, and a JankStats hook
 
 ```
 Create a Material 3 design system for Bibi in a module named core/designsystem (Kotlin, Compose).
-Inputs: the chosen character palette.json.
+Inputs: docs/design/character/master/palette.json. Use violet #7C5CFF as the seed color; cyan and amber are accents.
 Deliver:
 - Color: light and dark ColorSchemes generated from the character's main color as the seed (tonal palettes), plus dynamic color support (Android 12+) with the brand scheme as the fallback. Keep one "character accent" color constant across dynamic color so Bibi stays recognizable.
 - Verify contrast ≥ 4.5:1 for text roles. Write a unit test that computes the contrast ratios and fails below the threshold.
