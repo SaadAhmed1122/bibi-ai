@@ -21,7 +21,14 @@ Can a foreground service keep an animated Bibi floating over other apps on our f
 - **Threshold:** 3 %/h of a 5000 mAh battery ≈ **150 mA**. The 5000 mAh figure is the vivo Y17s rated capacity from GSMArena [VERIFY capacity]; the app converts with %/h = mA ÷ 5000 × 100.
 - **Percent-based drain is secondary.** `battery_pct` moves in 1 % steps, so over 60 min it is only accurate to about ±1–2 %/h, too coarse for a 3 %/h gate.
 - **The charge counter is not used:** on the vivo it is derived from the percentage ([RESULTS.md](results/RESULTS.md)).
-- **Checkpoint A finding [VERIFY]:** the 53-min vivo Calm log gives 18.6 %/h from current (mean 928 mA at 5000 mAh) but 15.8 %/h from percent steps. Either `current_ua` is scaled differently on this device or the usable capacity isn't 5000 mAh. Both runs of a comparison come from the same phone and the same counter, so the **delta** still holds; the absolute %/h figures don't.
+- **Checkpoint A finding [VERIFY]:** the 53-min vivo Calm log gives 18.6 %/h from current (mean 928 mA at 5000 mAh) but 15.8 %/h from percent steps. Either `current_ua` is scaled differently on this device or the usable capacity isn't 5000 mAh. Both runs of a comparison come from the same phone and the same counter, so the **delta** in mA is consistent within the device, but converting it to %/h at 5000 mAh may be off by about 15 % [VERIFY].
+- **`pct_per_ma`:** for every run of ≥ 60 min the summary also reports `pct_per_ma` = percent-based drain (%/h) ÷ mean current (mA). It calibrates this phone's current reading against its own percentage, without assuming the capacity.
+
+**Gate decision uses two checks:**
+1. **Absolute:** Bibi mean mA − baseline mean mA ≤ **150 mA**.
+2. **Relative:** Bibi cost %/h ≈ (Bibi mean mA − baseline mean mA) × the **baseline run's** `pct_per_ma` ≤ **3 %/h**.
+
+If both pass, the battery check passes; if both fail, it fails. **If they disagree, record both numbers and mark the battery gate `[VERIFY]`, not pass**, until the cause (current scaling or capacity) is resolved.
 
 **If it fails:** Bubble/Edge mode only, lower frame rate, calm mode as the default (PRD 0.7). The decision is recorded in `docs/project_status.md`.
 
@@ -56,6 +63,8 @@ Can a foreground service keep an animated Bibi floating over other apps on our f
   - an overlay window error
   - mixed modes in one file
   - Bibi hidden during the run
+  - Bibi touched (tap or drag) during the run
+  - no clean stop (the run didn't end with *Stop*, so the process may have died)
 
 ## 4. Plan (one commit per task)
 1. Gradle project skeleton (AGP 9.0.1 with built-in Kotlin, Gradle 9.1.0, compileSdk/targetSdk 36, minSdk 34, no other dependencies).
@@ -71,18 +80,29 @@ v2 (fixed run modes, per-run logs, conditions, mean-current summary, restart and
 ## 5. Test protocol (owner runs on the device)
 Do each run on **vivo Y17s** (and Galaxy A23 if available). Rebuild and install the current app first.
 
-**Run order (alternating, 60 min each):**
+**Run order (alternating, about 61 min each):**
 1. **Baseline:** *Start baseline (no Bibi)*.
 2. **Bibi 12:** *Start Bibi 12 fps*.
 3. **Baseline:** *Start baseline (no Bibi)* again.
 4. **Bibi Calm:** *Start Bibi Calm 2 fps*.
 
-Each run starts within **±5 % battery** of the others, and the battery stays between **90 % and 40 %** for every run. If a run would start outside that window, charge first and start the sequence again. Press *Stop* after 60 min (the summary needs ≥ 60.0 min to read valid). Comparing each Bibi run with the baseline next to it cancels slow drift (battery level, temperature).
+The runs don't have to be back to back; spread them over a day or two. At about 16 %/h with the screen on ([RESULTS.md](results/RESULTS.md)), each run uses roughly 16 points of battery, so four runs can't share one charge.
+
+**Before every run (same steps each time):**
+1. Charge to **85 %**, then unplug.
+2. Open the spike app and leave the screen on in it for **10 min**, so battery temperature and current settle. Don't start a run yet.
+3. Note the battery **start %** (it should be close to 85 %, after the settle drain).
+4. Press the start button for this run's mode.
+
+**During the run:** don't touch Bibi or the phone's screen. The app marks taps and drags as invalid. Drag and tap checks happen in a **separate short session** before the measured run (start a Bibi mode, try it, press *Stop*), not inside it.
+
+**Ending the run:** after about **61 min**, press **Stop** (the button in the spike app or the notification's Stop; both write the same clean `stop` row). A run under 60.0 min reads invalid, and a run that doesn't end with *Stop* has no clean stop, which the summary treats as a possible process death. Comparing each Bibi run with the baseline before it, each starting from the same charge level after the same settle time, keeps battery level and temperature comparable.
 
 **Conditions checklist (same for every run; write it down once per sequence):**
 - [ ] Unplugged for the whole run.
 - [ ] **Screen timeout at the maximum** the phone allows. A run where the screen goes off is invalid (the summary says so).
-- [ ] **No touches during the measured hour.** Drag and tap tests happen before *Start*. Touches redraw the window and add fps.
+- [ ] **No touches during the measured hour.** Drag and tap tests happen in a separate short session. Touches redraw the window, add fps, and make the run invalid.
+- [ ] Charged to 85 %, unplugged, 10 min settle in the app before *Start*.
 - [ ] Brightness fixed, **auto-brightness off**, same level every run (the summary shows the brightness range).
 - [ ] Same **refresh-rate setting** (e.g. 60 Hz or 90 Hz, Settings → Display) every run; the log records `refresh_hz`.
 - [ ] Same foreground app and screen (e.g. a static web page in Chrome).
@@ -91,17 +111,17 @@ Each run starts within **±5 % battery** of the others, and the battery stays be
 - [ ] Record vivo's **background power consumption** setting for the spike app (default or Allow); keep it the same in every run.
 - [ ] Room temperature; phone not in a case if possible.
 
-**After each run:** check the summary says `VALID for gate: yes`, then tap *Share log (CSV)* (it sends the newest run) and attach the file to issue #4. If it says `no`, repeat that run; don't average invalid runs in. Tap *Share exit reasons* at the end of the sequence.
+**After each run:** check the summary says `VALID for gate: yes`, then tap *Share log (CSV)* (it sends the newest run) and attach the file to issue #4 with the start % you noted. If it says `no`, repeat that run; don't average invalid runs in. Tap *Share exit reasons* at the end of the sequence.
 
 **Optional second signal [VERIFY on vivo]:** with USB debugging, run `adb shell dumpsys batterystats --reset` right before *Start*, and `adb shell dumpsys batterystats` after *Stop*; note the per-app estimated power for the spike app. Whether vivo's build reports useful per-app figures is not known yet.
 
 **Kill/restart check (separate, about 5 min, NOT a gate run):** start a Bibi mode, swipe the app away from Recents, then lock and unlock. Note whether Bibi survives or comes back, and share the run file and exit reasons. This run will read invalid (restart and screen off), which is expected.
 
 ## 6. Result template (goes into `results/RESULTS.md`, `docs/project_status.md` → Spike results, and issue #4)
-| Device | Run | Mode | Duration | Mean current mA | %/h (current) | %/h (percent) | Avg fps | Max PSS MB | VALID | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|
+| Device | Run | Mode | Start % | Duration | Mean current mA | %/h (current) | %/h (percent) | pct_per_ma | Avg fps | Max PSS MB | VALID | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
-Then: Bibi 12 cost = mean mA (Bibi 12) − mean mA (baseline before it); Bibi Calm cost = mean mA (Bibi Calm) − mean mA (baseline before it). Pass if the cost is ≤ 150 mA and every run is valid with no kill.
+Then: Bibi 12 cost = mean mA (Bibi 12) − mean mA (baseline before it); Bibi Calm cost = mean mA (Bibi Calm) − mean mA (baseline before it). For each cost also give the relative figure: cost mA × `pct_per_ma` of that baseline run (%/h). Battery passes if the cost is ≤ 150 mA **and** the relative figure is ≤ 3 %/h; if only one of them passes, record both and mark the gate `[VERIFY]`. Stability passes if every run is valid (ended with *Stop*) with no kill.
 
 ## 7. Known limits of this spike
 - v1 was built and run by the owner on the vivo Y17s (results in [results/RESULTS.md](results/RESULTS.md)). v2 has only been type-checked and its summary tested on synthetic logs on a JVM; the container can't reach Google's Maven repository, so the owner's Android Studio build is the first real build of v2.

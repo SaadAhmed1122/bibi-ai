@@ -27,10 +27,12 @@
 | Bibi's extra drain ≤ 3 %/h | **Not measured.** Needs a baseline run |
 
 ## Next runs needed
-Protocol and conditions checklist: [SPEC.md §5](../SPEC.md#5-test-protocol-owner-runs-on-the-device). Rebuild the app first (v2: fixed run modes, one file per run, `VALID for gate` line). Each run 60 min, each starting within ±5 % battery of the others, battery 90–40 %, screen timeout at max, no touches.
+Protocol and conditions checklist: [SPEC.md §5](../SPEC.md#5-test-protocol-owner-runs-on-the-device). Rebuild the app first (v2: fixed run modes, one file per run, `VALID for gate` line). Order:
 1. **Baseline:** *Start baseline (no Bibi)*.
 2. **Bibi 12:** *Start Bibi 12 fps*.
 3. **Baseline:** *Start baseline (no Bibi)*.
 4. **Bibi Calm:** *Start Bibi Calm 2 fps*.
+
+At ~16 %/h each run uses about 16 points, so the four runs don't fit one charge; spread them over a day or two. Before **every** run: charge to 85 %, unplug, 10 min with the screen on in the spike app to settle, note the start %, then press start. Screen timeout at max, no touching Bibi or the screen during the run (drag/tap checks in a separate short session), stop with the app's **Stop** button at about 61 min.
 
 Run B doesn't count toward the gate: it was 53 min, had a screen-off, and its mode changed during the run. Separately, a short kill/restart check (not a gate run).

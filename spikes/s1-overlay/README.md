@@ -28,7 +28,7 @@ Or from a terminal in this folder:
    - **Start baseline (no Bibi):** same service and logging, no overlay.
    - **Start Bibi 12 fps:** Bibi appears on the right edge and animates at 12 fps.
    - **Start Bibi Calm 2 fps:** the same at 2 fps, no breathing.
-4. To try Bibi, drag it, release it (it snaps to the nearest side) and tap it (it says hi). Do this **before** a measured run, not during one.
+4. To try Bibi, drag it, release it (it snaps to the nearest side) and tap it (it says hi). Do this in a **separate short session** (start, try, *Stop*), never during a measured run: taps and drags make that run invalid.
 5. The notification shows the mode and has **Hide/Show** (Bibi modes) and **Stop**. Hiding Bibi makes the run invalid for the gate.
 
 **Files (in the app's private storage):**
@@ -41,14 +41,16 @@ Or from a terminal in this folder:
 - **Share exit reasons:** sends `exit_reasons.csv`.
 
 ## Running the measurements
-Follow [SPEC.md §5](SPEC.md#5-test-protocol-owner-runs-on-the-device): four 60-minute runs in the order **baseline → Bibi 12 → baseline → Bibi Calm**, each starting within ±5 % battery of the others (battery 90–40 %), screen timeout at max, no touches during the hour, and the same conditions every time. The kill/restart check is a separate short test, not a gate run. After each run, tap **Share log (CSV)** and attach it to issue #4.
+Follow [SPEC.md §5](SPEC.md#5-test-protocol-owner-runs-on-the-device): four runs of about 61 minutes in the order **baseline → Bibi 12 → baseline → Bibi Calm**, spread over a day or two if needed. Before **every** run: charge to 85 %, unplug, leave the screen on in the spike app for 10 min to settle, note the start %, then press the start button. Screen timeout at max, no touching Bibi or the screen during the hour (taps and drags make the run invalid), the same conditions every time, and end each run with **Stop** (no clean stop reads invalid). The kill/restart check is a separate short test, not a gate run. After each run, tap **Share log (CSV)** and attach it to issue #4.
 
 **Reading the summary:**
 - **Mean current** (mA, time-weighted over sample rows) is the number the gate uses. **Drain (current)** converts it to %/h at 5000 mAh [VERIFY capacity]; **Drain (pct)** is the coarse 1 %-step figure.
 - **Conditions** lists brightness, refresh rate, battery saver, temperature and voltage. Compare them between runs.
-- **`VALID for gate: yes`** means the run counts. **`no`** lists why: shorter than 60 min, screen off, charging, a restart or blocked start, an overlay window error, mixed modes, or Bibi hidden. Repeat an invalid run.
+- **`VALID for gate: yes`** means the run counts. **`no`** lists why: shorter than 60 min, screen off, charging, a restart or blocked start, an overlay window error, mixed modes, Bibi hidden, Bibi touched (tap or drag), or no clean stop. Repeat an invalid run.
 
-**Gate:** Bibi's cost = mean current of the Bibi run − mean current of the baseline run ≤ 150 mA (≈ 3 %/h at 5000 mAh), plus 60 minutes with no kill.
+- **`pct_per_ma`** (runs ≥ 60 min) = percent-based %/h ÷ mean mA; it calibrates the vivo's current reading, which may be about 15 % off [VERIFY].
+
+**Gate:** Bibi's cost = mean current of the Bibi run − mean current of the baseline run. It must be ≤ 150 mA **and** cost × the baseline's `pct_per_ma` must be ≤ 3 %/h. If the two disagree, record both and mark the gate `[VERIFY]`, not pass. Plus every run valid, ended with **Stop**, with no kill.
 
 ## vivo notes
 vivo's Funtouch/OriginOS limits background apps aggressively (PRD §12.4). Run everything with the **default** battery settings first. If Bibi gets killed, note it, then repeat with *Settings → Battery → Background power consumption management → Bibi S1 spike → Allow* (menu names vary by version), and record both results.
