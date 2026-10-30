@@ -12,14 +12,14 @@ Details: [docs/project_status.md](docs/project_status.md) → Test devices.
 
 | Spike | Issue | Branch | App folder | Ready to test? | What to send back |
 |---|---|---|---|---|---|
-| S1 — Overlay | [#4](https://github.com/SaadAhmed1122/bibi-ai/issues/4) | `spike/S1-overlay` (PR [#10](https://github.com/SaadAhmed1122/bibi-ai/pull/10)) | `spikes/s1-overlay/` | **Partly done** — 2 runs recorded; the baseline run is still missing | One run CSV per run (four runs), the start % of each, exit reasons at the end, and the kill/restart check files. Post on #4. |
-| S2 — Local LLM | [#5](https://github.com/SaadAhmed1122/bibi-ai/issues/5) | `spike/S2-llm` (PR [#12](https://github.com/SaadAhmed1122/bibi-ai/pull/12)) | `spikes/s2-llm/` | **In progress** — smoke runs done; Gemma 3 1B soak in progress | One run CSV per model (plus its summary) and `exit_reasons.csv`. Post on #5. |
-| S3a + S3b — Voice | [#6](https://github.com/SaadAhmed1122/bibi-ai/issues/6), [#7](https://github.com/SaadAhmed1122/bibi-ai/issues/7) | `spike/S3-voice` (PR [#14](https://github.com/SaadAhmed1122/bibi-ai/pull/14)) | `spikes/s3-voice/` | **Done** — results in `spikes/s3-voice/results/RESULTS.md` on `main` (after PR #14) | The run CSVs for each model (*Share all runs (CSV)*), the summary, `exit_reasons.csv`, and the transcripts (in the STT CSVs' `detail` column). Post the TTS parts on #6 and the STT parts on #7. |
-| S4 — Tools and permissions | [#8](https://github.com/SaadAhmed1122/bibi-ai/issues/8) | `spike/S4-tools` (PR [#13](https://github.com/SaadAhmed1122/bibi-ai/pull/13)) | `spikes/s4-tools/` | **Yes** — app written; not measured yet | The benchmark CSV and a note of what each action did on the phone (which clock app opened, whether the confirmation showed for dial). Post on #8. |
+| S1 — Overlay | [#4](https://github.com/SaadAhmed1122/bibi-ai/issues/4) | `main` (merged, PR [#10](https://github.com/SaadAhmed1122/bibi-ai/pull/10)) | `spikes/s1-overlay/` | **Partial** — 2 runs on 2026-10-29 (53 min Calm, no kills, ~16 %/h total drain); baseline run missing, so Bibi's extra drain isn't measured. The app is no longer installed on the vivo: reinstall from `main`. Four runs or an owner override [OPEN] | One run CSV per run (four runs), the start % of each, exit reasons at the end, and the kill/restart check files. Post on #4. |
+| S2 — Local LLM | [#5](https://github.com/SaadAhmed1122/bibi-ai/issues/5) | `main` (PRs [#12](https://github.com/SaadAhmed1122/bibi-ai/pull/12), [#22](https://github.com/SaadAhmed1122/bibi-ai/pull/22)); chat soak on `feature/5-s2-conversation-soak` (PR [#23](https://github.com/SaadAhmed1122/bibi-ai/pull/23), open) | `spikes/s2-llm/` | **Per-prompt soak FAIL** — Gemma 3 1B int4: 6.54 tok/s PASS, 0 OOM PASS, first-token p95 3,493 ms FAIL. **Chat soak 50 pending** (PR #23 build). Qwen not soaked | Chat soak: the run CSV, the summary and `exit_reasons.csv`. Post on #5. |
+| S3a + S3b — Voice | [#6](https://github.com/SaadAhmed1122/bibi-ai/issues/6), [#7](https://github.com/SaadAhmed1122/bibi-ai/issues/7) (closed) | `main` (merged, PR [#14](https://github.com/SaadAhmed1122/bibi-ai/pull/14)) | `spikes/s3-voice/` | **Done** — Piper TTS; Parakeet STT by owner override. Results in `spikes/s3-voice/results/RESULTS.md` | Nothing more on the vivo. Galaxy A23 run if it becomes available. |
+| S4 — Tools and permissions | [#8](https://github.com/SaadAhmed1122/bibi-ai/issues/8) | `main` (merged, PRs [#13](https://github.com/SaadAhmed1122/bibi-ai/pull/13), [#19](https://github.com/SaadAhmed1122/bibi-ai/pull/19)) | `spikes/s4-tools/` | **Gate PASS** (shortcut p95 6.2–19.4 ms). **Owner on-screen checks pending** (README steps 2–8, 13–14) | The on-screen notes for those steps and the CSV. Post on #8. |
 
 ## Before any test
 - [ ] **Android Studio** installed (any 2026 stable release). It offers to install the Android SDK platform a spike needs.
-- [ ] **Get the spike code:** check out the spike's branch (for S1: `git checkout spike/S1-overlay`).
+- [ ] **Get the spike code:** all four spike apps are on `main` (`git checkout main && git pull`). Only the S2 chat soak needs the PR #23 branch (`git checkout feature/5-s2-conversation-soak`) until that PR is merged.
 - [ ] **Open the spike folder, not the repo root:** File → Open → `spikes/<spike folder>` (for S1: `spikes/s1-overlay`). Let Gradle sync finish.
 - [ ] **Connect the phone:** enable Developer options (Settings → About phone → tap the build number 7 times), turn on **USB debugging**, plug in by USB, accept the "Allow USB debugging" prompt, then pick the phone in Studio's device menu and press **Run**.
 - [ ] **Common phone settings, the same for every run:**
@@ -31,7 +31,7 @@ Details: [docs/project_status.md](docs/project_status.md) → Test devices.
 
 If the build fails, paste the error into the spike's issue.
 
-## S1 — Overlay (issue #4, branch `spike/S1-overlay`)
+## S1 — Overlay (issue #4, on `main`)
 Question: can Bibi float over other apps for 1 hour, stably, at ≤ 3 % battery per hour? Full protocol: `spikes/s1-overlay/SPEC.md` §5 and `spikes/s1-overlay/README.md` on the branch.
 
 **One-time setup in the app**
@@ -68,14 +68,14 @@ Question: can Bibi float over other apps for 1 hour, stably, at ≤ 3 % battery 
 
 If Bibi gets killed with default battery settings, note it, then repeat with the app allowed under vivo's background power consumption management, and post both results.
 
-## S2 — Local LLM (issue #5, branch `spike/S2-llm`)
+## S2 — Local LLM (issue #5, on `main`)
 Question: can the phone run a Gemma 3 1B-class model and a 0.5B Qwen-class model (int4, CPU only, fully offline) at ≥ 5 tokens/s, first token ≤ 3 s, with zero out-of-memory kills over a 50-prompt soak? Full protocol: `spikes/s2-llm/SPEC.md` §2, §4 and §6, and `spikes/s2-llm/README.md` on the branch.
 
-> **Build warning.** The LiteRT-LM adapter (`spikes/s2-llm/app/src/main/java/io/github/saadahmed1122/bibi/spike/s2/LiteRtLmEngine.kt`, the only file that touches the library) has **never been compiled**: the library couldn't be downloaded where the app was written, and nothing has been built with Gradle or run on a phone. The first Android Studio build may show errors there. Paste them on issue #5. Don't let Studio upgrade `litertlm-android` past 0.16.1 (0.17+ needs Kotlin 2.3, which AGP 9.0 doesn't provide).
+> **Build note.** The app builds and has run on the vivo Y17s (results in `spikes/s2-llm/results/RESULTS.md`). Don't let Studio upgrade `litertlm-android` past 0.16.1 (0.17+ needs Kotlin 2.3, which AGP 9.0 doesn't provide).
 
 **One-time setup**
-1. [ ] Check out `spike/S2-llm`, open `spikes/s2-llm` in Android Studio, let Gradle sync, press **Run**. Open the app once: it creates the model folder and shows its path.
-2. [ ] Download the Gemma file: on Hugging Face open `litert-community/Gemma3-1B-IT`, log in, **accept the Gemma terms**, then download `gemma3-1b-it-int4.litertlm` (584,417,280 bytes).
+1. [ ] On `main`, open `spikes/s2-llm` in Android Studio, let Gradle sync, press **Run**. Open the app once: it creates the model folder and shows its path.
+2. [ ] Download the Gemma file (done on the vivo, 2026-10-30): on Hugging Face open `litert-community/Gemma3-1B-IT`, log in, **accept the Gemma terms**, then download `gemma3-1b-it-int4.litertlm` (584,417,280 bytes).
 3. [ ] Download a 0.5B Qwen-class `.litertlm` file (not `.task`) from `litert-community/Qwen2.5-0.5B-Instruct` or `litert-community/Qwen3-0.6B`, int4/q4 if offered. The exact file is not confirmed yet [VERIFY]. If only q8 exists, use it and write "q8, no int4 available". Note the exact file names and sizes of both models.
 4. [ ] Push both files from the download folder:
    ```bash
@@ -104,18 +104,25 @@ Question: can the phone run a Gemma 3 1B-class model and a 0.5B Qwen-class model
 4. [ ] Let the phone cool for about 10 min (screen off, unplugged), then repeat the "Before every soak" checks and steps 1–3 for the Qwen file.
 5. [ ] Optional: repeat the Gemma soak with S1's **Bibi Calm 2 fps** overlay running and label it "with overlay". Whether this run is required for the gate is [OPEN].
 
+**Chat soak 50 (next S2 run; needs the PR [#23](https://github.com/SaadAhmed1122/bibi-ai/pull/23) build)**
+The per-prompt Gemma soak failed on first-token p95 (3,493 ms). This run tests prefix reuse: one conversation, with the system prompt prefilled once. Whether it counts for the S2 gate is the owner's decision after the run [OPEN].
+1. [ ] Check out `feature/5-s2-conversation-soak`, open `spikes/s2-llm`, press **Run**. The button only exists in this build until PR #23 is merged.
+2. [ ] Do the "Before every soak" checks above. **Unplug** the phone and turn **airplane mode on**.
+3. [ ] Tap **CHAT SOAK 50: GEMMA3-1B-IT-INT4.LITERTLM**. Leave the app in front with the screen on, don't touch it, and wait for *Done*.
+4. [ ] Plug the phone back in. Tap **Share newest run (CSV)** and **Share summary**, and attach both to issue #5 (plus **Share exit reasons**).
+
 **At the end of the session**
 - [ ] Tap **Share exit reasons** and attach `exit_reasons.csv` to issue #5, with the device name, both model file names and the extended-RAM setting.
 - [ ] Repeat everything on each test phone (Galaxy A23 first if available, then the vivo Y17s). The gate passes on a device only if both models pass there.
 
-## S3a + S3b — Voice (issues #6, #7, branch `spike/S3-voice`)
+## S3a + S3b — Voice (issues #6, #7, on `main`) — done
 Question: can the phone speak a reply (S3a TTS, real-time factor ≤ 1.0) and transcribe speech (S3b STT, real-time factor ≤ 0.7 **and** peak memory ≤ 600 MB) fully offline? S3 can fail without stopping the project; it decides whether voice ships in P2. Full protocol: `spikes/s3-voice/SPEC.md` §2, §5 and §7, and `spikes/s3-voice/README.md` → "Owner test steps" on the branch.
 
-> **Build warning.** The sherpa-onnx adapter (`SherpaEngines.kt`) has only been type-checked against sherpa-onnx's v2.0.1 Kotlin API sources. Nothing has been built with Gradle, linked with the real AAR, or run on a phone. The first Android Studio build may show errors: paste them on issue #6. Model licenses have not been reviewed yet [VERIFY]; the spike doesn't ship models, but check them before any release.
+> **Done on the vivo Y17s** (results in `spikes/s3-voice/results/RESULTS.md`). The steps below stay for a Galaxy A23 run. Model licenses have not been reviewed yet [VERIFY]; the spike doesn't ship models, but check them before any release.
 
 **One-time setup**
 1. [ ] Download **`sherpa-onnx-2.0.1.aar`** from the sherpa-onnx [v2.0.1 GitHub release](https://github.com/k2-fsa/sherpa-onnx/releases/tag/v2.0.1) and put it at `spikes/s3-voice/app/libs/sherpa-onnx-2.0.1.aar` (exact name; it is git-ignored, don't commit it). Its size is not checked [VERIFY].
-2. [ ] Check out `spike/S3-voice`, open `spikes/s3-voice` in Android Studio, let Gradle sync, press **Run** on the vivo Y17s. Open the app once: it creates its models folder.
+2. [ ] On `main`, open `spikes/s3-voice` in Android Studio, let Gradle sync, press **Run** on the vivo Y17s. Open the app once: it creates its models folder.
 3. [ ] From https://github.com/k2-fsa/sherpa-onnx/releases download these five archives (names per SPEC §5 [VERIFY names and sizes on download]) and unpack each (e.g. `tar xf kokoro-en-v0_19.tar.bz2`):
    - `tts-models/kokoro-en-v0_19.tar.bz2`
    - `tts-models/kokoro-int8-multi-lang-v1_1.tar.bz2`
@@ -162,19 +169,17 @@ Question: can the phone speak a reply (S3a TTS, real-time factor ≤ 1.0) and tr
 - [ ] Post the TTS parts on issue **#6** and the STT parts on issue **#7**, with the phone model and anything unusual (heat, charging, a call during the run).
 - [ ] If the Galaxy A23 is available, repeat everything on it; the summary keeps the two phones apart.
 
-## S4 — Tools and permissions (issue #8, branch `spike/S4-tools`)
-Full steps: `spikes/s4-tools/README.md` → "Owner test steps" on the S4 branch. Gate: each of the five actions on the shortcut path, 20 benchmark runs, **p95 < 300 ms** (SPEC §2–3). The real-LLM path is **not** part of this test yet; it waits for S2. The **Fake LLM path** switch stands in for it.
+## S4 — Tools and permissions (issue #8, on `main`)
+Full steps: `spikes/s4-tools/README.md` → "Owner test steps". Gate: each of the five actions on the shortcut path, 20 benchmark runs, **p95 < 300 ms** (SPEC §2–3). **Measured: PASS** on the vivo Y17s (p95 6.2–19.4 ms; `spikes/s4-tools/results/RESULTS.md`), and the LLM benchmark has run too.
 
-1. [ ] Install **Bibi S4 spike** from Android Studio. Open it, wait for `Launcher apps: N` and the handler line, and **write down** the handler line (`NONE` means no app handles that action).
-2. [ ] With **Dry run** and **Fake LLM path** off, try each of the five commands with the quick buttons (3 times each, Back to return): open settings, wake me at 7:30, set a timer for 5 minutes, flashlight on/off, call 0123 456 789. Note which clock app opened and whether it showed a screen.
-3. [ ] Try the same five commands by typing them in the text box and pressing Submit.
-4. [ ] Dial check: tapping **call 0123 456 789** must show a confirmation card with the number. **Open dialer** fills in the number and does **not** call.
-5. [ ] Tap call again and **Cancel**: nothing is dialed. Tap it once more and leave the card alone for 30 s: it must close by itself, say it was cancelled, and **not** dial.
-6. [ ] Turn **Fake LLM path** on and repeat the commands, plus "it's dark in here", "broken timer test" (timer after one repair) and "send a text to mum" (must be rejected). Then do the taint and kill-switch checks (README steps 7–8).
-7. [ ] Close other apps and press **Benchmark** (about 30 s, don't touch the phone).
-8. [ ] Read the results panel: the `S4 shortcut gate:` line (PASS, FAIL or INCOMPLETE, with its reason) and the p50/p95 of the five `bench shortcut` rows against 300 ms.
-9. [ ] Tap **Refresh results**, then **Share log (CSV)**.
-10. [ ] Post on issue #8: the CSV, the phone, the handler line and a note of what each action did (which clock app opened, whether the dial confirmation showed, any safety check that did not behave as above). Then delete the "Bibi S4 test" alarms and timers.
+**Still to do: the on-screen checks** (README numbering; each is a short manual check, not a benchmark):
+1. [ ] **Step 2–3:** the shortcut **Benchmark** and the `S4 shortcut gate:` line, only if you reinstall and want to confirm it on screen.
+2. [ ] **Step 4:** with **Dry run** and **Fake LLM path** off, tap each quick command 3 times (settings, alarm 7:30, 5-minute timer, flashlight on/off, call 0123 456 789 → confirmation card, **Open dialer** fills the number and does **not** call). Note which clock app opened and whether it showed a screen.
+3. [ ] **Step 5:** **Fake LLM path** on: the commands again, plus "it's dark in here", "take me to maps", "broken timer test" and "send a text to mum" (must be rejected).
+4. [ ] **Step 6:** confirmation timeout: leave the call card alone for 30 s; it closes, says cancelled, nothing dialed.
+5. [ ] **Steps 7–8:** taint (**Untrusted content in context** → flashlight asks for confirmation; "injection test" too) and kill switch (**Disable all actions** → refused).
+6. [ ] **Steps 13–14:** **Real LLM path** on (models loaded): the six phrases in the README, then the taint and kill-switch checks with the real LLM.
+7. [ ] **Share log (CSV)** and post it on issue #8 with what each step did on screen. Then delete the "Bibi S4 test" alarms and timers.
 
 ## How to send results
 1. In the spike app, tap **Share log** (S1: **Share log (CSV)**, plus **Share exit reasons** at the end) and send the file to yourself or straight to the browser.

@@ -1,6 +1,6 @@
 # Developer tooling
 
-Five agent tools are wired into this repository for the implementation phases (P1 onward). This file covers one-time setup on each machine and when each tool is used. The short version of the rules is in `CLAUDE.md` §9.
+Ten agent tools are wired into this repository, mainly for the implementation phases (P1 onward): the Agent Skills, impeccable, ui-ux-pro-max, last30days, humanizer and ponytail plugins, plus Context7, Graphify, 21st and Strix. The agent-board plugin is covered in [local-setup.md](local-setup.md). This file covers one-time setup on each machine and when each tool is used. The short version of the rules is in `CLAUDE.md` §9.
 
 None of these tools ship in the app. Bibi itself stays offline (PRD 0.4). Context7, 21st, and Strix send queries or code to external services. Never send them user data, `.env` contents, or keystores.
 
@@ -41,7 +41,7 @@ Full laptop setup and how to resume from your phone or the cloud: [local-setup.m
    ```bash
    export CONTEXT7_API_KEY=...   API_KEY_21ST=...   STRIX_LLM=...   LLM_API_KEY=...
    ```
-4. **Trust the folder:** open Claude Code in `bibi-ai/` and accept the plugin and MCP prompts. Then check with `/mcp`, which should list `context7` and `21st`, and `/plugin`, which should list `agent-skills`.
+4. **Trust the folder:** open Claude Code in `bibi-ai/` and accept the plugin and MCP prompts. Then check with `/mcp`, which should list `context7` and `21st`, and `/plugin`, which should list `agent-skills`, `agent-board`, `impeccable`, `ui-ux-pro-max`, `last30days`, `humanizer` and `ponytail`.
 5. **Build the first graph** once real code exists:
    ```bash
    graphify update .
