@@ -8,7 +8,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PKGDIR="$HERE/../../app/src/main/java/io/github/saadahmed1122/bibi/spike/s4"
 # The pure-Kotlin files. Everything else in PKGDIR uses android.* and is checked by tools/typecheck.sh.
-CORE="ToolCall.kt ToolValidator.kt ShortcutParser.kt MiniJson.kt ToolCallParser.kt PermissionEngine.kt AppResolver.kt FakeLlm.kt Summary.kt LlmToolPath.kt LlmBenchPrompts.kt LlmSummary.kt"
+CORE="ToolCall.kt ToolValidator.kt ShortcutParser.kt MiniJson.kt ToolCallParser.kt PermissionEngine.kt AppResolver.kt FakeLlm.kt Summary.kt LlmToolPath.kt SlotExtractor.kt LlmBenchPrompts.kt LlmSummary.kt"
 KLIB="$(ls -d /opt/gradle-*/lib | head -1)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT

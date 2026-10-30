@@ -139,6 +139,9 @@ enum class CallSource {
 
     /** No call found; the text goes to [ToolCallParser] as is. */
     TEXT,
+
+    /** Not a model: [SlotExtractor] filled the Decision Maker's tool (pass 2, Decision 2026-10-30). */
+    SLOTS,
 }
 
 /** One model answer after preparation and parsing. [rejection] set = a tool outside the exposed subset. */
@@ -248,22 +251,28 @@ object LlmToolRouter {
             turn.toolCalls.isNotEmpty() -> CallSource.STRUCTURED to turn.toolCalls
             else -> TextToolCall.fromText(turn.text)?.let { CallSource.TEXT_JSON to listOf(it) } ?: (CallSource.TEXT to emptyList())
         }
-        if (calls.isNotEmpty()) {
-            val names = calls.joinToString("+") { it.name }
-            val input = if (calls.size == 1) {
-                ModelCallEncoder.toParserJson(calls[0])
-            } else {
-                // More than one call: the parser rejects an array ("must be a JSON object"), which triggers the repair.
-                calls.joinToString(",", "[", "]") { ModelCallEncoder.toParserJson(it) }
-            }
-            val outside = calls.firstOrNull { ToolName.fromWire(it.name) !in exposed }
-            if (outside != null) return LlmAttempt(source, names, input, null, outsideReason(outside.name, exposed))
-            return LlmAttempt(source, names, input, ToolCallParser.parse(input), null)
-        }
+        if (calls.isNotEmpty()) return check(source, calls, exposed)
         val parse = ToolCallParser.parse(turn.text)
         val call = (parse as? ToolCallParse.Valid)?.call
         val rejection = if (call != null && call.tool !in exposed) outsideReason(call.tool.wire, exposed) else null
         return LlmAttempt(CallSource.TEXT, call?.tool?.wire.orEmpty(), turn.text, parse, rejection)
+    }
+
+    /**
+     * Re-serializes [calls] to the parser's JSON, rejects a tool outside [exposed], then parses
+     * (and validates). Shared by model calls and [SlotToolRouter].
+     */
+    fun check(source: CallSource, calls: List<ModelToolCall>, exposed: Set<ToolName>): LlmAttempt {
+        val names = calls.joinToString("+") { it.name }
+        val input = if (calls.size == 1) {
+            ModelCallEncoder.toParserJson(calls[0])
+        } else {
+            // More than one call: the parser rejects an array ("must be a JSON object"), which triggers the repair.
+            calls.joinToString(",", "[", "]") { ModelCallEncoder.toParserJson(it) }
+        }
+        val outside = calls.firstOrNull { ToolName.fromWire(it.name) !in exposed }
+        if (outside != null) return LlmAttempt(source, names, input, null, outsideReason(outside.name, exposed))
+        return LlmAttempt(source, names, input, ToolCallParser.parse(input), null)
     }
 
     private fun outsideReason(name: String, exposed: Set<ToolName>) =

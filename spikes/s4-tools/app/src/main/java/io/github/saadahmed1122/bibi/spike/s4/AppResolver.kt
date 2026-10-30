@@ -33,7 +33,35 @@ class AppResolver(
         return entries.filter { e -> e.label.lowercase().split(' ').any { it == name } }.singleOrNull()
     }
 
+    /**
+     * Every name this resolver knows, normalized with [normalizeName] → the app it resolves to: each
+     * label, each label without a leading vendor word ("Samsung Notes" → "notes") and each alias
+     * whose package is installed. A name that [resolve]s to a different app is left out.
+     */
+    val names: Map<String, AppEntry> by lazy {
+        val out = LinkedHashMap<String, AppEntry>()
+        fun add(name: String, entry: AppEntry) {
+            val key = normalizeName(name)
+            if (key.isNotEmpty() && key !in out && resolve(key)?.packageName == entry.packageName) out[key] = entry
+        }
+        for (e in entries) add(e.label, e)
+        for (e in entries) {
+            val key = normalizeName(e.label)
+            val vendor = VENDORS.firstOrNull { key.startsWith("$it ") }
+            if (vendor != null) add(key.removePrefix("$vendor "), e)
+        }
+        for (alias in aliases.keys) resolve(alias)?.let { add(alias, it) }
+        out
+    }
+
     companion object {
+        /** Vendor words users often add or drop in front of an app name ("google drive" for "Drive"). */
+        val VENDORS = listOf("google", "samsung", "galaxy")
+
+        /** Lowercase; anything but letters, digits, & ' + becomes a space; spaces collapsed. */
+        fun normalizeName(s: String): String =
+            s.lowercase().replace(Regex("[^\\p{L}\\p{N}&'+]+"), " ").trim()
+
         /**
          * Common names → candidate packages (AOSP, Google, Samsung). Package names are from general
          * knowledge, not checked on the test phones [VERIFY]; vivo's own apps are not listed [OPEN].
