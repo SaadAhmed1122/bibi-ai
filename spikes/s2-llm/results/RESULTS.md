@@ -15,6 +15,21 @@ Gate (PRD 0.7, SPEC.md §2): median decode ≥ 5 tokens/s, p95 time to first tok
 
 Other numbers: load 11.3 s; max PSS 1,161 MB (`:inference`, between prompts); peak RSS 1,238 MB; minimum system available RAM 2,828 MB; thermal 0; mean current 254 mA. File `gemma3-1b-it-int4.litertlm`, 584,417,280 bytes. Run started 2026-10-30 01:17 by the owner.
 
+## 1b. Verdict in chat mode (PR #23): Gemma 3 1B int4 on vivo Y17s — PASS
+
+Chat soak 50 (2026-10-30 02:01, started by the owner): one conversation, `system_bibi.txt` (310 tokens incl. a scripted greeting exchange) prefilled once before timing, then the 50 prompts as consecutive turns. Unplugged (78 → 78 %), airplane mode on, battery saver off.
+
+| Check | Result | Gate | |
+|---|---|---|---|
+| Valid run | yes: 50/50, clean stop, preface prefilled (310 tokens, 9,929 ms, untimed), 0 conversation resets | — | ✓ |
+| TTFT p95 | **2,409 ms** (p50 1,305 ms) | ≤ 3,000 | PASS |
+| Decode median | **7.04 tok/s** (p10 6.54) | ≥ 5 | PASS |
+| OOM kills | **0** | 0 | PASS |
+
+**GATE S2 (gemma3-1b-it-int4, chat mode): PASS** (app `Summary.kt`). Max PSS 1,189 MB; peak RSS 1,262 MB; min available RAM 2,790 MB; thermal 0; load 10.3 s. The slowest turns (2.39–2.45 s) had the longest user messages (44–58 tokens) late in the conversation (context 1,209–2,196 tokens); the context reached 2,261 of 4,096 tokens.
+
+Whether this chat-mode result decides the S2 gate (instead of the per-prompt soak in §1) is an **owner decision [OPEN]**. Earlier chat-mode files `…0141…` (flag only; preface not prefilled, turn 1 TTFT 10.3 s) and `…0159…` (plugged-in check after the fix) are device checks, not gate runs.
+
 ## 2. Why TTFT fails
 
 TTFT grows with prompt length: about **50 ms per prefill token** on this phone (~20 tokens/s prefill).
