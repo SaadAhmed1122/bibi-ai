@@ -31,15 +31,41 @@ data class LlmGroupStats(
 
 /**
  * Reads the LLM columns of an S4 run file (kind `llm_bench` rows, one per benchmark prompt) and
- * summarizes them per expected action. Info only: the S4 shortcut gate is [Summary]'s, unchanged.
+ * summarizes them per expected action, separately for the two pass-2 modes: rows with
+ * `source = slots` (slot extraction, the default since Decision 2026-10-30) go to [slotGroups],
+ * all others (the experimental Gemma tool call) to [groups]. For slot rows, `json_ok` means the
+ * slots were complete. Info only: the S4 shortcut gate is [Summary]'s, unchanged.
  */
-class LlmSummary private constructor(val groups: List<LlmGroupStats>, val peakPssKb: Long?) {
+class LlmSummary private constructor(
+    val groups: List<LlmGroupStats>,
+    val peakPssKb: Long?,
+    val slotGroups: List<LlmGroupStats>,
+    val slotPeakPssKb: Long?,
+) {
 
     fun describe(): String = buildString {
-        appendLine("LLM path (Decision Maker → Gemma tool call → parser → Permission Engine), dry run:")
-        if (groups.isEmpty()) {
-            appendLine("No LLM benchmark rows yet. Load the models, then press LLM benchmark.")
-        } else {
+        if (groups.isEmpty() && slotGroups.isEmpty()) {
+            appendLine("LLM path: no LLM benchmark rows yet. Load the models, then press LLM benchmark.")
+        }
+        if (slotGroups.isNotEmpty()) {
+            appendLine("Real path (Decision Maker → slot extraction → parser → Permission Engine), dry run:")
+            appendLine("expected       n  DM acc  tool ok  slot ok   args =   p50 ms   p95 ms  max PSS")
+            for (g in slotGroups) {
+                val action = g.expected != ToolRouting.NONE
+                appendLine(
+                    String.format(
+                        Locale.US, "%-12s %3d %7s %8s %8s %8s %8s %8s %8s",
+                        g.expected, g.n, p(g, g.routedRight), p(g, g.correctTool),
+                        if (action) p(g, g.jsonOk) else "n/a", if (action) p(g, g.argsMatch) else "n/a",
+                        f(g.p50Ms), f(g.p95Ms), mb(g.maxPssKb),
+                    ),
+                )
+            }
+            appendLine("Peak PSS (slot extraction rows): ${mb(slotPeakPssKb)}")
+            appendLine("slot ok = every required slot found, no ambiguity (else the user is asked).")
+        }
+        if (groups.isNotEmpty()) {
+            appendLine("LLM path (Decision Maker → Gemma tool call → parser → Permission Engine), dry run:")
             appendLine("expected       n  DM acc  tool ok  json ok  args ok  args =  rep   p50 ms   p95 ms  max PSS")
             for (g in groups) {
                 appendLine(
@@ -72,41 +98,49 @@ class LlmSummary private constructor(val groups: List<LlmGroupStats>, val peakPs
         const val BENCH_KIND = "llm_bench"
         const val LIVE_KIND = "llm_live"
 
+        /** `source` value of every row written in slot-extraction mode (also no-action rows). */
+        const val SLOTS_SOURCE = "slots"
+
         fun from(csv: String): LlmSummary {
             val lines = csv.lineSequence().filter { it.isNotBlank() }.toList()
             val header = lines.firstOrNull()?.split(",").orEmpty()
             val idx = header.withIndex().associate { it.value.trim() to it.index }
             fun cell(cells: List<String>, col: String) = idx[col]?.let { cells.getOrNull(it) }?.trim().orEmpty()
             val rows = lines.drop(1).map { it.split(",") }.filter { cell(it, "kind") == BENCH_KIND }
+            val (slotRows, llmRows) = rows.partition { cell(it, "source") == SLOTS_SOURCE }
 
-            val order = ToolName.entries.map { it.wire } + ToolRouting.NONE
-            val groups = rows.groupBy { cell(it, "expected") }
-                .filterKeys { it in order }
-                .toSortedMap(compareBy { order.indexOf(it) })
-                .map { (expected, rs) ->
-                    fun count(pred: (List<String>) -> Boolean) = rs.count(pred)
-                    fun yes(r: List<String>, col: String) = cell(r, col) == "true"
-                    val latencies = rs.mapNotNull { cell(it, "e2e_ms").toDoubleOrNull() }
-                    LlmGroupStats(
-                        expected = expected,
-                        n = rs.size,
-                        routedRight = count { cell(it, "route") == expected },
-                        llmRan = count { cell(it, "route").let { r -> r.isNotEmpty() && r != ToolRouting.NONE } },
-                        jsonOk = count { yes(it, "json_ok") },
-                        correctTool = if (expected == ToolRouting.NONE) {
-                            count { cell(it, "outcome") != "call" }
-                        } else {
-                            count { cell(it, "outcome") == "call" && cell(it, "call_tool") == expected }
-                        },
-                        argsValid = count { yes(it, "args_ok") },
-                        argsMatch = count { yes(it, "args_match") },
-                        repaired = count { yes(it, "repaired") },
-                        p50Ms = Summary.percentile(latencies, 0.50),
-                        p95Ms = Summary.percentile(latencies, 0.95),
-                        maxPssKb = rs.mapNotNull { cell(it, "pss_kb").toLongOrNull() }.maxOrNull(),
-                    )
-                }
-            return LlmSummary(groups, groups.mapNotNull { it.maxPssKb }.maxOrNull())
+            fun groupsOf(rows: List<List<String>>): List<LlmGroupStats> {
+                val order = ToolName.entries.map { it.wire } + ToolRouting.NONE
+                return rows.groupBy { cell(it, "expected") }
+                    .filterKeys { it in order }
+                    .toSortedMap(compareBy { order.indexOf(it) })
+                    .map { (expected, rs) ->
+                        fun count(pred: (List<String>) -> Boolean) = rs.count(pred)
+                        fun yes(r: List<String>, col: String) = cell(r, col) == "true"
+                        val latencies = rs.mapNotNull { cell(it, "e2e_ms").toDoubleOrNull() }
+                        LlmGroupStats(
+                            expected = expected,
+                            n = rs.size,
+                            routedRight = count { cell(it, "route") == expected },
+                            llmRan = count { cell(it, "route").let { r -> r.isNotEmpty() && r != ToolRouting.NONE } },
+                            jsonOk = count { yes(it, "json_ok") },
+                            correctTool = if (expected == ToolRouting.NONE) {
+                                count { cell(it, "outcome") != "call" }
+                            } else {
+                                count { cell(it, "outcome") == "call" && cell(it, "call_tool") == expected }
+                            },
+                            argsValid = count { yes(it, "args_ok") },
+                            argsMatch = count { yes(it, "args_match") },
+                            repaired = count { yes(it, "repaired") },
+                            p50Ms = Summary.percentile(latencies, 0.50),
+                            p95Ms = Summary.percentile(latencies, 0.95),
+                            maxPssKb = rs.mapNotNull { cell(it, "pss_kb").toLongOrNull() }.maxOrNull(),
+                        )
+                    }
+            }
+            val llm = groupsOf(llmRows)
+            val slots = groupsOf(slotRows)
+            return LlmSummary(llm, llm.mapNotNull { it.maxPssKb }.maxOrNull(), slots, slots.mapNotNull { it.maxPssKb }.maxOrNull())
         }
 
         private fun p(g: LlmGroupStats, count: Int) = String.format(Locale.US, "%.0f%%", g.pct(count))
