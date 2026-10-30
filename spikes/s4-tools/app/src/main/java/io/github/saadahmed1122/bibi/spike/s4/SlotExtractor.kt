@@ -137,10 +137,15 @@ object SlotExtractor {
     private fun alarm(text: String): Slots {
         fun missing(reason: String) = Slots.Missing(ToolName.SET_ALARM, "What time should the alarm ring?", reason)
         val s = numberText(text)
-        // "one and a half hours", "in 20 minutes": a length of time is not a clock time (and may be a timer).
-        if (hits(s, TIMER_PATTERNS).orEmpty().isNotEmpty()) return missing("the request has a length of time, not a clock time")
         if (hasPhoneNumber(text)) return missing("the request has a phone number")
         val found = hits(s, ALARM_PATTERNS) ?: return missing("a time in the request is not a valid clock time")
+        // "in 20 minutes": a length of time is not a clock time. With no clock time it is a timer
+        // (the Decision Maker labels some timers set_alarm, RESULTS.md §6); with one, it is ambiguous.
+        val durations = hits(s, TIMER_PATTERNS).orEmpty()
+        if (durations.isNotEmpty()) {
+            val clock = found.filter { c -> durations.none { d -> d.range.first <= c.range.last && c.range.first <= d.range.last } }
+            return if (clock.isEmpty()) timer(text) else missing("the request has both a clock time and a length of time")
+        }
         val pm = PM_CONTEXT.containsMatchIn(s)
         val am = AM_CONTEXT.containsMatchIn(s)
         val times = found.map { h ->
@@ -264,6 +269,9 @@ object SlotExtractor {
 
     // ---- open_app {app} ------------------------------------------------------------------------
 
+    /** Words that may follow a bare vendor name ("open google app", "google for me") without naming another app. */
+    private val VENDOR_FOLLOWERS = setOf("", "app", "please", "now", "for", "and", "then", "to", "search")
+
     private class Mention(val start: Int, val end: Int, val name: String, val entry: AppEntry)
 
     private fun openApp(text: String, apps: AppResolver?): Slots {
@@ -280,6 +288,10 @@ object SlotExtractor {
             // Drop a name inside a longer one ("maps" in "google maps"), and a vendor word right before another name ("google" drive).
             all.none { o -> o !== m && o.start <= m.start && m.end <= o.end && (o.end - o.start) > (m.end - m.start) } &&
                 !(m.name in AppResolver.VENDORS && all.any { o -> o.start == m.end + 1 })
+        }
+        // "google drive" with no Drive installed: the vendor's own app is not what was asked for.
+        if (kept.any { it.name in AppResolver.VENDORS && s.substring(it.end).trim().substringBefore(' ') !in VENDOR_FOLLOWERS }) {
+            return missing("a vendor name is followed by an app that is not installed")
         }
         val packages = kept.map { it.entry.packageName }.distinct()
         return when (packages.size) {
@@ -299,7 +311,8 @@ object SlotToolRouter {
     fun route(selection: ToolSelection.Expose, text: String, apps: AppResolver?): LlmRouteResult =
         when (val slots = SlotExtractor.extract(selection.tool, text, apps)) {
             is Slots.Missing -> LlmRouteResult(LlmRoute.AskUser(slots.question, listOf(slots.reason)), null, null)
-            is Slots.Filled -> fromSlots(slots, selection.exposed)
+            // The one allowed re-route: set_alarm text with a duration and no clock time is a timer.
+            is Slots.Filled -> fromSlots(slots, if (selection.tool == ToolName.SET_ALARM) selection.exposed + ToolName.START_TIMER else selection.exposed)
         }
 
     /** [exposed] is the Decision Maker's tool; anything else is rejected before parsing. */

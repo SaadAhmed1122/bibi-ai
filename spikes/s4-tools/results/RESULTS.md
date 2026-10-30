@@ -79,3 +79,12 @@ Misses (13), all but one ended with no action or a question to the user:
 - **Wrong app (1):** "get me into google drive" → `open_app {"app":"google"}` (Google, not Drive). This call reached the Permission Engine (dry run). Fix: prefer the longest matching app name [OPEN].
 
 The 100/100 offline score in the JVM tests is an upper bound (extractor written with the prompts in view; assumed app list).
+
+## 7. Tuning after §6 (#8), JVM tests only, not yet run on a phone
+
+Three changes, each with tests written first (`tools/core-test`, 559 checks pass):
+1. **Router threshold 0.5 → 0.25** (`ToolRouting.MIN_CONFIDENCE`). Of the §6 threshold misses, this lets through photos 0.40, spotify 0.27, gallery 0.35, weather 0.38, dark 0.47, light 0.43 and "tea" 0.27; calculator 0.11 stays out. "what time is it in Tokyo" (set_alarm 0.15) stays out. A wrong label that gets through still meets slot extraction, which asks when a value is missing. The value was picked on the same 110 prompts [VERIFY on a fresh prompt set].
+2. **set_alarm → start_timer re-route:** under the set_alarm label, a duration with no clock time becomes a timer ("let me know when 3 minutes are up" → 180 s). A clock time plus a duration still asks. This is the only cross-tool route, and it still goes through ToolCallParser, ToolValidator and the Permission Engine. Offline: 20/20 timer prompts labelled set_alarm start the right timer; none set an alarm.
+3. **Vendor word + unknown app asks:** "google drive" with no Drive app now asks "Which app should I open?" instead of opening Google. With Drive installed it still opens Drive. Whether Drive is on this vivo is [VERIFY]; the §6 result (Google opened) fits it being absent, because with Drive installed the extractor picks Drive.
+
+Expected on the vivo, if the router labels come out the same: about 95 of 100 [VERIFY by re-running the slot benchmark]. Strix not run (CLI not installed); these files are tool-router code (CLAUDE.md §9).

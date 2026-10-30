@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
+- S4 slot tuning: router threshold 0.25, set_alarm → start_timer re-route for durations, and a vendor-name check for apps that are not installed ("google drive"). JVM tests only (559 checks); not yet run on a phone.
 - S4 slot-extraction device result on the vivo Y17s: 87/100 correct calls, ~0.5 s, 600 MB.
 - S4 pass 2 is deterministic slot extraction (`SlotExtractor`, `SlotToolRouter`) after the Decision Maker label, by owner decision; the Gemma 3 1B tool call stays behind an off-by-default "LLM tool call (experimental)" switch. JVM ceiling on the 110 benchmark prompts with the correct label: 100/100; not yet run on a phone.
 - S2 chat-mode soak result on the vivo Y17s: Gemma 3 1B int4 PASS (TTFT p95 2,409 ms, 7.04 tok/s, 0 OOM).

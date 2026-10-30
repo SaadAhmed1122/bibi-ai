@@ -77,8 +77,14 @@ fun slotExtractorTests() {
     check("alarm: no time → missing", missing(ToolName.SET_ALARM, "set an alarm"))
     check("alarm: negation with no time → missing", missing(ToolName.SET_ALARM, "don't set an alarm tonight"))
     check("alarm: two different times → missing (ambiguous)", missing(ToolName.SET_ALARM, "alarm at 6 or 7"))
-    check("alarm: relative time unsupported → missing", missing(ToolName.SET_ALARM, "wake me in 20 minutes"))
-    check("alarm: 'for 10 minutes' is not 10:00", missing(ToolName.SET_ALARM, "alarm for 10 minutes"))
+    // A duration and no clock time under the set_alarm label is a timer (vivo run: 3 timer prompts labelled set_alarm, RESULTS.md §6).
+    val asTimer = { text: String -> (SlotExtractor.extract(ToolName.SET_ALARM, text, null) as? Slots.Filled)?.let { it.tool to it.args["seconds"] } }
+    checkEq("alarm: 'wake me in 20 minutes' → 20 min timer", ToolName.START_TIMER to 1200L, asTimer("wake me in 20 minutes"))
+    checkEq("alarm: 'for 10 minutes' is a timer, not 10:00", ToolName.START_TIMER to 600L, asTimer("alarm for 10 minutes"))
+    checkEq("alarm: 'let me know when 3 minutes are up' → timer", ToolName.START_TIMER to 180L, asTimer("let me know when 3 minutes are up"))
+    checkEq("alarm: 'a quarter of an hour on the clock' → timer", ToolName.START_TIMER to 900L, asTimer("give me a quarter of an hour on the clock"))
+    check("alarm: a clock time plus a duration stays ambiguous", missing(ToolName.SET_ALARM, "alarm at 7 for 10 minutes"))
+    check("alarm: a duration with an invalid clock time stays missing", missing(ToolName.SET_ALARM, "alarm at 25:00 in 10 minutes"))
     check("alarm: 13 pm is not a time → missing", missing(ToolName.SET_ALARM, "alarm at 13 pm"))
     check("alarm: 25:00 → missing", missing(ToolName.SET_ALARM, "alarm at 25:00"))
     check("alarm: morning and evening → missing", missing(ToolName.SET_ALARM, "alarm at 7 in the morning or in the evening"))
@@ -132,6 +138,11 @@ fun slotExtractorTests() {
     checkEq("app vendor-less 'notes' → Samsung Notes", "notes", filled(ToolName.OPEN_APP, "navigate to the notes app", apps)?.get("app"))
     checkEq("app longest label wins (YouTube Music)", "youtube music", filled(ToolName.OPEN_APP, "open youtube music", apps)?.get("app"))
     checkEq("app bare 'google'", "google", filled(ToolName.OPEN_APP, "open google", apps)?.get("app"))
+    checkEq("app 'google app' → google", "google", filled(ToolName.OPEN_APP, "open the google app", apps)?.get("app"))
+    // vivo run: Drive not installed, "google drive" opened Google. A vendor word + an unknown name asks instead.
+    val noDrive = AppResolver(BENCH_LAUNCHER.filter { it.label != "Drive" })
+    check("app 'google drive' without Drive → missing, not Google", missing(ToolName.OPEN_APP, "get me into google drive", noDrive))
+    check("app 'samsung health' without it → missing", missing(ToolName.OPEN_APP, "open samsung health", noDrive))
     check("app: two apps → missing (ambiguous)", missing(ToolName.OPEN_APP, "open camera and maps", apps))
     check("app: not installed → missing", missing(ToolName.OPEN_APP, "open tiktok", apps))
     check("app: no launcher index → missing", missing(ToolName.OPEN_APP, "open camera", null))
@@ -202,7 +213,15 @@ fun slotWrongLabelTests() {
     }
     println("WRONG-LABEL calls (${calls.size} of ${LlmBenchPrompts.ALL.count { it.expected != null } * 4} prompt×wrong-tool pairs):")
     calls.forEach { println("  $it") }
-    // The confusion seen on the vivo (RESULTS.md §3): timer prompts labelled set_alarm must not set an alarm.
-    check("wrong-label calls stay rare (at most 2 of 400 pairs)", calls.size <= 2) { "${calls.size}" }
-    checkEq("timer prompts labelled set_alarm give no call", emptyList<String>(), calls.filter { it.startsWith("start_timer→set_alarm") })
+    // A wrong-label call is one whose tool is not the prompt's tool; set_alarm → start_timer re-routing is allowed.
+    val wrongTool = calls.filterNot { it.startsWith("start_timer→set_alarm") && it.contains("→ start_timer ") }
+    check("wrong-tool calls stay rare (at most 2 of 400 pairs)", wrongTool.size <= 2) { "$wrongTool" }
+    // The confusion seen on the vivo (RESULTS.md §3, §6): timer prompts labelled set_alarm never set an alarm.
+    checkEq("timer prompts labelled set_alarm set no alarm", emptyList<String>(), calls.filter { it.startsWith("start_timer→set_alarm") && !it.contains("→ start_timer ") })
+    val rerouted = LlmBenchPrompts.ALL.filter { it.expected == ToolName.START_TIMER }.count { p ->
+        val call = (SlotToolRouter.route(ToolSelection.Expose(ToolName.SET_ALARM), p.text, apps).route as? LlmRoute.Call)?.call
+        call != null && LlmBenchPrompts.argsMatch(p.expectedCall!!, call)
+    }
+    println("REROUTED: $rerouted/20 timer prompts labelled set_alarm start the right timer")
+    check("timer prompts labelled set_alarm: at least 15/20 start the right timer", rerouted >= 15) { "$rerouted" }
 }
