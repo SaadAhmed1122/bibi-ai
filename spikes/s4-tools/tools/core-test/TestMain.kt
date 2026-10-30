@@ -9,6 +9,8 @@ fun main() {
     summaryTests()
     llmToolPathTests()
     llmSummaryTests()
+    slotExtractorTests()
+    slotWrongLabelTests()
     println("$passed checks")
     println("ALL PASS")
 }

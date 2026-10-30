@@ -18,6 +18,7 @@ private data class LlmRow(
     val e2eMs: Double = 1000.0,
     val pssKb: Long = 1_500_000,
     val kind: String = "llm_bench",
+    val source: String = "structured",
 )
 
 private fun csvRow(r: LlmRow, i: Int): String {
@@ -27,7 +28,7 @@ private fun csvRow(r: LlmRow, i: Int): String {
         "total_ms" to "", "parse_ms" to "", "policy_ms" to "", "build_ms" to "", "dispatch_ms" to "", "detail" to "x",
         "expected" to r.expected, "dm_label" to r.route, "dm_conf" to "0.900", "dm_ms" to "40.000", "route" to r.route,
         "llm_ttft_ms" to "300.000", "llm_ms" to "900.000", "tool_name" to r.callTool, "args_json" to "{\"tool\":\"x\";\"args\":{}}",
-        "source" to "structured", "json_ok" to r.jsonOk.toString(), "args_ok" to r.argsOk.toString(),
+        "source" to r.source, "json_ok" to r.jsonOk.toString(), "args_ok" to r.argsOk.toString(),
         "repaired" to r.repaired.toString(), "call_tool" to r.callTool, "args_match" to r.argsMatch.toString(),
         "outcome" to r.outcome, "decision" to if (r.outcome == "call") "allow" else "", "e2e_ms" to "%.3f".format(java.util.Locale.US, r.e2eMs),
         "pss_kb" to r.pssKb.toString(),
@@ -88,6 +89,35 @@ fun llmSummaryTests() {
     check("describe shows DM accuracy 90%", text.contains("90%")) { text }
     check("describe shows peak PSS in MB", text.contains("2051 MB")) { text }
     check("describe says the gate is unchanged", text.contains("does not change the S4 shortcut gate")) { text }
+
+    checkEq("no slot rows → no slot groups", 0, s.slotGroups.size)
+
+    // Pass 2 = slot extraction (Decision 2026-10-30): source=slots rows get their own table.
+    val slotRows = buildList {
+        // dial: 20 prompts, all routed right; 17 slots complete and valid, 16 match; 3 asked the user.
+        repeat(17) { k -> add(LlmRow("dial", source = "slots", argsMatch = k != 0, e2eMs = 500.0 + k, pssKb = 300_000)) }
+        repeat(3) { add(LlmRow("dial", source = "slots", outcome = "ask_user", callTool = "", jsonOk = false, argsOk = false, argsMatch = false, e2eMs = 520.0, pssKb = 310_000)) }
+        repeat(10) { add(LlmRow("none", source = "slots", e2eMs = 480.0, pssKb = 305_000)) }
+    }
+    val both = LlmSummary.from(llmCsv(rows + slotRows))
+    checkEq("slot rows do not change the LLM groups", s.groups, both.groups)
+    checkEq("LLM peak PSS ignores slot rows", 2_100_000L, both.peakPssKb)
+    val dialSlots = both.slotGroups.single { it.expected == "dial" }
+    checkEq("slots dial n", 20, dialSlots.n)
+    checkEq("slots dial DM acc", 20, dialSlots.routedRight)
+    checkEq("slots dial slot ok (complete)", 17, dialSlots.jsonOk)
+    checkEq("slots dial args match", 16, dialSlots.argsMatch)
+    checkEq("slots dial correct tool", 17, dialSlots.correctTool)
+    checkEq("slots dial p95", 520.0, dialSlots.p95Ms)
+    checkEq("slots peak PSS", 310_000L, both.slotPeakPssKb)
+    checkEq("slot groups order", listOf("dial", "none"), both.slotGroups.map { it.expected })
+    val bothText = both.describe()
+    check("describe has the slot-extraction table", bothText.contains("slot extraction")) { bothText }
+    check("describe shows slot ok 85%", bothText.contains("85%")) { bothText }
+    check("describe shows the slot peak PSS", bothText.contains("303 MB")) { bothText }
+    check("describe keeps the LLM tool-call table", bothText.contains("Gemma tool call")) { bothText }
+    val slotsOnly = LlmSummary.from(llmCsv(slotRows)).describe()
+    check("slots-only describe has no LLM tool-call table", !slotsOnly.contains("Gemma tool call")) { slotsOnly }
 
     checkEq("empty LLM summary", 0, LlmSummary.from("").groups.size)
     check("empty describe says how to run it", LlmSummary.from("").describe().contains("LLM benchmark")) { LlmSummary.from("").describe() }
