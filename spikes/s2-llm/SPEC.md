@@ -30,10 +30,34 @@ Can our floor devices run a Gemma 3 1B-class model and a 0.5B Qwen-class model, 
 
 The app's summary prints which branch applies (`Summary.outcome`). Note from `docs/project_status.md` → Test devices: the vivo Y17s has 6 GB but an older chip, so it does **not** count as the "better hardware" device for the 0.5 rule (open item 4). The Galaxy A23 is the floor (open item 10).
 
+### 2.1 Chat mode (added 2026-10-30, owner request)
+**Why.** The first valid Gemma 3 1B soak on the vivo Y17s failed only on first token: p95 3,493 ms > 3,000 ms, about 50 ms per prefill token ([results/RESULTS.md](results/RESULTS.md)). In that soak every prompt is a fresh conversation, so every TTFT includes prefilling the system prompt. A real Bibi chat keeps one conversation open, so the fixed system prompt can be prefilled once and reused. Chat mode measures that case.
+
+**What it does** (button **Chat soak 50**, `mode=chat`):
+- Loads the model with the same CPU backend, greedy sampler (topK = 1) and 128-token reply cap as the soak. The only engine difference: `EngineConfig.maxNumTokens = 4096` (the KV cache size), set explicitly so the reset budget below matches the engine.
+- Opens **one** conversation with a longer, realistic system prompt, `app/src/main/assets/system_bibi.txt` (Bibi persona plus five remembered facts, 235 words, about 250–350 tokens [VERIFY: the app logs the real count]). **Mechanism:** `ConversationConfig.prefillPrefaceOnInit = true` plus a **scripted first exchange** in `initialMessages`: user "Hi Bibi.", model "Hi! What can I help you with?" (`CHAT_PRIMER_*` in `InferenceService`). `createConversation()` prefills system prompt + that exchange before returning; nothing is decoded. This happens **outside** the timed region and is logged as a `preface` row: `total_ms` (app clock), `prefill_tokens` and `ctx_tokens` (both `Conversation.getTokenCount()`, empty if unknown), `detail` = `system=system_bibi.txt chars=… primer=1 context=4096`.
+  - **Why the scripted exchange.** The first device run (vivo Y17s, 2026-10-30 01:41, flag only) logged `preface ctx_tokens=0` in 23.6 ms, then prompt 1 with 311 prefill tokens and a 10,290 ms TTFT: the system prompt was prefilled inside the first timed turn. Cause: the Gemma 3 chat template in 0.16.1 (`runtime/util/model_type_utils.cc`, `GetDefaultJinjaPromptTemplate`, `case kGemma3`, about lines 247–289) has no system turn. It emits the system text only as a prefix of the **first user message**, so a preface with only a system message renders to `{{ bos_token }}` and nothing useful is prefilled (`conversation.cc` `Create`, about lines 450–493). The turn-1 delta (`GetSingleTurnTextFromFullHistory`) then contains the whole system prompt. With a user/model exchange in the preface, the template renders a complete first turn that carries the system text, and turn 1 adds only its own user turn.
+  - **What this costs honestly.** Every conversation starts with that one scripted exchange (about 20 extra tokens) in its context, before the 50 real turns. The model sees a short greeting it never generated. Prompt 1 is timed and counted like every other prompt.
+  - A preface or `conv_reset` row with `ctx_tokens` 0 or empty makes the run invalid ("preface not prefilled"), so this can't pass silently again. Whether the scripted exchange actually fills the cache on device is [VERIFY] on the next run (expect `ctx_tokens` around 320–380).
+- Sends the same 50 prompts as **consecutive turns** of that conversation. TTFT is measured exactly as in the soak (send → first streamed chunk). It now covers the user turn plus its chat-template markers, with the system prompt and earlier turns already in the KV cache.
+- **Context limit.** Before each turn the app checks `used + estimate(prompt) + 128 > 4096`, where `used` is `getTokenCount()` after the previous turn and the estimate is `chars ÷ 3 + 16` tokens (the first soak measured about 4.5 characters per token). If the turn might not fit, the app closes the conversation and opens a fresh one with the preface prefilled again, untimed, and logs a `conv_reset` row (same columns as `preface`; `detail` = `before=<prompt> used=… turns=…`). After an error row the conversation is also reset (`after_error`), but the run is already invalid. With about 300 preface tokens and short replies, expect 0–1 resets per 50 turns.
+- Prompt rows also log `ctx_tokens`, the KV cache size after the turn, so TTFT can be checked against conversation length.
+
+**How it's verified against LiteRT-LM 0.16.1** (sources at the v0.16.1 tag and `javap` of the 0.16.1 AAR; Context7 was not used):
+- `Config.kt`: `prefillPrefaceOnInit` — "Whether to prefill the preface on initialization … this will make createConversation() take longer to finish"; `maxNumTokens` — "maximum number of the sum of input and output tokens … the size of the kv-cache. When null, use the default value from the model or the engine."
+- Kotlin `Engine.createConversation` passes the flag to `nativeCreateConversation` (javap), and the JNI (`kotlin/java/com/google/ai/edge/litertlm/jni/litertlm.cc` about lines 1036 and 1122) sets it on the native config. The flag works; the empty Gemma 3 rendering above is why a system-only preface prefills nothing.
+- `runtime/conversation/conversation.cc`: with the flag set, `Create` prefills the preface into the session and later turns are rendered without it; each `SendMessage` prefills only the suffix of the newly rendered history into the same session, so earlier turns are reused.
+- `Conversation.kt`: `getTokenCount()` — "number of tokens in the conversation KV Cache (prefill + decode)".
+- `runtime/engine/engine_settings.cc`: with no setting, the limit is the model's `LlmMetadata.max_num_tokens`, else 4096 for a short prompt hint. `gemma3-1b-it-int4.litertlm` has no `max_num_tokens` field in its metadata (decoded from the file), so its default would also be 4096 [VERIFY on device]. The Google AI Edge Gallery uses 1024 for this model. If 4096 doesn't fit a model, load or a turn fails and the run is invalid.
+
+**How its verdict is read.** `Summary` applies the same three checks (median decode ≥ 5 tok/s, p95 TTFT ≤ 3,000 ms, 0 OOM kills) and the same validity rules, plus "no preface row" and "preface not prefilled" (a `preface` or `conv_reset` row with `ctx_tokens` 0 or empty) make a chat run invalid. The verdict line reads `GATE S2 (<model>, chat mode): …`. The summary also prints the preface time and tokens, the system prompt file, the reset count and the slowest re-prefill. Preface and reset time is **not** in any gate number; it is reported so the cost of opening a conversation stays visible.
+
+**Whether a chat-mode result decides the S2 gate is [OPEN].** It counts only if the owner records a dated Decision in `docs/project_status.md`. The per-prompt soak result stays recorded either way.
+
 ## 3. What the spike app does
 - **Main screen** (plain Android views, no UI libraries):
   - device line and the model folder path
-  - one **Soak 50** and one **Smoke 3** button per `.litertlm` file found
+  - one **Soak 50**, one **Chat soak 50** (§2.1) and one **Smoke 3** button per `.litertlm` file found
   - **Rescan model files**, **Stop run**, a live progress line
   - **Share newest run (CSV)**, **Share exit reasons**, **Share summary**
   - the newest run's summary.
@@ -54,9 +78,10 @@ The app's summary prints which branch applies (`Summary.outcome`). Note from `do
     - `start`: file, bytes, device, Android, total RAM, `lmk_report`, prompt count, runtime
     - `load`: `load_ms`
     - one `prompt` row per prompt
+    - chat mode only: `preface` and `conv_reset` (§2.1)
     - `error`
     - an end row: `stop` (clean), `cancelled` (Stop pressed), `aborted` (load failed) or `inference_died` (written by the UI).
-  - Prompt columns: `prompt_idx, prompt_id, prompt_chars, prefill_tokens, decode_tokens, tokens_source, chunks, ttft_ms, decode_tps, total_ms`, plus the runtime's own `eng_ttft_ms, eng_decode_tps` for cross-checking (LiteRT-LM's experimental benchmark counters).
+  - Prompt columns: `prompt_idx, prompt_id, prompt_chars, prefill_tokens, decode_tokens, tokens_source, chunks, ttft_ms, decode_tps, total_ms`, plus the runtime's own `eng_ttft_ms, eng_decode_tps` for cross-checking (LiteRT-LM's experimental benchmark counters), and `ctx_tokens` (KV cache tokens after the turn; filled in chat mode).
   - Memory of `:inference`: `pss_kb` (`Debug.getPss()`, read between prompts because it is slow), `rss_kb`, and `rss_peak_kb` (VmHWM from `/proc/self/status`, which catches the peak during decoding). System memory: `avail_mem_mb`, `low_memory`.
   - Conditions on every row: `thermal` (PowerManager thermal status), `battery_pct`, `current_ua`, `charging`, `batt_temp_dc`, `screen_on`, `airplane`, `brightness`, `power_save`.
 - **Exit reasons:** `files/exit_reasons.csv` (`time, epoch_ms, reason, status, detail, process, importance, pss_kb, rss_kb`), written by the UI process on launch, on resume and after an `:inference` death. Never cleared.
@@ -114,6 +139,7 @@ Run on the **Galaxy A23** (floor) if available and on the **vivo Y17s**. Label e
 2. Soak 50: Gemma.
 3. Let the phone cool down until the battery temperature is back near where it started (about 10 min, screen off, not charging).
 4. Soak 50: Qwen.
+4a. Chat soak 50 for each model (§2.1), with the same cooldown before each. Its verdict is reported separately; whether it decides the gate is [OPEN].
 5. Optional, recommended by the feature doc's test plan: repeat the Gemma soak **with S1's overlay running** (start *Bibi Calm 2 fps* in the S1 app first). Label it "with overlay". Whether this run is required for the gate is [OPEN].
 
 **Before every soak:**

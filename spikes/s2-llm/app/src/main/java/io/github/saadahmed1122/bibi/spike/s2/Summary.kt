@@ -10,6 +10,10 @@ import kotlin.math.ceil
  *
  * Gate (PRD 0.7, interpretation in SPEC.md §2): p95 time to first token ≤ 3 s, median decode
  * speed ≥ 5 tokens/s, zero OOM kills of `:inference` in the 50-prompt soak.
+ *
+ * Two run modes are judged with the same checks, each on its own: `soak` (a fresh conversation
+ * per prompt) and `chat` (one conversation with the system prompt prefilled once, untimed, then 50
+ * turns; SPEC.md §2.1). Chat verdicts are labelled "chat mode".
  */
 class Summary private constructor(
     val model: String,
@@ -33,7 +37,19 @@ class Summary private constructor(
     val maxDecodeTokens: Int?,
     val oomKills: Int,
     val invalidReasons: List<String>,
+    /** Chat mode: the first preface prefill (app clock) and its token count. */
+    val prefaceMs: Double?,
+    val prefaceTokens: Int?,
+    /** Chat mode: conversations reset before the KV cache would overflow, and the slowest re-prefill. */
+    val resets: Int,
+    val maxResetMs: Double?,
+    /** Chat mode: the system prompt asset used for the preface. */
+    val systemPrompt: String,
 ) {
+
+    val chat: Boolean get() = mode == MODE_CHAT
+
+    private val label: String get() = if (chat) "$model, chat mode" else model
 
     val valid: Boolean get() = invalidReasons.isEmpty()
 
@@ -48,9 +64,9 @@ class Summary private constructor(
         if (valid) "VALID for gate: yes" else "VALID for gate: no — ${invalidReasons.joinToString("; ")}"
 
     fun gateLine(): String = when (pass) {
-        null -> "GATE S2 ($model): no verdict, run not valid"
-        true -> "GATE S2 ($model): PASS"
-        false -> "GATE S2 ($model): FAIL — " + listOfNotNull(
+        null -> "GATE S2 ($label): no verdict, run not valid"
+        true -> "GATE S2 ($label): PASS"
+        false -> "GATE S2 ($label): FAIL — " + listOfNotNull(
             if (!ttftOk) "p95 TTFT ${f(ttftP95Ms, 0)} ms > ${TTFT_MAX_MS.toInt()} ms" else null,
             if (!speedOk) "median ${f(tpsMedian, 2)} tok/s < ${MIN_TPS.toInt()}" else null,
             if (!oomOk) "$oomKills OOM kill(s)" else null,
@@ -74,6 +90,10 @@ class Summary private constructor(
             appendLine("Max thermal:     ${maxThermal ?: "n/a"} (0 none … 3 severe)")
             appendLine("Battery:         ${startPct ?: "?"}% → ${endPct ?: "?"}%, mean ${f(meanCurrentMa, 0)} mA")
             appendLine("Max tokens:      prefill ${maxPrefillTokens ?: "n/a"}, decode ${maxDecodeTokens ?: "n/a"} (cap $MAX_NEW)")
+            if (chat) {
+                appendLine("Preface:         ${f(prefaceMs, 0)} ms, ${prefaceTokens ?: "n/a"} tokens, system=$systemPrompt (untimed)")
+                appendLine("Conv resets:     $resets   (slowest re-prefill ${f(maxResetMs, 0)} ms, untimed)")
+            }
             appendLine(validityLine())
             appendLine(gateLine())
             if (pass == false) {
@@ -106,6 +126,10 @@ class Summary private constructor(
         const val SOAK_PROMPTS = 50
         const val MAX_NEW = 128
         const val MIN_START_PCT = 60
+
+        /** Run modes that can give a verdict; must match InferenceService. */
+        const val MODE_SOAK = "soak"
+        const val MODE_CHAT = "chat"
 
         /** Kills of `:inference` within this long after the run's last row still belong to it. */
         const val EXIT_GRACE_MS = 120_000L
@@ -162,8 +186,18 @@ class Summary private constructor(
             val died = "inference_died" in kinds
 
             val reasons = mutableListOf<String>()
-            if (mode != "soak") reasons += "${mode.ifEmpty { "unknown" }} run (only soak runs count)"
+            if (mode != MODE_SOAK && mode != MODE_CHAT) reasons += "${mode.ifEmpty { "unknown" }} run (only soak and chat runs count)"
             if (kinds.firstOrNull() != "start") reasons += "no start row"
+            val preface = rows.firstOrNull { it["kind"] == "preface" }
+            val resetRows = rows.filter { it["kind"] == "conv_reset" }
+            if (mode == MODE_CHAT && preface == null && oomKills == 0) reasons += "no preface row"
+            // The KV cache must hold the preface before the first timed turn; otherwise its prefill
+            // lands in that turn's TTFT (seen on device 2026-10-30 with prefillPrefaceOnInit alone).
+            val notPrefilled = (listOfNotNull(preface) + resetRows).filter { (it.int("ctx_tokens") ?: 0) <= 0 }
+            if (mode == MODE_CHAT && notPrefilled.isNotEmpty()) {
+                reasons += "preface not prefilled (" +
+                    notPrefilled.joinToString("/") { "${it["kind"]} ctx_tokens=${it["ctx_tokens"].ifEmpty { "?" }}" } + ")"
+            }
             if (planned != null && planned != SOAK_PROMPTS) reasons += "planned $planned prompts, the gate needs $SOAK_PROMPTS"
             if (oomKills == 0) {
                 if (planned != null && prompts.size < planned) reasons += "only ${prompts.size} of $planned prompts finished"
@@ -207,6 +241,11 @@ class Summary private constructor(
                 maxDecodeTokens = prompts.mapNotNull { it.int("decode_tokens") }.maxOrNull(),
                 oomKills = oomKills,
                 invalidReasons = reasons,
+                prefaceMs = preface?.double("total_ms"),
+                prefaceTokens = preface?.int("prefill_tokens"),
+                resets = resetRows.size,
+                maxResetMs = resetRows.mapNotNull { it.double("total_ms") }.maxOrNull(),
+                systemPrompt = preface?.get("detail")?.substringAfter("system=", "")?.substringBefore(' ').orEmpty(),
             )
         }
 

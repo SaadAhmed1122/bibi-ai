@@ -22,7 +22,25 @@ interface LlmEngine : AutoCloseable {
      */
     fun generate(prompt: String, maxTokens: Int, onToken: (String) -> Unit): EngineCounts
 
-    /** Asks a running [generate] to stop early. Safe to call from any thread; no-op when idle. */
+    /**
+     * Chat mode: closes any open chat, then opens one conversation whose preface — [systemPrompt]
+     * plus one scripted exchange ([primerUser], [primerReply]) — is prefilled now (blocking, so the
+     * caller times it outside the measured turns). Nothing is decoded. Replies are capped at
+     * [maxTokens] new tokens per turn. Returns the tokens in the KV cache afterwards, or null.
+     */
+    fun openChat(systemPrompt: String, primerUser: String, primerReply: String, maxTokens: Int): Int?
+
+    /**
+     * Chat mode: one user turn in the chat from [openChat]; earlier turns stay in the KV cache.
+     * Same streaming, counters and errors as [generate]; [EngineCounts.contextTokens] is the KV
+     * cache size after the turn.
+     */
+    fun chat(prompt: String, onToken: (String) -> Unit): EngineCounts
+
+    /** Chat mode: closes the open chat, if any. */
+    fun closeChat()
+
+    /** Asks a running [generate] or [chat] to stop early. Safe to call from any thread; no-op when idle. */
     fun cancel()
 
     /** Frees the model. The instance can't be used afterwards. */
@@ -35,4 +53,6 @@ data class EngineCounts(
     val decodeTokens: Int? = null,
     val ttftMs: Double? = null,
     val decodeTokensPerSecond: Double? = null,
+    /** Tokens in the conversation's KV cache after the call (prefill + decode, all turns). */
+    val contextTokens: Int? = null,
 )

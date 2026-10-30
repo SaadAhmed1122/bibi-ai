@@ -38,7 +38,7 @@ Details and sources are in [SPEC.md §4](SPEC.md#4-model-files-the-owner-downloa
    adb push gemma3-1b-it-int4.litertlm /sdcard/Android/data/io.github.saadahmed1122.bibi.spike.s2/files/models/
    adb push <qwen-file>.litertlm      /sdcard/Android/data/io.github.saadahmed1122.bibi.spike.s2/files/models/
    ```
-3. In the app, tap **Rescan model files**. Each file gets a **Soak 50** and a **Smoke 3** button.
+3. In the app, tap **Rescan model files**. Each file gets a **Soak 50**, a **Chat soak 50** and a **Smoke 3** button.
 
 **If `adb push` is refused** for that folder [VERIFY on vivo], use the app's private folder instead (debug builds only):
 ```bash
@@ -50,6 +50,7 @@ adb shell rm /data/local/tmp/gemma3-1b-it-int4.litertlm
 ## Using the app
 - **Smoke 3: <file>:** loads the model and runs 3 prompts. Use it first, to check that the model works. It never counts for the gate.
 - **Soak 50: <file>:** the gate run. Loads the model, then runs all 50 prompts, each as a fresh chat, with up to 128 new tokens.
+- **Chat soak 50: <file>:** the same 50 prompts as turns of one conversation. The longer Bibi system prompt is prefilled once before the timed turns, and again if the conversation fills up (see [SPEC.md §2.1](SPEC.md#21-chat-mode-added-2026-10-30-owner-request)). Its verdict reads `GATE S2 (<model>, chat mode)`.
 - **Stop run:** ends the run early. The run is then marked invalid.
 - The progress line shows the current prompt and the last prompt's first-token time and speed.
 - The results panel shows the newest run's summary:
@@ -77,4 +78,5 @@ adb shell rm /data/local/tmp/gemma3-1b-it-int4.litertlm
 7. Check `VALID for gate: yes`, then tap **Share newest run (CSV)** and **Share summary**, and attach both to issue #5. If it isn't valid, repeat the run.
 8. Let the phone cool for about 10 min (screen off, unplugged), then repeat steps 5–7 for the Qwen file.
 9. Optional: repeat the Gemma soak with S1's *Bibi Calm 2 fps* overlay running, and label it "with overlay".
-10. At the end, tap **Share exit reasons** and attach it to issue #5. Do this on each test phone (Galaxy A23 first, if available, then the vivo Y17s).
+10. **Chat soak** (after the soaks above, with the same preparation as step 5 and a 10 min cooldown first): tap **Chat soak 50** for Gemma. The first line says *prefilling system prompt*; that part can take about 15 s and isn't timed. Then it runs like a soak. When it says *Done*, check `VALID for gate: yes` and the `GATE S2 (<model>, chat mode)` line, note the `Preface` and `Conv resets` lines (the Preface line should show about 300+ tokens; if the summary says `preface not prefilled`, stop and share the CSV), and share the CSV and summary to issue #5 as in step 7. Repeat for the Qwen file. Whether this result decides the gate is the owner's call [OPEN].
+11. At the end, tap **Share exit reasons** and attach it to issue #5. Do this on each test phone (Galaxy A23 first, if available, then the vivo Y17s).

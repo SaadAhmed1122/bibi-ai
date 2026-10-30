@@ -59,3 +59,6 @@ Run a small language model fully on device, in the `:inference` process, with st
 - **Unit tests:** `FakeInferenceEngine`, cancellation, stream conflation, and the token budgeter.
 - **Integration test:** kill `:inference` during generation. The UI must recover, the overlay must stay alive, and an error state must show.
 - Record every number in the spike tracker. Log the gate result and the runtime choice as a dated decision.
+
+## S2 result and runtime requirement (2026-10-30)
+Gemma 3 1B int4 on LiteRT-LM 0.16.1 passes S2 on the vivo Y17s in chat mode (TTFT p95 2,409 ms, 7.04 tok/s, 0 OOM; `spikes/s2-llm/results/RESULTS.md`). It fails when every message opens a new conversation (TTFT p95 3,493 ms, about 50 ms per prompt token). **Requirement:** keep one conversation per chat and prefill the system prompt once; with Gemma 3 the preface needs a user/model exchange, because its template has no system turn. The runtime choice itself is still recorded only for this device [VERIFY on the Galaxy A23].
