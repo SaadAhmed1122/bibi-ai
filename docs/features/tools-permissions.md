@@ -56,6 +56,13 @@ Let Bibi perform a small set of phone actions safely. Every action goes through 
 - **Schema** (§16.1): `ToolSpec(name, description, parameters, risk, androidPermissions, reversible, confirmationTemplate, timeoutMs)`.
 - **Shortcut path** (§13.5): a deterministic rules/regex matcher for the top commands. It skips the LLM entirely, so it is instant and costs no battery.
 - **LLM path:** constrained `<tool_call>` output (or a two-pass fallback) → schema validation → one repair attempt → a clarifying question.
+- **S4 real-LLM path (spike only, Decisions 2026-10-30; details in `spikes/s4-tools/SPEC.md` §2.1, §4):**
+  - Order: shortcut matcher first, unchanged; models only run on a miss, so the 300 ms gate path never waits for a model.
+  - Router (PRD §13.4 tool-schema router): MediaPipe Decision Maker (`tasks-decision` 1.2.0, `embeddinggemma-2-text-270m.litertlm`) chooses one of the five tools or `none`. `none`, an unknown key or low confidence (< 0.5 [OPEN]) means no action and the clarify/chat path. The router never dispatches anything.
+  - Tool call: LiteRT-LM 0.16.1 with Gemma 3 1B int4; the conversation sees **only the chosen tool**, `automaticToolCalling = false`, and the `@Tool` methods are inert (they throw).
+  - Validation: each `Message.toolCalls` entry is re-serialized to the parser's `{"tool", "args"}` JSON and goes through `ToolCallParser` → `ToolValidator` (one repair, scoped to the exposed tool) → `PermissionEngine` → `ToolExecutor`, the same as the fake LLM. A call naming a tool that wasn't exposed is rejected outright.
+  - Permissions: none added. Dial stays `ACTION_DIAL` with a confirmation card. MediaPipe's transitive `datatransport` (it would add `INTERNET`, `ACCESS_NETWORK_STATE`) is excluded and both permissions are removed in the manifest.
+  - Results are provisional until S2 is decided and don't decide the S2 runtime [OPEN].
 - **Confused-deputy defenses** (§16.6):
   - Provenance tags on every string in the prompt.
   - The executor builds intents from validated arguments only.
@@ -64,6 +71,8 @@ Let Bibi perform a small set of phone actions safely. Every action goes through 
 
 ## Risks
 - **Tool-call formatting** from a small int4 model may be unreliable (§13.3, §13.5). The shortcut path and validation are the mitigation.
+- **Gemma 3 1B tool support [VERIFY]:** the LiteRT-LM guide says tool use needs a model with tool support (it names FunctionGemma). If Gemma 3 1B's template doesn't produce structured `toolCalls`, the S4 router still reads a JSON call written as text, and the benchmark's `source` column shows which happened.
+- **Router mistakes are final for that request:** only the chosen tool is exposed, so a wrong router choice can't be corrected by the LLM. This is intended (less surface for the model), and the S4 LLM benchmark measures how often it happens.
 - **Prompt injection** (FR-124): low exposure in MVP because there is no notification or file reading, but keep taint tracking in the design.
 - **Package visibility on Android 11+** may hide apps from `open_app` without the correct `<queries>` entries.
 - **Play policy:** adding any restricted permission later (SMS, call log, Accessibility) changes the review risk profile (0.8 reasoning).
@@ -79,5 +88,6 @@ Let Bibi perform a small set of phone actions safely. Every action goes through 
   - Tool-call parser and validator: valid, malformed, and missing-parameter cases; repair once, then ask.
   - Shortcut matcher: phrase coverage.
 - **S4 timing (A23):** shortcut path from submit to intent launch, p50 and p95, over 20 runs per action. Pass: < 300 ms.
-- **LLM path:** 20 prompts per action. Record valid-JSON %, correct-tool %, and correct-argument %. This is a reduced version of the §13.9 harness.
+- **LLM path:** 20 prompts per action. Record valid-JSON %, correct-tool %, and correct-argument %. This is a reduced version of the §13.9 harness. Built in S4 as the **LLM benchmark** (110 prompts incl. 10 "none", dry run; adds router accuracy, p50/p95 latency and peak PSS) [VERIFY on device].
+- **JVM tests for the real-LLM path (S4 `tools/core-test`):** router label → exposed tool (incl. `none` and low confidence), LiteRT-LM call → parser JSON, rejection of tools outside the exposed subset, one repair, prompt set (no shortcut matches), per-action summary.
 - **Safety:** an injected instruction in pasted text never executes without confirmation.
