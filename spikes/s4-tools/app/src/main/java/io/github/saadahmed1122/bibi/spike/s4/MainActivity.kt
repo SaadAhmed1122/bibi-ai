@@ -18,12 +18,21 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
  * S4 spike screen (plain views, throwaway). One path for every action:
  * text → ShortcutParser or FakeLlm + ToolRouter → PermissionEngine → (confirmation) → ToolExecutor.
+ * With "Real LLM path" on, a shortcut miss (and only a miss: the shortcut path is unchanged and
+ * never waits for a model) goes Decision Maker → Gemma tool call (one tool exposed) →
+ * LlmToolRouter (parse, validate, one repair, exposed-subset check) → the same PermissionEngine.
  *
  * Timing (SystemClock.elapsedRealtimeNanos, see SPEC.md §3):
  * t0 = submit (button tap handler entered) → parse done → policy done → intent/torch call built →
@@ -41,12 +50,21 @@ class MainActivity : Activity() {
     private val fakeLlm = FakeLlm()
     private val handler = Handler(Looper.getMainLooper())
     private val io: ExecutorService = Executors.newSingleThreadExecutor()
+    private val scope = MainScope()
+    private lateinit var pipeline: LlmPipeline
+    private var llmJob: Job? = null
+    private var llmBenchJob: Job? = null
+    private var loadJob: Job? = null
+    private var loadLine = "not loaded"
 
     private var apps: AppResolver? = null
     private var handlersLine = ""
 
     private lateinit var input: EditText
     private lateinit var fakeLlmBox: CheckBox
+    private lateinit var realLlmBox: CheckBox
+    private lateinit var modelStatus: TextView
+    private lateinit var llmBenchButton: Button
     private lateinit var taintBox: CheckBox
     private lateinit var dryRunBox: CheckBox
     private lateinit var killBox: CheckBox
@@ -69,6 +87,8 @@ class MainActivity : Activity() {
         val autoConfirm: Boolean,
         val ctx: PolicyContext?,
         val onDone: (Boolean) -> Unit = {},
+        /** On a shortcut miss, try the real LLM path instead of stopping at no_match. */
+        val realLlm: Boolean = false,
     )
 
     private class Timing(val t0: Long) {
@@ -85,7 +105,9 @@ class MainActivity : Activity() {
         executor = ToolExecutor(this)
         torch = TorchController(this)
         keyguard = getSystemService(KeyguardManager::class.java)
+        pipeline = LlmPipeline(this)
         setContentView(buildUi())
+        refreshModelStatus()
         loadAppIndex()
         refreshResults()
     }
@@ -97,6 +119,7 @@ class MainActivity : Activity() {
 
     override fun onStop() {
         if (benchRunning) abortBenchmark("activity stopped")
+        if (llmBenchJob?.isActive == true) stopLlmBenchmark("activity stopped")
         torchTimeout?.let { handler.removeCallbacks(it) }
         torchTimeout = null
         torch.stop()
@@ -107,6 +130,8 @@ class MainActivity : Activity() {
         handler.removeCallbacksAndMessages(null)
         dialog?.dismiss()
         io.shutdownNow()
+        scope.cancel()
+        pipeline.close()
         super.onDestroy()
     }
 
@@ -144,11 +169,19 @@ class MainActivity : Activity() {
         col.addView(input)
         col.addView(button("Submit") { submitLive(input.text.toString()) })
 
-        fakeLlmBox = box("Fake LLM path (fixed mappings; the real LLM waits for S2)")
+        fakeLlmBox = box("Fake LLM path (fixed mappings, baseline; text skips the shortcut matcher)")
+        realLlmBox = box("Real LLM path (on a shortcut miss: Decision Maker → Gemma 3 1B tool call)")
+        // One model path at a time.
+        fakeLlmBox.setOnCheckedChangeListener { _, on -> if (on) realLlmBox.isChecked = false }
+        realLlmBox.setOnCheckedChangeListener { _, on -> if (on) fakeLlmBox.isChecked = false }
         taintBox = box("Untrusted content in context (simulated notification text → taint)")
         dryRunBox = box("Dry run (resolve the intent, don't launch)")
         killBox = box("Disable all actions (kill switch)")
-        listOf(fakeLlmBox, taintBox, dryRunBox, killBox).forEach(col::addView)
+        listOf(fakeLlmBox, realLlmBox, taintBox, dryRunBox, killBox).forEach(col::addView)
+        modelStatus = text("", mono = true).apply { textSize = 11f }
+        col.addView(modelStatus)
+        col.addView(button("Load models") { loadModels() })
+        col.addView(button("Rescan model files") { refreshModelStatus() })
 
         col.addView(text("Quick commands:"))
         for (cmd in QUICK) {
@@ -164,6 +197,8 @@ class MainActivity : Activity() {
 
         benchButton = button("Benchmark (20× per action, shortcut path, dry run + torch)") { startBenchmark() }
         col.addView(benchButton)
+        llmBenchButton = button(LLM_BENCH_LABEL) { toggleLlmBenchmark() }
+        col.addView(llmBenchButton)
         col.addView(button("Refresh results") { refreshResults() })
         col.addView(button("Share log (CSV)") { shareLog() })
         col.addView(button("New run file") {
@@ -212,7 +247,7 @@ class MainActivity : Activity() {
     // ---- Submit path ------------------------------------------------------------------------------
 
     private fun submitLive(text: String) {
-        if (benchRunning) {
+        if (benchRunning || llmBenchJob?.isActive == true) {
             toast("Benchmark running")
             return
         }
@@ -224,6 +259,7 @@ class MainActivity : Activity() {
                 dryRun = dryRunBox.isChecked,
                 autoConfirm = false,
                 ctx = null,
+                realLlm = realLlmBox.isChecked && !fakeLlmBox.isChecked,
             ),
         )
     }
@@ -255,17 +291,26 @@ class MainActivity : Activity() {
             }
         } else {
             ShortcutParser.parse(r.text) ?: run {
+                // The Decision Maker and the LLM run only after a miss, never before or inside the matcher.
+                if (r.realLlm) return startLlm(r.copy(path = "llm"), t)
                 log.event("no_match", "shortcut matcher: no match", path = r.path)
                 show("No shortcut matched. In the app this would go to the LLM.")
                 return r.onDone(false)
             }
         }
         t.parse = SystemClock.elapsedRealtimeNanos()
+        handleDecision(call, evaluate(call, t, r), t, r)
+    }
 
+    /** Permission Engine decision for [call]; sets [Timing.policy]. */
+    private fun evaluate(call: ToolCall, t: Timing, r: Request): Decision {
         val target = (call as? ToolCall.OpenApp)?.let { apps?.resolve(it.app) }?.let { "${it.label} (${it.packageName})" }
         val decision = engine.evaluate(call, policyContext(r), target)
         t.policy = SystemClock.elapsedRealtimeNanos()
+        return decision
+    }
 
+    private fun handleDecision(call: ToolCall, decision: Decision, t: Timing, r: Request) {
         when (decision) {
             is Decision.Allow -> execute(call, t, r, note = "")
             is Decision.Deny -> {
@@ -407,6 +452,10 @@ class MainActivity : Activity() {
     private fun startBenchmark() {
         if (benchRunning) return
         if (apps == null) return toast("Launcher apps still loading")
+        // Model work on other cores would skew the gate numbers.
+        if (llmBenchJob?.isActive == true || llmJob?.isActive == true || loadJob?.isActive == true) {
+            return toast("Wait for the LLM path to finish")
+        }
         val ctx = PolicyContext(setOf(Provenance.USER_TYPED), deviceLocked = keyguard.isDeviceLocked)
         fun req(text: String, path: String) =
             Request(text, kind = "bench", path = path, dryRun = true, autoConfirm = true, ctx = ctx, onDone = { nextBenchStep() })
@@ -450,10 +499,232 @@ class MainActivity : Activity() {
         log.event("bench_aborted", reason)
     }
 
+    // ---- Real LLM path ---------------------------------------------------------------------------
+
+    private fun refreshModelStatus() {
+        fun line(f: java.io.File?, name: String) =
+            if (f?.isFile == true) "  $name: present (${f.length() / (1024 * 1024)} MB)" else "  $name: MISSING"
+        modelStatus.text = buildString {
+            appendLine("Real LLM path models (not in the APK). adb push both files into:")
+            appendLine("  ${pipeline.modelsDir?.absolutePath ?: "external storage unavailable"}")
+            appendLine(line(pipeline.dmFile, DecisionRouter.MODEL_FILE))
+            appendLine(line(pipeline.llmFile, LiteRtToolLlm.MODEL_FILE))
+            append("Models: $loadLine")
+        }
+    }
+
+    private fun loadModels() {
+        if (pipeline.loaded) return toast("Models already loaded")
+        if (loadJob?.isActive == true) return
+        if (!pipeline.filesPresent()) return toast("Model files missing; see the model status")
+        loadJob = scope.launch { loadAndReport() }
+    }
+
+    /** Loads both models once (off the main thread) and logs load time and PSS. False if loading failed. */
+    private suspend fun loadAndReport(): Boolean {
+        loadLine = "loading…"
+        refreshModelStatus()
+        return try {
+            pipeline.load()?.let { rep ->
+                loadLine = String.format(
+                    Locale.US, "loaded: Decision Maker %.0f ms, Gemma %.0f ms, PSS %d MB",
+                    rep.dmMs, rep.llmMs, rep.pssKb / 1024,
+                )
+                log.event("llm_load", "dm_ms=${SpikeLog.ms(rep.dmMs)}; llm_ms=${SpikeLog.ms(rep.llmMs)}; pss_kb=${rep.pssKb}", totalMs = rep.dmMs + rep.llmMs)
+            }
+            true
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            loadLine = "not loaded (cancelled)"
+            throw e
+        } catch (e: Exception) {
+            loadLine = "load FAILED: ${e.javaClass.simpleName}: ${e.message}"
+            log.event("llm_load_failed", "${e.javaClass.simpleName}: ${e.message}")
+            false
+        } finally {
+            if (!isDestroyed) refreshModelStatus()
+        }
+    }
+
+    /** Live request after a shortcut miss. [t] started at submit. */
+    private fun startLlm(r: Request, t: Timing) {
+        if (llmJob?.isActive == true || loadJob?.isActive == true) {
+            show("LLM path busy (a request or the model load is still running).")
+            return r.onDone(false)
+        }
+        if (!pipeline.filesPresent()) {
+            log.event("no_match", "shortcut matcher: no match; LLM model files missing", path = r.path)
+            show("No shortcut matched, and the model files are missing (see the model status).")
+            return r.onDone(false)
+        }
+        show(if (pipeline.loaded) "LLM path: thinking…" else "LLM path: loading models (first use)…")
+        llmJob = scope.launch {
+            // A first-use load is not part of the request time: t0 restarts after it.
+            val timing = if (pipeline.loaded) t else if (loadAndReport()) Timing(SystemClock.elapsedRealtimeNanos()) else t
+            onLlmResult(r, timing, pipeline.run(r.text), prompt = null)
+        }
+    }
+
+    /**
+     * Runs on the main thread after the pipeline returned. A validated call goes to the Permission
+     * Engine. Live: then on to confirmation/executor as for any call. Benchmark ([prompt] set): it
+     * stops at the decision (a confirmation is cancelled at once), so nothing is launched.
+     */
+    private suspend fun onLlmResult(r: Request, t: Timing, run: LlmRun, prompt: BenchPrompt?) {
+        t.parse = SystemClock.elapsedRealtimeNanos()
+        val bench = prompt != null
+        val result = run.route
+        val route = result?.route
+        val selection = run.selection
+        val exposed = (selection as? ToolSelection.Expose)?.exposed.orEmpty()
+        val call = (route as? LlmRoute.Call)?.call
+        var decision: Decision? = null
+        val outcome: String
+        val note: String
+        when {
+            run.error != null -> {
+                outcome = "error"
+                note = run.error
+                show("LLM path error: ${run.error}")
+            }
+            selection is ToolSelection.NoAction -> {
+                outcome = "no_action"
+                note = selection.reason
+                show("No action (${selection.reason}). In the app this goes to the clarify/chat path.")
+            }
+            route is LlmRoute.Rejected -> {
+                outcome = "rejected"
+                note = route.reason
+                show("LLM path: REJECTED, nothing runs. ${route.reason}")
+            }
+            route is LlmRoute.AskUser -> {
+                outcome = "ask_user"
+                note = route.errors.joinToString("; ")
+                show("LLM path: invalid twice → ask user.\n${route.question}\nErrors: $note")
+            }
+            route is LlmRoute.NoToolCall -> {
+                outcome = "no_tool_call"
+                note = "text: " + route.text.take(160)
+                show("LLM path: the model answered in text, no action.\n${route.text.take(300)}")
+            }
+            call != null -> {
+                outcome = "call"
+                note = call.redacted() + if (result?.repaired == true) "; repaired" else ""
+                decision = evaluate(call, t, r)
+            }
+            else -> {
+                outcome = "error"
+                note = "no route"
+                show("LLM path error: no route")
+            }
+        }
+        val e2eMs = ms(t.t0, if (decision != null) t.policy else t.parse)
+        val decisionText = when (decision) {
+            null -> ""
+            is Decision.Allow -> "allow"
+            is Decision.NeedsConfirmation -> "confirm"
+            is Decision.Deny -> "deny: ${decision.reason}"
+        }
+        if (call != null && decision != null) {
+            if (bench) {
+                // Dry run: consume the confirmation so nothing stays pending, never execute.
+                if (decision is Decision.NeedsConfirmation) engine.respond(decision.request.id, UserResponse.CANCEL, keyguard.isDeviceLocked)
+            } else {
+                handleDecision(call, decision, t, r)
+            }
+        } else if (!bench) {
+            r.onDone(false)
+        }
+
+        // After the timed section: PSS (slow, off the main thread), then the row.
+        val pss = pipeline.pssKb()
+        val routeLabel = when (selection) {
+            is ToolSelection.Expose -> selection.tool.wire
+            is ToolSelection.NoAction -> ToolRouting.NONE
+            null -> ""
+        }
+        val expectedCall = prompt?.expectedCall
+        val dialInvolved = ToolName.DIAL in exposed || prompt?.expected == ToolName.DIAL
+        val top = run.router?.probabilities?.entries?.sortedByDescending { it.value }?.take(3)
+            ?.joinToString(" ") { String.format(Locale.US, "%s=%.2f", it.key, it.value) }.orEmpty()
+        val promptNote = prompt?.let { "prompt: " + if (dialInvolved) LogRedaction.maskDigits(it.text) else it.text }
+        val detail = listOfNotNull(
+            promptNote,
+            if (dialInvolved && outcome != "call") LogRedaction.maskDigits(note) else note,
+            top.takeIf { it.isNotEmpty() }?.let { "p: $it" },
+        ).joinToString(" | ")
+        log.llm(
+            kind = if (bench) LlmSummary.BENCH_KIND else LlmSummary.LIVE_KIND,
+            action = call?.tool?.wire ?: routeLabel.ifEmpty { ToolRouting.NONE },
+            mode = if (r.dryRun) "dry_run" else "real",
+            ok = outcome == "call" && decision !is Decision.Deny,
+            detail = detail,
+            llm = mapOf(
+                "expected" to (if (prompt == null) "" else prompt.expected?.wire ?: ToolRouting.NONE),
+                "dm_label" to run.router?.label.orEmpty(),
+                "dm_conf" to run.router?.confidence?.let { String.format(Locale.US, "%.3f", it) }.orEmpty(),
+                "dm_ms" to SpikeLog.ms(run.dmMs),
+                "route" to routeLabel,
+                "llm_ttft_ms" to SpikeLog.ms(run.ttftMs),
+                "llm_ms" to SpikeLog.ms(run.llmMs),
+                "tool_name" to result?.toolName.orEmpty(),
+                "args_json" to result?.argsJsonForLog(exposed).orEmpty(),
+                "source" to result?.first?.source?.name?.lowercase(Locale.US).orEmpty(),
+                "json_ok" to result?.jsonValid?.toString().orEmpty(),
+                "args_ok" to result?.argsValid?.toString().orEmpty(),
+                "repaired" to result?.repaired?.toString().orEmpty(),
+                "call_tool" to call?.tool?.wire.orEmpty(),
+                "args_match" to if (expectedCall == null) "" else (call != null && LlmBenchPrompts.argsMatch(expectedCall, call)).toString(),
+                "outcome" to outcome,
+                "decision" to decisionText,
+                "e2e_ms" to SpikeLog.ms(e2eMs),
+                "pss_kb" to pss.toString(),
+            ),
+        )
+    }
+
+    private fun toggleLlmBenchmark() {
+        if (llmBenchJob?.isActive == true) return stopLlmBenchmark("stopped by user")
+        if (benchRunning) return toast("Shortcut benchmark running")
+        if (llmJob?.isActive == true || loadJob?.isActive == true) return toast("LLM path busy")
+        if (!pipeline.filesPresent()) return toast("Model files missing; see the model status")
+        llmBenchButton.text = "Stop LLM benchmark"
+        llmBenchJob = scope.launch {
+            try {
+                if (!pipeline.loaded && !loadAndReport()) return@launch
+                // Fixed context, like the shortcut benchmark: trusted text, actions enabled.
+                val ctx = PolicyContext(setOf(Provenance.USER_TYPED), deviceLocked = keyguard.isDeviceLocked)
+                val prompts = LlmBenchPrompts.ALL
+                log.event("llm_bench_start", "${prompts.size} prompts; dry run: stops at the Permission Engine decision; nothing is launched")
+                for ((i, p) in prompts.withIndex()) {
+                    show("LLM benchmark ${i + 1}/${prompts.size}…")
+                    val r = Request(p.text, kind = "bench", path = "llm", dryRun = true, autoConfirm = false, ctx = ctx)
+                    val t = Timing(SystemClock.elapsedRealtimeNanos())
+                    onLlmResult(r, t, pipeline.run(p.text), p)
+                    delay(BENCH_GAP_MS)
+                }
+                log.event("llm_bench_end", "done")
+                show("LLM benchmark done.")
+            } finally {
+                if (!isDestroyed) {
+                    llmBenchButton.text = LLM_BENCH_LABEL
+                    refreshResults()
+                }
+            }
+        }
+    }
+
+    private fun stopLlmBenchmark(reason: String) {
+        pipeline.cancel()
+        llmBenchJob?.cancel()
+        log.event("llm_bench_aborted", reason)
+        show("LLM benchmark stopped: $reason")
+    }
+
     // ---- Results ---------------------------------------------------------------------------------
 
     private fun refreshResults() {
-        results.text = "Run file: ${log.current?.name}\n\n" + Summary.from(log.readCurrent()).describe()
+        val csv = log.readCurrent()
+        results.text = "Run file: ${log.current?.name}\n\n" + Summary.from(csv).describe() + "\n\n" + LlmSummary.from(csv).describe()
     }
 
     private fun shareLog() {
@@ -477,6 +748,7 @@ class MainActivity : Activity() {
         const val LLM_RUNS = 6
         const val BENCH_GAP_MS = 150L
         const val TORCH_TIMEOUT_MS = 1_000L
+        const val LLM_BENCH_LABEL = "LLM benchmark (110 prompts, real models, dry run; minutes)"
 
         /** Benchmark commands for the four intent actions (dry run). Settings is on every launcher. */
         val BENCH_LAUNCH = listOf("open settings", "wake me at 7:30", "set a timer for 5 minutes", "call 0123 456 789")

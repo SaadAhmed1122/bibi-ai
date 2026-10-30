@@ -7,6 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Added
 - S2 results on the vivo Y17s: Gemma 3 1B int4 soak (gate FAIL on TTFT p95 3,493 ms; speed and memory pass) and earlier smoke/invalid runs, in `spikes/s2-llm/results/`.
+- S4 real-LLM path (Decision Maker router + LiteRT-LM tool calls) and its vivo Y17s results: shortcut gate PASS; Gemma 3 1B tool calls 0 % valid.
+- Project plugin ponytail (DietrichGebert/ponytail) enabled; always on via its hooks; precedence rule in CLAUDE.md §9.
 - Project plugin humanizer (blader/humanizer) enabled in `.claude/settings.json`.
 - Project plugins impeccable, ui-ux-pro-max and last30days enabled in `.claude/settings.json`; usage rules in `docs/tooling.md`.
 - Project scaffold created: `brainstorm.md`, `project_spec.md`, `CLAUDE.md`, `.env.example`, `.gitignore`.

@@ -102,6 +102,7 @@ Gate measurements also go in `reference/Pip_Spike_Tracker.xlsx`.
 - **Graphify:** follow the `## graphify` rules below. Run `graphify update .` after code changes.
 - **21st MCP:** UI inspiration search only. It returns React/Tailwind; translate ideas into Compose with `core/designsystem` tokens. Never paste web code into the app.
 - **Strix (local CLI):** run the `find-security-vulnerabilities-in-code` skill on changes to the Permission Engine, tool router, export/import, encryption, or overlay touch handling, and at the P2 gate. Fix findings with `fix-security-vulnerabilities-with-strix`. No Strix Cloud uploads without a decision entry.
+- **ponytail:** on in every session and subagent (its SessionStart hook): simplest code that works, YAGNI, stdlib first. CLAUDE.md wins on conflict: tests first, structured concurrency and full checks on Permission Engine, tool router and parser code are never "shortcuts". Write a deferred `shortcut:` as `// shortcut(#N): ...` with an issue, like TODOs (§5). Run `/ponytail-review` alongside `/review` before a PR.
 - If a tool is unavailable (no key, not installed, server down), say so in the session summary and continue with official docs. Don't silently skip it.
 
 ## 10. Repository Etiquette & Git Rules

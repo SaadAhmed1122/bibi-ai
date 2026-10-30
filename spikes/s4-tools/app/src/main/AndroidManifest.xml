@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Needed for AlarmClock.ACTION_SET_ALARM and ACTION_SET_TIMER (developer.android.com,
          "Common intents" → Alarm clock; AlarmClock reference says SET_TIMER requires it too). -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+
+    <!-- Offline only (CLAUDE.md §2): nothing may add network access. MediaPipe's tasks-core pulls in
+         Google datatransport, which declares both; it is excluded in app/build.gradle.kts and these
+         lines keep the merged manifest free of them in any case. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
 
     <!-- Flashlight via CameraManager.setTorchMode; no CAMERA permission is listed for it. The flash
          is optional so the app still installs on devices without one. -->
