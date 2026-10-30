@@ -4,7 +4,7 @@ A small standalone Android app that runs Bibi's five MVP phone actions (open app
 
 **Throwaway code.** Plain Android views. P1 rewrites everything.
 
-**Two LLM paths:** the **fake LLM** ("Fake LLM" switch, fixed text → JSON mappings) stays as the baseline. The **real LLM path** ("Real LLM path" switch) runs after a shortcut miss: MediaPipe Decision Maker picks one tool (or none), Gemma 3 1B on LiteRT-LM is shown only that tool and returns a tool call, and the call goes through the same parser, validator and Permission Engine. Its numbers are provisional until S2 is decided [OPEN] (Decisions 2026-10-30 in `docs/project_status.md`). The models are **not** in the APK; you push them (below).
+**Two LLM paths:** the **fake LLM** ("Fake LLM" switch, fixed text → JSON mappings) stays as the baseline. The **real LLM path** ("Real LLM path" switch) runs after a shortcut miss: MediaPipe Decision Maker picks one tool (or none), **slot extraction** reads that tool's arguments from your text (time, length, number, app name, on/off), and the call goes through the same parser, validator and Permission Engine. If a value is missing or unclear, it asks you instead of guessing. The old pass 2, Gemma 3 1B on LiteRT-LM making the tool call (0/100 valid calls on the vivo), is still there behind the **LLM tool call (experimental)** switch, off by default (Decisions 2026-10-30 in `docs/project_status.md`). The models are **not** in the APK; you push them (below).
 
 ## Build and install (on your computer)
 **Needs:** Android Studio (any 2026 stable release), the Android SDK Platform 36, and USB debugging enabled on the phone.
@@ -15,10 +15,10 @@ A small standalone Android app that runs Bibi's five MVP phone actions (open app
 
 Or from a terminal in this folder: `./gradlew :app:installDebug`
 
-**What was verified before this reached you:** `./gradlew :app:assembleDebug` builds (AGP 9.0.1), the merged manifest has only `SET_ALARM`, and the pure-Kotlin core passes its JVM tests (`tools/core-test/run.sh`: 439 checks). The real-LLM path has **not** run on a phone yet. If anything fails, paste the error into issue #8.
+**What was verified before this reached you:** `./gradlew :app:assembleDebug` builds (AGP 9.0.1), no permissions were added, and the pure-Kotlin core passes its JVM tests (`tools/core-test/run.sh`: 547 checks, including slot extraction on the 110 benchmark prompts). Slot extraction has **not** run on a phone yet. If anything fails, paste the error into issue #8.
 
 ## Models (real LLM path only)
-Two files, pushed into the app's folder on shared storage (install the app first so the folder exists; the screen prints the same path):
+The default path needs only the Decision Maker file. Gemma is needed only if you turn on **LLM tool call (experimental)**. Both are pushed into the app's folder on shared storage (install the app first so the folder exists; the screen prints the same path):
 ```bash
 adb shell mkdir -p /sdcard/Android/data/io.github.saadahmed1122.bibi.spike.s4/files/models
 adb push embeddinggemma-2-text-270m.litertlm /sdcard/Android/data/io.github.saadahmed1122.bibi.spike.s4/files/models/
@@ -31,7 +31,8 @@ adb push gemma3-1b-it-int4.litertlm         /sdcard/Android/data/io.github.saada
 
 ## The screen
 - **Text box + Submit**, and quick-command buttons.
-- **Real LLM path:** the shortcut matcher still goes first. Only text it doesn't match goes to the Decision Maker and Gemma. The first request loads the models (several seconds [VERIFY]); **Load models** does it in advance. The model status line shows the push folder, whether each file is present, and the load time and memory (PSS).
+- **Real LLM path:** the shortcut matcher still goes first. Only text it doesn't match goes to the Decision Maker, then slot extraction.
+- **LLM tool call (experimental):** off by default. With it on, Gemma makes the tool call instead of slot extraction, as in the first S4 run; **Load models** then loads Gemma too (about 1 GB more memory). Once loaded, Gemma stays in memory until you close the app. The first request loads the models (several seconds [VERIFY]); **Load models** does it in advance. The model status line shows the push folder, whether each file is present, and the load time and memory (PSS).
 - **Fake LLM path:** send the text through the fake model and the tool-call parser instead of the shortcut matcher. Phrases it knows are listed on screen, e.g. "it's dark in here", "broken timer test" (malformed first answer, repaired once), "send a text to mum" (unknown tool, rejected), "injection test" (dials a number). It also understands every quick command.
 - **Untrusted content in context:** pretends notification text is in the conversation. Every action then needs a confirmation.
 - **Dry run:** build and resolve the intent, don't launch it.
@@ -59,11 +60,12 @@ adb push gemma3-1b-it-int4.litertlm         /sdcard/Android/data/io.github.saada
 
 **Real LLM path (after steps 1–10; needs the two model files, see Models):**
 
-11. Push both models, tap **Rescan model files**, then **Load models**. Wait for `Models: loaded: Decision Maker … ms, Gemma … ms, PSS … MB` and **write it down**. If it says `load FAILED`, copy the message into issue #8 and stop here.
-12. Close other apps, press **LLM benchmark**, and don't touch the phone until the button reads "LLM benchmark …" again. Nothing should open or light up; if anything does, stop and report it. Then tap **Refresh results** and note the LLM table and the `Peak PSS` line. The `S4 shortcut gate:` line must be the same as after step 3.
-13. Turn **Real LLM path** on (Dry run off) and try once each: "I need to get up at 6:45 tomorrow" (alarm 06:45), "count down ten minutes for the eggs" (10-minute timer), "it's too dark to see anything" (torch on), "bring up google maps for me" (Maps), "get 020 7946 0018 up on the dialer" (confirmation card; tap **Open dialer**, the dialer shows the number and **does not call**; go back without calling), and "tell me a joke" (no action). Note for each what happened on screen and the result line. "open settings" must still go through the shortcut (instant, no model).
+11. Leave **LLM tool call (experimental)** off. Push the Decision Maker model (Gemma is optional), tap **Rescan model files**, then **Load models**. Wait for `Models: loaded: Decision Maker … ms, Gemma not loaded, PSS … MB` and **write it down**. If it says `load FAILED`, copy the message into issue #8 and stop here.
+12. Close other apps, press **LLM benchmark**, and don't touch the phone until the button reads "LLM benchmark …" again. Nothing should open or light up; if anything does, stop and report it. Then tap **Refresh results** and note the slot-extraction table (`DM acc`, `tool ok`, `slot ok`, `args =`, p50/p95, max PSS) and its `Peak PSS` line. The `S4 shortcut gate:` line must be the same as after step 3.
+13. Turn **Real LLM path** on (Dry run off) and try once each: "I need to get up at 6:45 tomorrow" (alarm 06:45), "count down ten minutes for the eggs" (10-minute timer), "it's too dark to see anything" (torch on), "bring up google maps for me" (Maps), "get 020 7946 0018 up on the dialer" (confirmation card; tap **Open dialer**, the dialer shows the number and **does not call**; go back without calling), and "tell me a joke" (no action). Then "set an alarm" (no time): it must **ask** what time, and nothing is set. Note for each what happened on screen and the result line. "open settings" must still go through the shortcut (instant, no model).
 14. With **Real LLM path** on, turn **Untrusted content in context** on and say "it's too dark to see anything": a confirmation card must appear; cancel it. Turn it off. Then turn **Disable all actions** on and repeat: it must be refused. Turn it off.
 15. **Share log (CSV)** and attach it to issue #8 with the notes from steps 11–14.
+16. Optional, only to repeat the old experiment: turn **LLM tool call (experimental)** on, **Load models** (now loads Gemma), and run **LLM benchmark** again. Its rows go into the separate "Gemma tool call" table.
 
 ## Tests without a phone
 ```bash

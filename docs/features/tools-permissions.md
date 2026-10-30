@@ -59,8 +59,9 @@ Let Bibi perform a small set of phone actions safely. Every action goes through 
 - **S4 real-LLM path (spike only, Decisions 2026-10-30; details in `spikes/s4-tools/SPEC.md` §2.1, §4):**
   - Order: shortcut matcher first, unchanged; models only run on a miss, so the 300 ms gate path never waits for a model.
   - Router (PRD §13.4 tool-schema router): MediaPipe Decision Maker (`tasks-decision` 1.2.0, `embeddinggemma-2-text-270m.litertlm`) chooses one of the five tools or `none`. `none`, an unknown key or low confidence (< 0.5 [OPEN]) means no action and the clarify/chat path. The router never dispatches anything.
-  - Tool call: LiteRT-LM 0.16.1 with Gemma 3 1B int4; the conversation sees **only the chosen tool**, `automaticToolCalling = false`, and the `@Tool` methods are inert (they throw).
-  - Validation: each `Message.toolCalls` entry is re-serialized to the parser's `{"tool", "args"}` JSON and goes through `ToolCallParser` → `ToolValidator` (one repair, scoped to the exposed tool) → `PermissionEngine` → `ToolExecutor`, the same as the fake LLM. A call naming a tool that wasn't exposed is rejected outright.
+  - Pass 2, arguments (Decision 2026-10-30): **deterministic slot extraction** (`SlotExtractor`) for the chosen tool only: time, duration, on/off, phone number, app name (whole-word match on the launcher list). A missing or ambiguous slot means no call and a short question to the user; nothing is guessed. The slots are serialized to the parser's `{"tool", "args"}` JSON and take the same path below. The LLM stays for chat only. Offline ceiling on the 110 benchmark prompts with the correct label: 100/100 (an upper bound; on-device numbers [VERIFY]).
+  - Experimental, off by default: the first try, LiteRT-LM 0.16.1 with Gemma 3 1B int4 making the call (0/100 valid calls on the vivo Y17s, `spikes/s4-tools/results/RESULTS.md`). The conversation sees **only the chosen tool**, `automaticToolCalling = false`, and the `@Tool` methods are inert (they throw).
+  - Validation: each slot result or `Message.toolCalls` entry is re-serialized to the parser's `{"tool", "args"}` JSON and goes through `ToolCallParser` → `ToolValidator` (one repair, scoped to the exposed tool) → `PermissionEngine` → `ToolExecutor`, the same as the fake LLM. A call naming a tool that wasn't exposed is rejected outright.
   - Permissions: none added. Dial stays `ACTION_DIAL` with a confirmation card. MediaPipe's transitive `datatransport` (it would add `INTERNET`, `ACCESS_NETWORK_STATE`) is excluded and both permissions are removed in the manifest.
   - Results are provisional until S2 is decided and don't decide the S2 runtime [OPEN].
 - **Confused-deputy defenses** (§16.6):
@@ -71,7 +72,8 @@ Let Bibi perform a small set of phone actions safely. Every action goes through 
 
 ## Risks
 - **Tool-call formatting** from a small int4 model may be unreliable (§13.3, §13.5). The shortcut path and validation are the mitigation.
-- **Gemma 3 1B tool support [VERIFY]:** the LiteRT-LM guide says tool use needs a model with tool support (it names FunctionGemma). If Gemma 3 1B's template doesn't produce structured `toolCalls`, the S4 router still reads a JSON call written as text, and the benchmark's `source` column shows which happened.
+- **Gemma 3 1B tool support:** measured on 2026-10-30, no structured `toolCalls` and 0/100 valid calls, so pass 2 is slot extraction now. FunctionGemma is not pursued for now (owner decision).
+- **Slot extraction coverage [VERIFY]:** English, pattern-based; unusual phrasings ask the user. Defaults still [OPEN]: a bare hour ("alarm at 6") is taken as 24-hour; a light request with no on/off word turns the torch on.
 - **Router mistakes are final for that request:** only the chosen tool is exposed, so a wrong router choice can't be corrected by the LLM. This is intended (less surface for the model), and the S4 LLM benchmark measures how often it happens.
 - **Prompt injection** (FR-124): low exposure in MVP because there is no notification or file reading, but keep taint tracking in the design.
 - **Package visibility on Android 11+** may hide apps from `open_app` without the correct `<queries>` entries.

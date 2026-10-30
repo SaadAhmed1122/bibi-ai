@@ -22,6 +22,17 @@ The results panel prints `S4 shortcut gate: PASS`, `FAIL` (some action's p95 ≥
 ### 2.1 Real-LLM path metrics (info only, never part of the gate)
 Added by the Decisions of 2026-10-30 in `docs/project_status.md` (Decision Maker router; LiteRT-LM tool calls). The results are **provisional** until the S2 gate and runtime choice are recorded, and they don't decide the S2 runtime [OPEN].
 
+**Pass 2 = slot extraction (Decision 2026-10-30, after Gemma 3 1B gave 0/100 valid tool calls):** by default the arguments for the Decision Maker's tool come from `SlotExtractor`, not from an LLM. The Gemma tool call is kept behind the off-by-default **LLM tool call (experimental)** switch, so the first benchmark stays reproducible. In slot mode every benchmark row has `source = slots`, and the results panel prints a separate table:
+
+| Column (slot table) | Meaning |
+|---|---|
+| `DM acc`, `tool ok`, `args =`, `p50 ms` / `p95 ms`, `max PSS` | As below. Latency here is Decision Maker + slot extraction + parsing |
+| `slot ok` | Every required slot was found with one unambiguous value (stored in the `json_ok` column for slot rows). Otherwise the user is asked |
+
+Offline ceiling (JVM, the CORRECT tool label, an assumed 24-app launcher list): **100/100** action prompts give the expected arguments (20/20 per action). The prompts were in view while the extractor was written, so this is an upper bound, not a held-out score [VERIFY on device with the real launcher list and the Decision Maker's labels].
+
+Table for the experimental LLM tool-call mode:
+
 The **LLM benchmark** button runs a fixed set (`LlmBenchPrompts`): 20 free-form prompts per action plus 10 that ask for no action, 110 in total. None of them is caught by the shortcut matcher (a JVM test checks this). It is a **dry run**: each request stops at the Permission Engine decision. A confirmation request is cancelled at once, no intent is resolved or started, no alarm, timer, dialer or torch. Per expected action the results panel prints:
 
 | Column | Meaning |
@@ -60,7 +71,8 @@ All times come from `SystemClock.elapsedRealtimeNanos()` on the main thread. `t0
 ## 4. What the spike app does
 - **Main screen** (plain Android views): a text box with **Submit**, quick-command buttons (`open settings`, `wake me at 7:30`, `set a timer for 5 minutes`, `flashlight on`, `flashlight off`, `call 0123 456 789`), and five switches:
   - **Fake LLM path:** text goes through `FakeLlm` (fixed mappings) instead of the shortcut matcher. Kept as the baseline.
-  - **Real LLM path:** the shortcut matcher runs first, unchanged. Only on a miss does the text go to the Decision Maker and Gemma (below). Fake and real are mutually exclusive.
+  - **Real LLM path:** the shortcut matcher runs first, unchanged. Only on a miss does the text go to the Decision Maker and then slot extraction (below). Fake and real are mutually exclusive.
+  - **LLM tool call (experimental):** off by default. With it on, pass 2 is the old Gemma 3 1B tool call instead of slot extraction, and **Load models** loads Gemma too.
   - **Untrusted content in context:** adds a simulated `NOTIFICATION` provenance, so every action is upgraded to Sensitive.
   - **Dry run:** resolve, don't launch.
   - **Disable all actions:** the kill switch (PRD §16.4).
@@ -73,15 +85,16 @@ All times come from `SystemClock.elapsedRealtimeNanos()` on the main thread. `t0
 **Real-LLM path** (Decisions 2026-10-30; PRD §13.4 router, §13.5 two-pass fallback):
 1. `ShortcutParser` first, unchanged. A match never touches a model; the gate path has no model work in it.
 2. On a miss: **Decision Maker** `ChoiceQuestion` over the five tools + `none` → selected key + confidence. `none`, an unknown key, or confidence below `ToolRouting.MIN_CONFIDENCE` (0.5 [OPEN]) → no action, the text goes to the clarify/chat path.
-3. Otherwise **LiteRT-LM**: a new `Conversation` whose `ConversationConfig.tools` holds **only the chosen tool** (`tool(ToolSet)`), `automaticToolCalling = false`, greedy sampling, `maxOutputToken = 128`. The `@Tool` methods are inert and throw if called.
-4. `LlmToolRouter`: each `Message.toolCalls` entry (`name`, `arguments`) is re-serialized to `{"tool": …, "args": {…}}` and goes through `ToolCallParser` (which runs `ToolValidator`). Invalid → one repair message naming only the exposed tool, sent in the same conversation → still invalid → ask the user. A call naming a tool that wasn't exposed is **rejected** (no repair, nothing runs). If the model writes a call as text instead, `{"name": …, "arguments": …}` or the parser's own format is read from the text; plain text means chat, no action.
+3. Otherwise **pass 2, slot extraction** (default; Decision 2026-10-30): `SlotExtractor` reads the chosen tool's arguments from the text — `set_alarm` {hour, minute} ("6:45", "seven thirty", "half six", "6 pm", "quarter past 7", "twenty to nine", "at 7", "noon"; "in the morning/evening" sets am/pm; without am/pm the hour is taken as written, 24-hour, as in the shortcut matcher [OPEN]); `start_timer` {seconds} ("ten minutes", "8 min", "an hour and a half", "a quarter of an hour", "1 hour 30 minutes"); `flashlight` {on} (an off word → off; otherwise on if the text asks for light at all); `dial` {number} (the one digit run of 3+ digits, spaces and dashes removed, `+` and a leading 0 kept); `open_app` {app} (whole-word match of a launcher label, a label without its vendor word, or an alias, via `AppResolver.names`). No value, two different values, a negated request ("don't turn off…"), a duration in an alarm request or a phone number in an `open_app` request → **no call**; the user gets a short question. `SlotToolRouter` turns the slots into the same `{"tool", "args"}` JSON and sends it through `ToolCallParser` (which runs `ToolValidator`) with the same exposed-subset check; there is no repair (the result is deterministic), so an invalid value also asks the user.
+   **Experimental alternative** (switch on): **LiteRT-LM**: a new `Conversation` whose `ConversationConfig.tools` holds **only the chosen tool** (`tool(ToolSet)`), `automaticToolCalling = false`, greedy sampling, `maxOutputToken = 128`. The `@Tool` methods are inert and throw if called.
+4. Experimental only: `LlmToolRouter`: each `Message.toolCalls` entry (`name`, `arguments`) is re-serialized to `{"tool": …, "args": {…}}` and goes through `ToolCallParser` (which runs `ToolValidator`). Invalid → one repair message naming only the exposed tool, sent in the same conversation → still invalid → ask the user. A call naming a tool that wasn't exposed is **rejected** (no repair, nothing runs). If the model writes a call as text instead, `{"name": …, "arguments": …}` or the parser's own format is read from the text; plain text means chat, no action.
 5. A validated call → the same `PermissionEngine` → confirmation → `ToolExecutor` as every other path. Dial stays `ACTION_DIAL` with a confirmation card.
 
-Threads: one single-thread dispatcher per engine (`bibi-s4-dm`, `bibi-s4-llm`); both models load once and are reused; the main thread only runs the shortcut matcher, the Permission Engine and the executor. Leaving the app stops the LLM benchmark (`Conversation.cancelProcess()` + coroutine cancel).
+Threads: one single-thread dispatcher per engine (`bibi-s4-dm`, `bibi-s4-llm`); slot extraction runs on `bibi-s4-dm` after the router; models load once and are reused (Gemma only when the experimental switch is on, then it stays loaded until the app closes); the main thread only runs the shortcut matcher, the Permission Engine and the executor. Leaving the app stops the LLM benchmark (`Conversation.cancelProcess()` + coroutine cancel).
 
 **Models are not in the APK** (`app/src/main/assets` has none). Both files are read from `getExternalFilesDir("models")`, i.e. `/sdcard/Android/data/io.github.saadahmed1122.bibi.spike.s4/files/models/`:
 - `embeddinggemma-2-text-270m.litertlm` (Decision Maker; 164,626,432 bytes per the Decision)
-- `gemma3-1b-it-int4.litertlm` (the S2 file)
+- `gemma3-1b-it-int4.litertlm` (the S2 file; only needed for the experimental LLM tool call)
 
 **Libraries (override of "no libraries", Decisions 2026-10-30):**
 | Library | Version | Why | Checked |
@@ -150,6 +163,8 @@ dial {"number": string}             literal number; the user presses Call
 5. SPEC.md and README.md.
 6. Real-LLM path (Decisions 2026-10-30), on `feature/8-s4-llm-tools`: JVM tests first (router mapping, call re-serialization, subset rejection, repair, prompt set, LLM summary), then the pure core, the dependencies, the two adapters and the pipeline, the screen and the log, then these docs.
 
+7. Pass 2 = slot extraction (Decision 2026-10-30), on `feature/8-s4-slot-extraction`: JVM tests first (every form above, refusal cases, the 110 prompts with their expected arguments, wrong-tool rejection, wrong-label behaviour, the slot summary table), then `SlotExtractor`/`SlotToolRouter`, the pipeline switch, these docs.
+
 ## 6. Test protocol (owner runs on the device)
 Do it on the **vivo Y17s**, and on the **Galaxy A23** when available (it is the floor device). Steps are in [README.md → Owner test steps](README.md#owner-test-steps).
 
@@ -160,7 +175,9 @@ Do it on the **vivo Y17s**, and on the **Galaxy A23** when available (it is the 
 Also record: the handler line (`SET_ALARM → …` etc.), the launcher index time, and for the real launches whether each action did the right thing on screen. Note whether the alarm and timer were set without UI (`EXTRA_SKIP_UI`) or the clock app showed a screen. For the tool-call path, whether each action worked through the fake LLM, and the safety checks in steps 6–8 of the owner steps.
 
 ## 8. Known limits of this spike
-- **Real-LLM path: built, not run.** `./gradlew :app:assembleDebug` succeeds and the pure core passes its JVM tests, but nothing of the LLM path has run on a phone yet. Every number in §2.1 is [VERIFY on device].
+- **Real-LLM path:** the Gemma tool-call mode ran on the vivo Y17s on 2026-10-30 (`results/RESULTS.md`: 0/100 valid calls). **Slot-extraction mode: built, not run on a phone.** `./gradlew :app:assembleDebug` succeeds and the JVM tests pass; its device numbers are [VERIFY on device].
+- **Slot extraction coverage [VERIFY]:** English only and pattern-based. Phrasings outside the covered forms ask the user instead of acting. Open questions: whether "alarm at 6" should ask am/pm [OPEN]; whether a flashlight request with no on/off word should default to on [OPEN] (it does now when the text mentions light, torch or dark); `open_app` needs the app's label (or an alias) as whole words — a Samsung phone with an "Email" app makes "check my email in gmail" ambiguous, so it asks.
+- **Wrong router label:** slot extraction can't fix a wrong Decision Maker label, but most wrong labels give no call: on the JVM, 2 of 400 (action prompt × wrong tool) pairs still produce a call ("a quarter of an hour on the clock" as `open_app` → Clock; "the light on the back of the phone" as `open_app` → Phone). Neither confusion was seen on the vivo.
 - **The fake LLM** shows that parsing, validation, repair and policy work; it says nothing about a real model. The real-LLM numbers are provisional until the S2 gate and runtime choice are recorded [OPEN].
 - **Gemma 3 1B and tool calls [VERIFY]:** the LiteRT-LM guide says tool use "only works with models with tool support" and names FunctionGemma. Whether the `gemma3-1b-it-int4.litertlm` prompt template renders tools and whether LiteRT-LM parses its answer into `Message.toolCalls` is unknown. The system instruction repeats the one tool's schema and the router also reads a JSON call written as text, so a model without structured tool calls can still be measured (`source` = `text_json`/`text`). Constrained decoding (`ExperimentalFlags.enableConversationConstrainedDecoding`) is off [OPEN].
 - **Decision Maker confidence [VERIFY]:** the guide doesn't define `ChoiceResult.confidence`. The 0.5 threshold is a first guess [OPEN]; `dm_conf` and the top-3 probabilities are logged so it can be tuned.

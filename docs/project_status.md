@@ -96,13 +96,15 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-30 evening: S4 pass 2 (slot extraction) built on `feature/8-s4-slot-extraction` (worktree `/Users/saadahmed/bibi-wt/s4-slots`): `SlotExtractor.kt`, `SlotToolRouter`, pipeline switch, slot summary table, docs. JVM suite 547 checks pass (ceiling 100/100 with the correct label); `assembleDebug` builds; not run on a phone. Stopped at: PR open, device benchmark next.
+
 2026-10-30 ~02:00 local session: PR #23 (`feature/5-s2-conversation-soak`, S2 chat-mode soak) is being fixed for the preface-prefill issue: in LiteRT-LM 0.16.1 `prefillPrefaceOnInit` did not prefill (turn 1 TTFT 10.3 s with all 311 system-prompt tokens), so the fix adds a scripted, untimed first exchange and marks the run invalid if the prefix was not prefilled. A plugged-in device check (not a gate run) showed turns 2–8 TTFT 1.25–1.33 s; the device check of the fix is pending. Worktrees under `/Users/saadahmed/bibi-wt/`. Main checkout `/Users/saadahmed/bibi-ai` is on `main`, up to date.
 
 GitHub: PRs #12–#22 merged; #3 (ImgBot) closed unmerged; #23 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
 1. Finish PR #23, check it on the device, then the owner runs Chat soak 50 (unplugged, airplane on; TESTING.md → S2); record the result and the owner's decision on whether it counts for the gate (open item 14, #5).
-2. Owner: choose the S4 pass-2 approach (open item 15, #8).
+2. S4 pass 2 = slot extraction (open item 15 resolved): review and merge the PR from `feature/8-s4-slot-extraction`, then run the **LLM benchmark** on the vivo in slot mode (README steps 11–15) and record the slot table in `spikes/s4-tools/results/RESULTS.md` (#8).
 3. S1: reinstall from `main` and do the four runs, or record an owner override (open item 16, #4).
 4. S4 owner on-screen checks (README steps 2–8, 13–14; #8).
 5. Run the spikes on the Galaxy A23 if it is available (open item 10).
