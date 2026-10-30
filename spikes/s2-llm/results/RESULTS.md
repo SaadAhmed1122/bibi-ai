@@ -28,7 +28,7 @@ Chat soak 50 (2026-10-30 02:01, started by the owner): one conversation, `system
 
 **GATE S2 (gemma3-1b-it-int4, chat mode): PASS** (app `Summary.kt`). Max PSS 1,189 MB; peak RSS 1,262 MB; min available RAM 2,790 MB; thermal 0; load 10.3 s. The slowest turns (2.39–2.45 s) had the longest user messages (44–58 tokens) late in the conversation (context 1,209–2,196 tokens); the context reached 2,261 of 4,096 tokens.
 
-Whether this chat-mode result decides the S2 gate (instead of the per-prompt soak in §1) is an **owner decision [OPEN]**. Earlier chat-mode files `…0141…` (flag only; preface not prefilled, turn 1 TTFT 10.3 s) and `…0159…` (plugged-in check after the fix) are device checks, not gate runs.
+**Owner decision 2026-10-30: the chat-mode result decides the S2 gate**, so Gemma 3 1B int4 passes S2 on the vivo Y17s. The per-prompt FAIL in §1 stays recorded. The 0.5B Qwen-class model still has no valid soak [OPEN]. Earlier chat-mode files `…0141…` (flag only; preface not prefilled, turn 1 TTFT 10.3 s) and `…0159…` (plugged-in check after the fix) are device checks, not gate runs.
 
 ## 2. Why TTFT fails
 
