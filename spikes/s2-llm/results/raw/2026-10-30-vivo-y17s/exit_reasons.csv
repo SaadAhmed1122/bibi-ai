@@ -1,0 +1,9 @@
+time,epoch_ms,reason,status,detail,process,importance,pss_kb,rss_kb
+2026-10-29 20:56:07,1793303767534,USER_REQUESTED,0,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s2,400,0,0
+2026-10-29 20:56:07,1793303767540,USER_REQUESTED,0,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s2:inference,400,0,0
+2026-10-29 21:00:56,1793304056958,USER_REQUESTED,0,[REMOVE TASK] remove-task callingPid:2599,io.github.saadahmed1122.bibi.spike.s2,400,0,196592
+2026-10-29 21:01:56,1793304116142,USER_REQUESTED,0,[REMOVE TASK] remove task,io.github.saadahmed1122.bibi.spike.s2:inference,300,0,2188944
+2026-10-30 00:06:11,1793315171137,USER_REQUESTED,0,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s2 due to stop by 8829,io.github.saadahmed1122.bibi.spike.s2,400,0,126456
+2026-10-30 00:06:11,1793315171163,USER_REQUESTED,0,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s2 due to stop by 8829,io.github.saadahmed1122.bibi.spike.s2:inference,400,0,674916
+2026-10-30 00:48:56,1793317736337,USER_REQUESTED,0,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s2 due to stop by 10735,io.github.saadahmed1122.bibi.spike.s2,325,0,200476
+2026-10-30 00:48:56,1793317736375,USER_REQUESTED,0,[FORCE STOP] stop io.github.saadahmed1122.bibi.spike.s2 due to stop by 10735,io.github.saadahmed1122.bibi.spike.s2:inference,400,0,188172
