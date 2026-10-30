@@ -29,6 +29,12 @@
         "source": "github",
         "repo": "pbakaus/impeccable"
       }
+    },
+    "humanizer": {
+      "source": {
+        "source": "github",
+        "repo": "blader/humanizer"
+      }
     }
   },
   "enabledPlugins": {
@@ -36,7 +42,8 @@
     "agent-board@bibi-ai": true,
     "last30days@last30days-skill": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "impeccable@impeccable": true
+    "impeccable@impeccable": true,
+    "humanizer@humanizer": true
   },
   "enabledMcpjsonServers": [
     "context7",
