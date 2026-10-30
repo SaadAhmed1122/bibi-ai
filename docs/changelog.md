@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
+- Project plugin ponytail (DietrichGebert/ponytail) enabled; always on via its hooks; precedence rule in CLAUDE.md §9.
 - Project plugin humanizer (blader/humanizer) enabled in `.claude/settings.json`.
 - Project plugins impeccable, ui-ux-pro-max and last30days enabled in `.claude/settings.json`; usage rules in `docs/tooling.md`.
 - Project scaffold created: `brainstorm.md`, `project_spec.md`, `CLAUDE.md`, `.env.example`, `.gitignore`.
