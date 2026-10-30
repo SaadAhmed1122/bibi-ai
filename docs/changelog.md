@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
+- S4 slot-extraction device result on the vivo Y17s: 87/100 correct calls, ~0.5 s, 600 MB.
 - S4 pass 2 is deterministic slot extraction (`SlotExtractor`, `SlotToolRouter`) after the Decision Maker label, by owner decision; the Gemma 3 1B tool call stays behind an off-by-default "LLM tool call (experimental)" switch. JVM ceiling on the 110 benchmark prompts with the correct label: 100/100; not yet run on a phone.
 - S2 chat-mode soak result on the vivo Y17s: Gemma 3 1B int4 PASS (TTFT p95 2,409 ms, 7.04 tok/s, 0 OOM).
 - S2 "Chat soak 50" mode: the 50 prompts as turns of one LiteRT-LM conversation, with a longer Bibi system prompt (`system_bibi.txt`) prefilled once outside the timed region, KV-cache-budget resets, and a separate "chat mode" verdict in the summary (`spikes/s2-llm/SPEC.md` §2.1). First device try showed the Gemma 3 preface was not prefilled (system-only preface renders to BOS); fixed with a scripted user/model exchange in `initialMessages`, and such runs are now invalid ("preface not prefilled"). Fix not yet run on a device.

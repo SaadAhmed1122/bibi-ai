@@ -56,3 +56,26 @@ What Gemma 3 1B wrote instead of a tool call (examples): `set_alarm {"hour": 07;
 - Real launches (n = 3 per action) and the owner's on-screen checks (README steps 2–8, 13–14) were not done in this session.
 - Runtime check that MediaPipe's removed datatransport logging is never reached: logcat after the run had no `NoClassDefFoundError`, no `datatransport` line and no crash, but the buffer may not cover the whole run.
 - Strix security scan not run (Strix CLI not installed on this machine).
+
+## 6. Pass 2 = slot extraction (PR #25), vivo Y17s, 2026-10-30 19:17
+
+Same 110 prompts, dry run, charging. Decision Maker only (Gemma not loaded): load 11.6 s, **PSS 599 MB** (was 1,212 MB with Gemma). Raw: `raw/2026-10-30-vivo-y17s/s4_20261030-191713_V2310.csv`. App summary:
+
+| expected | n | DM acc | tool ok | slot ok | args = | p50 ms | p95 ms | max PSS |
+|---|---|---|---|---|---|---|---|---|
+| open_app | 20 | 70 % | 65 % | 65 % | 60 % | 491 | 572 | 596 MB |
+| set_alarm | 20 | 100 % | 100 % | 100 % | 100 % | 488 | 498 | 595 MB |
+| start_timer | 20 | 85 % | 85 % | 85 % | 85 % | 488 | 498 | 596 MB |
+| flashlight | 20 | 90 % | 90 % | 90 % | 90 % | 486 | 493 | 597 MB |
+| dial | 20 | 100 % | 100 % | 100 % | 100 % | 488 | 498 | 599 MB |
+| none | 10 | 80 % | 100 % (no call) | n/a | n/a | 485 | 491 | 600 MB |
+
+**87 of 100 action prompts produced the right call with the right values** (Gemma tool calling: 0 of 100), end to end in about 0.5 s. None of the 10 "none" prompts produced a call.
+
+Misses (13), all but one ended with no action or a question to the user:
+- **Confidence threshold (7):** the router's label was right but below the 0.5 threshold [OPEN]: "I'd like to look at my photos" 0.40, "let me see the calculator" 0.11, "switch over to spotify" 0.27, "show my gallery" 0.35, "bring the weather app up" 0.38, "it's too dark to see anything" 0.47, "give me some light" 0.43; plus "jump into whatsapp" labelled dial 0.44.
+- **Timer heard as alarm (3):** the extractor saw a duration in an alarm request and asked instead of guessing. Candidate fix: re-route set_alarm → start_timer when the text has a duration and no clock time [OPEN].
+- **App not installed (1):** Instagram is not on this phone; the app asked.
+- **Wrong app (1):** "get me into google drive" → `open_app {"app":"google"}` (Google, not Drive). This call reached the Permission Engine (dry run). Fix: prefer the longest matching app name [OPEN].
+
+The 100/100 offline score in the JVM tests is an upper bound (extractor written with the prompts in view; assumed app list).
