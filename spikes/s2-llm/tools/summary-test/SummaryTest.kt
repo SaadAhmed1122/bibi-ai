@@ -11,7 +11,7 @@ const val HEADER =
         "prompt_idx,prompt_id,prompt_chars,prefill_tokens,decode_tokens,tokens_source,chunks," +
         "load_ms,ttft_ms,decode_tps,total_ms,eng_ttft_ms,eng_decode_tps," +
         "pss_kb,rss_kb,rss_peak_kb,avail_mem_mb,low_memory," +
-        "thermal,battery_pct,current_ua,charging,batt_temp_dc,screen_on,airplane,brightness,power_save"
+        "thermal,battery_pct,current_ua,charging,batt_temp_dc,screen_on,airplane,brightness,power_save,ctx_tokens"
 val COLS = HEADER.split(",")
 
 const val EXIT_HEADER = "time,epoch_ms,reason,status,detail,process,importance,pss_kb,rss_kb"
@@ -57,6 +57,29 @@ fun run(
     }
     if (end != null) rows += row(5_000L + (n + 1) * 10_000L, end, mode)
     return rows.joinToString("\n") + "\n"
+}
+
+/**
+ * A chat-mode run: [run] with mode "chat", a `preface` row after load, and [resets] `conv_reset`
+ * rows (each re-prefilling the preface) spread between the prompts.
+ */
+fun chatRun(
+    n: Int = 50,
+    resets: Int = 1,
+    preface: Boolean = true,
+    ttft: (Int) -> Double = { 400.0 + it * 2 },
+    tps: (Int) -> Double = { 6.5 },
+    end: String? = "stop",
+): String {
+    val lines = run(n = n, mode = "chat", ttft = ttft, tps = tps, end = end).trimEnd().lines().toMutableList()
+    if (preface) {
+        lines.add(3, row(6_000, "preface", "chat", "detail" to "system=system_bibi.txt", "total_ms" to "15000.0", "prefill_tokens" to "310", "ctx_tokens" to "310"))
+    }
+    repeat(resets) { r ->
+        val at = 4 + (r + 1) * 20 // after prompt 20, 40, ...
+        lines.add(at.coerceAtMost(lines.size), row(6_000L + (r + 1) * 200_000L, "conv_reset", "chat", "detail" to "used=3950", "total_ms" to "${16000.0 + r * 1000}", "prefill_tokens" to "310", "ctx_tokens" to "310"))
+    }
+    return lines.joinToString("\n") + "\n"
 }
 
 fun exitRow(t: Long, reason: String, status: String = "0", process: String = "$PKG:inference") =
@@ -161,6 +184,43 @@ fun main(args: Array<String>) {
     check("proc status VmHWM", Metrics.procStatusKb(status, "VmHWM") == 812345L, "")
     check("proc status missing", Metrics.procStatusKb(status, "VmSwap") == null, "")
 
+    // --- existing per-prompt soak output is unchanged by chat mode
+    check("soak: describe unchanged", a.describe() == SOAK_DESCRIBE, a.describe())
+    check("soak: no chat lines", !a.describe().contains("Preface") && !a.describe().contains("chat mode"), a.describe())
+
+    // --- chat mode: same gate checks, own label, preface and resets reported
+    val ch = Summary.from(chatRun(resets = 2))
+    check("chat: valid", ch.valid, ch.validityLine())
+    check("chat: PASS labelled chat mode", ch.pass == true && ch.gateLine() == "GATE S2 (gemma3-1b-it-int4, chat mode): PASS", ch.gateLine())
+    check("chat: 50 of 50, preface/reset rows not counted as prompts", ch.completed == 50, "${ch.completed}")
+    check("chat: preface 15000 ms, 310 tokens", near(ch.prefaceMs, 15000.0) && ch.prefaceTokens == 310, "${ch.prefaceMs} ${ch.prefaceTokens}")
+    check("chat: 2 resets, max re-prefill 17000 ms", ch.resets == 2 && near(ch.maxResetMs, 17000.0), "${ch.resets} ${ch.maxResetMs}")
+    check("chat: system prompt named", ch.systemPrompt == "system_bibi.txt", ch.systemPrompt)
+    val chText = ch.describe()
+    check("chat: describe has preface and resets", chText.contains("Preface:") && chText.contains("15000 ms") && chText.contains("Conv resets:     2"), chText)
+    check("chat: describe header says chat", chText.contains("(chat)"), chText)
+    val chSlow = Summary.from(chatRun(ttft = { if (it > 47) 3500.0 else 500.0 }))
+    check("chat: FAIL on p95, chat label", chSlow.pass == false && chSlow.gateLine().startsWith("GATE S2 (gemma3-1b-it-int4, chat mode): FAIL — p95 TTFT 3500 ms"), chSlow.gateLine())
+    val chSpeed = Summary.from(chatRun(tps = { 4.0 }))
+    check("chat: FAIL on speed", chSpeed.pass == false && chSpeed.gateLine().contains("median 4.00 tok/s < 5"), chSpeed.gateLine())
+    val chOom = Summary.from(chatRun(n = 20, resets = 0, end = "inference_died"), exits(exitRow(205_000, "LOW_MEMORY")))
+    check("chat: OOM counted, valid, FAIL", chOom.valid && chOom.oomKills == 1 && chOom.pass == false && chOom.gateLine().contains("chat mode"), chOom.gateLine())
+    val chCancel = Summary.from(chatRun(n = 30, end = "cancelled"))
+    check("chat: cancelled invalid, no verdict, chat label", !chCancel.valid && chCancel.gateLine() == "GATE S2 (gemma3-1b-it-int4, chat mode): no verdict, run not valid", chCancel.gateLine())
+    val chNoPreface = Summary.from(chatRun(preface = false))
+    check("chat: no preface row is invalid", !chNoPreface.valid && chNoPreface.validityLine().contains("no preface row"), chNoPreface.validityLine())
+    val chCharging = Summary.from(chatRun().replace(",false,320,true,true,", ",true,320,true,true,"))
+    check("chat: charging invalid", !chCharging.valid && chCharging.validityLine().contains("charging"), chCharging.validityLine())
+    check("soak: no preface needed", a.valid && a.resets == 0 && a.prefaceMs == null, a.validityLine())
+
+    // --- chat-mode context budget (reset before a turn could overflow the KV cache)
+    // 60 chars -> 20 + 16 template = 36 tokens, + 128 new = 164.
+    check("budget: turn estimate", Metrics.turnTokenEstimate(60) == 36, "${Metrics.turnTokenEstimate(60)}")
+    check("budget: fits exactly", !Metrics.needsContextReset(usedTokens = 3932, turnsInConversation = 5, promptChars = 60, maxNewTokens = 128, contextTokens = 4096), "")
+    check("budget: one over -> reset", Metrics.needsContextReset(usedTokens = 3933, turnsInConversation = 5, promptChars = 60, maxNewTokens = 128, contextTokens = 4096), "")
+    check("budget: fresh conversation never resets", !Metrics.needsContextReset(usedTokens = 4000, turnsInConversation = 0, promptChars = 60, maxNewTokens = 128, contextTokens = 4096), "")
+    check("budget: long prompt resets earlier", Metrics.needsContextReset(usedTokens = 3800, turnsInConversation = 1, promptChars = 600, maxNewTokens = 128, contextTokens = 4096), "")
+
     // --- the shipped prompt set
     val set = PromptSet.parse(File(args[0]).readText())
     check("prompts: 50", set.prompts.size == 50, "${set.prompts.size}")
@@ -174,9 +234,39 @@ fun main(args: Array<String>) {
     try { PromptSet.parse("system\ta\np1\tx\np1\ty") } catch (e: IllegalArgumentException) { threw = true }
     check("prompts: duplicate id rejected", threw, "")
 
+    // The chat-mode system prompt: persona + remembered facts, ~250-350 tokens. At about
+    // 1.3-1.5 tokens per English word [VERIFY per tokenizer] that is roughly 170-260 words; the app
+    // logs the real count as the preface row's prefill_tokens.
+    val bibi = File(args[1]).readText().trim()
+    val bibiWords = bibi.split(Regex("\\s+")).size
+    check("chat system prompt: 170-260 words", bibiWords in 170..260, "$bibiWords words")
+    check("chat system prompt: is Bibi", bibi.startsWith("You are Bibi"), bibi.take(40))
+
     println()
     println(a.describe())
     println()
     println(d.describe())
+    println()
+    println(ch.describe())
     println("ALL PASS")
 }
+
+/** Summary.describe() of the default passing soak, captured before chat mode was added. */
+val SOAK_DESCRIBE = """
+Model:           gemma3-1b-it-int4 (soak)
+Device:          vivo V2310
+Prompts:         50 of 50 finished
+Load:            4200 ms
+TTFT p50 / p95:  1250 / 1480 ms   (gate: p95 ≤ 3000)
+Decode median:   7.20 tok/s   (gate: ≥ 5)
+Decode p10:      7.00 tok/s   (slowest 10 %; informational)
+OOM kills:       0   (gate: 0)
+Max PSS:         684 MB (:inference, between prompts)
+Peak RSS:        781 MB (VmHWM of :inference)
+Min avail RAM:   1500 MB (system)
+Max thermal:     0 (0 none … 3 severe)
+Battery:         80% → 80%, mean 900 mA
+Max tokens:      prefill 60, decode 100 (cap 128)
+VALID for gate: yes
+GATE S2 (gemma3-1b-it-int4): PASS
+""".trimStart()

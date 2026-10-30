@@ -133,7 +133,7 @@ class BenchLog(context: Context) {
                 "prompt_idx,prompt_id,prompt_chars,prefill_tokens,decode_tokens,tokens_source,chunks," +
                 "load_ms,ttft_ms,decode_tps,total_ms,eng_ttft_ms,eng_decode_tps," +
                 "pss_kb,rss_kb,rss_peak_kb,avail_mem_mb,low_memory," +
-                "thermal,battery_pct,current_ua,charging,batt_temp_dc,screen_on,airplane,brightness,power_save"
+                "thermal,battery_pct,current_ua,charging,batt_temp_dc,screen_on,airplane,brightness,power_save,ctx_tokens"
         val COLUMNS: List<String> = HEADER.split(",")
 
         const val EXIT_HEADER = "time,epoch_ms,reason,status,detail,process,importance,pss_kb,rss_kb"
