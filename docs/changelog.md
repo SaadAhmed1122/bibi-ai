@@ -6,7 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
-- S2 "Chat soak 50" mode: the 50 prompts as turns of one LiteRT-LM conversation, with a longer Bibi system prompt (`system_bibi.txt`) prefilled once outside the timed region, KV-cache-budget resets, and a separate "chat mode" verdict in the summary (`spikes/s2-llm/SPEC.md` §2.1). Not run on a device yet.
+- S2 "Chat soak 50" mode: the 50 prompts as turns of one LiteRT-LM conversation, with a longer Bibi system prompt (`system_bibi.txt`) prefilled once outside the timed region, KV-cache-budget resets, and a separate "chat mode" verdict in the summary (`spikes/s2-llm/SPEC.md` §2.1). First device try showed the Gemma 3 preface was not prefilled (system-only preface renders to BOS); fixed with a scripted user/model exchange in `initialMessages`, and such runs are now invalid ("preface not prefilled"). Fix not yet run on a device.
 - S2 results on the vivo Y17s: Gemma 3 1B int4 soak (gate FAIL on TTFT p95 3,493 ms; speed and memory pass) and earlier smoke/invalid runs, in `spikes/s2-llm/results/`.
 - S4 real-LLM path (Decision Maker router + LiteRT-LM tool calls) and its vivo Y17s results: shortcut gate PASS; Gemma 3 1B tool calls 0 % valid.
 - Project plugin ponytail (DietrichGebert/ponytail) enabled; always on via its hooks; precedence rule in CLAUDE.md §9.

@@ -31,6 +31,12 @@ import java.util.concurrent.TimeoutException
  *  - `ConversationConfig.prefillPrefaceOnInit = true` makes `createConversation()` prefill the
  *    preface (system instruction + initial messages) before it returns; Conversation.cc then
  *    renders later turns without the preface.
+ *  - The flag alone does NOT prefill a system-only preface for Gemma 3 (device run 2026-10-30:
+ *    ctx 0 after creation, 311 prefill tokens in turn 1). The Gemma 3 template
+ *    (runtime/util/model_type_utils.cc, case kGemma3) has no system turn: it emits the system
+ *    text only as a prefix of the first user message, so a preface without a user message renders
+ *    to just `{{ bos_token }}`. [openChat] therefore adds one scripted user/model exchange as
+ *    `initialMessages`, so the preface renders a complete first turn containing the system text.
  *  - Each later `sendMessageAsync` prefills only the new text (Conversation.cc renders the full
  *    history and sends the suffix after the old rendering into the same session), so earlier
  *    turns stay in the KV cache.
@@ -81,11 +87,12 @@ class LiteRtLmEngine(
         return e.createConversation(config(systemPrompt, maxTokens, prefill = false)).use { send(it, prompt, onToken) }
     }
 
-    override fun openChat(systemPrompt: String, maxTokens: Int): Int? {
+    override fun openChat(systemPrompt: String, primerUser: String, primerReply: String, maxTokens: Int): Int? {
         val e = checkNotNull(engine) { "load() first" }
         closeChat()
         // Blocks until the preface is in the KV cache (prefillPrefaceOnInit docstring).
-        val conversation = e.createConversation(config(systemPrompt, maxTokens, prefill = true))
+        val primer = listOf(Message.user(primerUser), Message.model(primerReply))
+        val conversation = e.createConversation(config(systemPrompt, maxTokens, prefill = true, initial = primer))
         chatConversation = conversation
         return runCatching { conversation.getTokenCount() }.getOrNull()
     }
@@ -98,8 +105,9 @@ class LiteRtLmEngine(
         chatConversation = null
     }
 
-    private fun config(system: String, maxTokens: Int, prefill: Boolean) = ConversationConfig(
+    private fun config(system: String, maxTokens: Int, prefill: Boolean, initial: List<Message> = emptyList()) = ConversationConfig(
         systemInstruction = Contents.of(system),
+        initialMessages = initial,
         // topK = 1 is greedy decoding, so runs are repeatable across models and devices.
         samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 1.0),
         // Docstring: "maximum number of output tokens per decode step" [VERIFY it caps the reply].

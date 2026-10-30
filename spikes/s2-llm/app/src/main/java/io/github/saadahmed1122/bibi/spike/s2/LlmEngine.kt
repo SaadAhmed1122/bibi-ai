@@ -23,11 +23,12 @@ interface LlmEngine : AutoCloseable {
     fun generate(prompt: String, maxTokens: Int, onToken: (String) -> Unit): EngineCounts
 
     /**
-     * Chat mode: closes any open chat, then opens one conversation with [systemPrompt] prefilled
-     * now (blocking, so the caller times it outside the measured turns). Replies are capped at
+     * Chat mode: closes any open chat, then opens one conversation whose preface — [systemPrompt]
+     * plus one scripted exchange ([primerUser], [primerReply]) — is prefilled now (blocking, so the
+     * caller times it outside the measured turns). Nothing is decoded. Replies are capped at
      * [maxTokens] new tokens per turn. Returns the tokens in the KV cache afterwards, or null.
      */
-    fun openChat(systemPrompt: String, maxTokens: Int): Int?
+    fun openChat(systemPrompt: String, primerUser: String, primerReply: String, maxTokens: Int): Int?
 
     /**
      * Chat mode: one user turn in the chat from [openChat]; earlier turns stay in the KV cache.

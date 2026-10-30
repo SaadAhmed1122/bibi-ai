@@ -145,9 +145,10 @@ class InferenceService : Service() {
             fun openChat(kind: String, detail: String) {
                 setStatus("$model: prefilling system prompt ($kind) …")
                 val t0 = SystemClock.elapsedRealtimeNanos()
-                val tokens = llm.openChat(chatSystem, MAX_NEW_TOKENS)
+                val tokens = llm.openChat(chatSystem, CHAT_PRIMER_USER, CHAT_PRIMER_REPLY, MAX_NEW_TOKENS)
                 val ms = (SystemClock.elapsedRealtimeNanos() - t0) / 1e6
-                used = tokens ?: Metrics.turnTokenEstimate(chatSystem.length)
+                // Unknown counts as not prefilled: Summary marks the run invalid on an empty ctx_tokens.
+                used = tokens ?: Metrics.turnTokenEstimate(chatSystem.length + CHAT_PRIMER_USER.length + CHAT_PRIMER_REPLY.length)
                 turns = 0
                 failed = false
                 row(
@@ -156,11 +157,11 @@ class InferenceService : Service() {
                     mapOf(
                         "total_ms" to fmt(ms, 1),
                         "prefill_tokens" to (tokens?.toString() ?: ""),
-                        "ctx_tokens" to used.toString(),
+                        "ctx_tokens" to (tokens?.toString() ?: ""),
                     ) + memory(),
                 )
             }
-            if (chat) openChat("preface", "system=$CHAT_SYSTEM_ASSET chars=${chatSystem.length} context=$CHAT_CONTEXT_TOKENS")
+            if (chat) openChat("preface", "system=$CHAT_SYSTEM_ASSET chars=${chatSystem.length} primer=1 context=$CHAT_CONTEXT_TOKENS")
 
             for ((i, prompt) in prompts.withIndex()) {
                 if (stopRequested) break
@@ -287,6 +288,14 @@ class InferenceService : Service() {
          * engine_settings.cc default would also be 4096 [VERIFY on device; other models may differ].
          */
         const val CHAT_CONTEXT_TOKENS = 4096
+
+        /**
+         * Chat mode's scripted first exchange, prefilled with the system prompt and never decoded.
+         * Gemma 3 has no system turn, so without a user message the preface renders to only BOS
+         * and the system prompt would be prefilled inside prompt 1's timed TTFT (LiteRtLmEngine).
+         */
+        const val CHAT_PRIMER_USER = "Hi Bibi."
+        const val CHAT_PRIMER_REPLY = "Hi! What can I help you with?"
 
         fun fmt(v: Double?, digits: Int): String = v?.let { "%.${digits}f".format(Locale.US, it) } ?: ""
     }
