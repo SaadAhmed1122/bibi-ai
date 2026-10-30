@@ -9,7 +9,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
-| P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | In progress: S1–S4 spike apps built; S3 measured on vivo Y17s; S1 partial; S2 and S4 not measured |
+| P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | In progress, gate **not met**: S1 partial (baseline run missing); S2 per-prompt soak FAIL on TTFT p95, chat-mode re-test pending (PR #23); S3 done; S4 gate PASS. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
 | P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | Not started |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
@@ -21,9 +21,9 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 | Spike | Pass threshold | Result | Device | Date |
 |---|---|---|---|---|
 | S1 Overlay | Stable 1 h; battery ≤ 3%/h, screen on | **Partial:** 53 min Calm run with no kill (stability likely pass); Bibi's extra drain not measured yet (baseline run missing). Total drain 15.8 %/h at ~930 mA. [Details](../spikes/s1-overlay/results/RESULTS.md) | vivo Y17s | 2026-10-29 |
-| S2 LLM | ≥ 5 tokens/s; first token ≤ 3 s; 0 OOM kills in a 50-prompt soak | **Gemma 3 1B int4: FAIL** (valid soak): decode 6.54 tok/s PASS, 0 OOM PASS, **TTFT p95 3,493 ms FAIL** (p50 2,425). TTFT ≈ 50 ms per prompt token; prompts ≤ 60 tokens all under 2.7 s. Qwen 0.5B-class not soaked. Next step [OPEN]. [Details](../spikes/s2-llm/results/RESULTS.md) | vivo Y17s | 2026-10-30 |
-| S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | **S3a:** Kokoro FAIL (best median RTF 3.769, en v0.19 t4); Piper PASS (0.248 t4, p95 0.271). **S3b:** Zipformer 20M passes numbers (RTF 0.177 t2, PSS 119 MiB) but drops utterance starts (model limit), so not usable as default; Parakeet FAIL memory (PSS 903 MiB, RTF 0.324); **owner override 2026-10-29: Parakeet is the S3b default despite memory**. [Details](https://github.com/SaadAhmed1122/bibi-ai/blob/spike/S3-voice/spikes/s3-voice/results/RESULTS.md) (branch `spike/S3-voice`) | vivo Y17s (charging; A23 not tested) | 2026-10-29 |
-| S4 Tools | Shortcut path < 300 ms | **PASS**: shortcut p95 6.2–19.4 ms per action (20 dry runs each, 0 failures). Info: Decision Maker router 85–100 % per action, ~0.5 s; Gemma 3 1B tool calling 0 % valid calls (not usable). [Details](../spikes/s4-tools/results/RESULTS.md) | vivo Y17s (charging) | 2026-10-30 |
+| S2 LLM | ≥ 5 tokens/s; first token ≤ 3 s; 0 OOM kills in a 50-prompt soak | **Gemma 3 1B int4: FAIL** (valid soak): decode 6.54 tok/s PASS, 0 OOM PASS, **TTFT p95 3,493 ms FAIL** (p50 2,425). TTFT ≈ 50 ms per prompt token; prompts ≤ 60 tokens all under 2.7 s. Qwen 0.5B-class not soaked. Re-test with prefix reuse ("Chat soak 50", PR #23) pending; whether chat mode counts for the gate [OPEN]. [Details](../spikes/s2-llm/results/RESULTS.md) | vivo Y17s | 2026-10-30 |
+| S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | **S3a:** Kokoro FAIL (best median RTF 3.769, en v0.19 t4); Piper PASS (0.248 t4, p95 0.271). **S3b:** Zipformer 20M passes numbers (RTF 0.177 t2, PSS 119 MiB) but drops utterance starts (model limit), so not usable as default; Parakeet FAIL memory (PSS 903 MiB, RTF 0.324); **owner override 2026-10-29: Parakeet is the S3b default despite memory**. Battery runs and Parakeet with an idle Qwen3 LLM resident: no kills, min MemAvailable 2,023 MB. [Details](../spikes/s3-voice/results/RESULTS.md) | vivo Y17s (charging; A23 not tested) | 2026-10-29 |
+| S4 Tools | Shortcut path < 300 ms | **PASS**: shortcut p95 6.2–19.4 ms per action (20 dry runs each, 0 failures). Info: Decision Maker router 85–100 % per action, ~0.5 s; Gemma 3 1B tool calling 0 % valid calls (not usable); pass-2 approach [OPEN]. Owner on-screen checks (README steps 2–8, 13–14) not done. [Details](../spikes/s4-tools/results/RESULTS.md) | vivo Y17s (charging) | 2026-10-30 |
 
 ## Test devices
 
@@ -49,12 +49,15 @@ Notes on the vivo Y17s:
 | 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
 | 5 | Final app name | **Bibi AI** chosen (2026-10-28). Web check done; similar "Bibi" products exist (see brainstorm.md). Formal trademark, Play listing, and domain checks still needed. | Partly resolved [VERIFY] |
 | 6 | Model pack hosting | Decide in P1 after checking Play Asset Delivery limits | Open [VERIFY] |
-| 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged. S1 and S3 numbers are not entered in it yet; they live in the RESULTS.md files. | Open |
+| 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged. The file is still not in `reference/` (checked 2026-10-30); S1–S4 numbers live in the spikes' `results/RESULTS.md` files instead. | Open |
 | 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Open — owner to confirm |
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
-| 11 | S2 model files (SPEC [VERIFY]) | Smoke runs on vivo Y17s, LiteRT-LM 0.16.1: `litert-community/Qwen3-0.6B` `qwen3_0_6b_mixed_int4.litertlm` (497,516,544 bytes) loads; decode 7.2–8.1 tok/s, engine TTFT 4.4–6.0 s, PSS ~2.1 GB (smoke, not gate). `Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm`: ~2.2 tok/s, TTFT 7.6–8.6 s, not recommended. Proposed soak file: mixed_int4. A Soak 50 of the dynamic_wi4b32 file (started 23:40, not by Claude) hung on prompt 4: `TimeoutException: no onDone within 300 s`; its `:inference` stayed resident (~1.48 GiB) after the error [VERIFY whether intended]. Gemma 3 1B int4 needs the owner to accept the Gemma terms and download it. The phone also holds non-SPEC models (gemma-4-E2B-it 2.59 GB, Qwen2.5-1.5B q8); the earlier Qwen2.5-1.5B soak is invalid (25/50 prompts, 3.7 tok/s). See #5. | Open [OPEN] — owner to confirm the Qwen file |
+| 11 | S2 model files (SPEC [VERIFY]) | **Gemma 3 1B:** `gemma3-1b-it-int4.litertlm` obtained by the owner and soaked (S2 row above). **Qwen 0.5B-class:** proposed file `litert-community/Qwen3-0.6B` `qwen3_0_6b_mixed_int4.litertlm` (497,516,544 bytes); its smoke runs on the vivo (LiteRT-LM 0.16.1) gave decode 7.2–8.1 tok/s but engine TTFT 4.4–6.0 s, slower than Gemma, PSS ~2.1 GB (smoke, not gate). `Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm`: ~2.2 tok/s, TTFT 7.6–8.6 s, not recommended; its Soak 50 hung on prompt 4 (`TimeoutException: no onDone within 300 s`) with `:inference` left resident (~1.48 GiB) [VERIFY whether intended]. Qwen soak not run. gemma-4-E2B-it removed from the phone at the owner's request (2026-10-30); the earlier Qwen2.5-1.5B q8 soak is invalid (25/50 prompts). See #5. | Open [OPEN] — owner to confirm the Qwen file |
 | 12 | S3b default recognizer | Parakeet TDT 0.6B v2 int8, by owner override of the 600 MB limit (Decisions, 2026-10-29). vivo check with a Qwen3 LLM resident (idle): no kills, min MemAvailable 2,023 MB. Still to check: LLM generating, Gemma 3 1B, Galaxy A23. See #7. | Resolved (override) [VERIFY on A23] |
-| 13 | Spike JVM test scripts (`tools/*/run.sh` on the spike branches) hard-code `/opt/gradle-*/lib` (cloud path) | Locally run via a copy pointed at `~/.gradle/wrapper/dists/gradle-9.1.0-bin/.../lib` plus trove4j from gradle-8.11 | Open — small chore |
+| 13 | Spike JVM test scripts (`spikes/*/tools/*/run.sh`, now on `main`) hard-code `/opt/gradle-*/lib` (cloud path) | Locally run via a copy pointed at `~/.gradle/wrapper/dists/gradle-9.1.0-bin/.../lib` plus trove4j from gradle-8.11 | Open — small chore |
+| 14 | S2: does the chat-mode soak (one conversation, system prompt prefilled once; PR #23) count for the S2 gate instead of the per-prompt soak? | Per-prompt soak result stands (FAIL on TTFT p95) | Open [OPEN] — owner to decide after the Chat soak 50 run (#5) |
+| 15 | S4 pass-2 approach for tool arguments (Gemma 3 1B gave 0/100 valid tool calls) | Shortcut path only; slot extraction recommended over FunctionGemma 270M | Open [OPEN] — owner to decide (#8) |
+| 16 | S1 path: four measured runs (baseline, Bibi 12, baseline, Calm, ~61 min each) or an owner override of the S1 gate | Runs needed; the S1 app is no longer installed on the vivo, so reinstall from `main` first | Open [OPEN] — owner to decide (#4) |
 
 ## Local environment (2026-10-29)
 - graphify installed and graph built (`graphify-out/`, git-ignored); gh CLI installed and logged in; Context7 MCP works without a key.
@@ -63,6 +66,7 @@ Notes on the vivo Y17s:
 
 ## Decisions
 - 2026-10-30 — S2 adds a chat-mode soak (one conversation, system prompt prefilled once, untimed; per-turn TTFT) to test prefix reuse after the per-prompt soak failed on TTFT p95; the per-prompt result stays recorded; whether chat mode decides the S2 gate is [OPEN] for the owner — Owner request — #5
+- 2026-10-30 — Merged branches (spike/*, docs/*, chore/*) are kept for now; none deleted — Owner choice ("nothing deleted yet").
 - 2026-10-30 — S2 gate FAIL for Gemma 3 1B int4 on vivo Y17s (valid 50-prompt soak, unplugged, airplane on): decode median 6.54 tok/s (PASS), 0 OOM kills (PASS), TTFT p95 3,493 ms > 3,000 ms (FAIL; p50 2,425 ms). TTFT scales with prompt length (~50 ms/token); only the 6 prompts of 72–86 tokens exceeded 3 s. Per PRD 0.7/0.5 the next step is an owner choice [OPEN]: prefix reuse, shorter prompts, GPU prefill, accept 3.5 s by override, or test the Galaxy A23. Qwen 0.5B-class soak not run — spikes/s2-llm/results/RESULTS.md, #5
 - 2026-10-30 — S4 gate PASS on vivo Y17s: shortcut path p95 6.2–19.4 ms per action (gate < 300 ms). LLM path (info only): Decision Maker routes correctly 85–100 % per action in ~0.5 s; Gemma 3 1B int4 via LiteRT-LM 0.16.1 produced 0/100 valid tool calls (text only, malformed JSON, wrong values), so it is not used for tool arguments; pass-2 approach (slot extraction vs tool-trained model) [OPEN], owner to decide — spikes/s4-tools/results/RESULTS.md, #8
 - 2026-10-30 — S4 spike adds MediaPipe Decision Maker (`com.google.mediapipe:tasks-decision:1.2.0`, model `embeddinggemma-2-text-270m.litertlm`, 164,626,432 bytes, Apache-2.0) as an intent router over the five MVP tools + "none"; it only selects which tool schema the LLM sees and never dispatches an action; the shortcut gate path is unchanged and runs without it — implements PRD §13.4 tool-schema router / §13.5 two-pass fallback; spike-only, not a commitment to the MVP stack — Owner request.
@@ -89,13 +93,13 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-29 local session: S3 run on the vivo Y17s; results committed to `spike/S3-voice` (`spikes/s3-voice/results/`); issues #5, #6, #7 commented. S2: smoke runs only (open item 11). Worktrees at `/Users/saadahmed/bibi-wt/{S2-llm,S3-voice,S4-tools}`.
+2026-10-30 ~02:00 local session: PR #23 (`feature/5-s2-conversation-soak`, S2 chat-mode soak) is being fixed for the preface-prefill issue: in LiteRT-LM 0.16.1 `prefillPrefaceOnInit` did not prefill (turn 1 TTFT 10.3 s with all 311 system-prompt tokens), so the fix adds a scripted, untimed first exchange and marks the run invalid if the prefix was not prefilled. A plugged-in device check (not a gate run) showed turns 2–8 TTFT 1.25–1.33 s; the device check of the fix is pending. Worktrees under `/Users/saadahmed/bibi-wt/`. Main checkout `/Users/saadahmed/bibi-ai` is on `main`, up to date.
 
-2026-10-29 (branch `docs/testing-guide`): `TESTING.md` added with the S1 owner protocol; S2 (#5), S3a/S3b (#6, #7) and S4 (#8) sections wait for each spike's "Owner test steps". Next step: when a spike app lands on its branch, copy its owner steps into `TESTING.md` and set its row to ready.
+GitHub: PRs #12–#22 merged; #3 (ImgBot) closed unmerged; #23 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. S3: done on the vivo: clip1 re-recorded, Parakeet re-run (t4 0.336), battery runs (Parakeet t4 0.346–0.358; Piper Play-on 0.297, owner heard it, no problems reported), and Parakeet with a Qwen3 LLM resident (RTF 0.349, min MemAvailable 2,023 MB, no kills) — RESULTS.md §4.3–4.4. Still to do: Parakeet while the LLM is generating, with Gemma 3 1B, and on the Galaxy A23 [VERIFY].
-2. Owner: download `gemma3-1b-it-int4.litertlm`, confirm the Qwen file (open item 11), and run S2 Soak 50 for both under soak conditions (#5).
-3. S4 on-phone steps and benchmark.
-4. S1: four measured runs (app on `main`, `spikes/s1-overlay`, #4).
-5. Make the `tools/*/run.sh` scripts find a local Gradle lib, not only `/opt` (open item 13).
+1. Finish PR #23, check it on the device, then the owner runs Chat soak 50 (unplugged, airplane on; TESTING.md → S2); record the result and the owner's decision on whether it counts for the gate (open item 14, #5).
+2. Owner: choose the S4 pass-2 approach (open item 15, #8).
+3. S1: reinstall from `main` and do the four runs, or record an owner override (open item 16, #4).
+4. S4 owner on-screen checks (README steps 2–8, 13–14; #8).
+5. Run the spikes on the Galaxy A23 if it is available (open item 10).

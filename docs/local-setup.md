@@ -46,16 +46,18 @@ How to get the same Claude Code setup on your own laptop that the cloud sessions
 5. Optional: build the code map with `graphify update .`. Its output in `graphify-out/` is git-ignored.
 
 ## Where the work stands
-The cloud sessions pushed everything; nothing lives only in the cloud. Each spike is its own branch and PR, and open one at a time in Android Studio:
+The cloud sessions pushed everything; nothing lives only in the cloud. All four spike apps are merged to `main` (open each spike folder on its own in Android Studio). Merged branches are kept for now (owner's choice, 2026-10-30).
 
-| Work | Branch | PR |
+| Work | Where | PR |
 |---|---|---|
-| S1 overlay | `spike/S1-overlay` | #10 (draft) |
-| S2 local LLM | `spike/S2-llm` | #12 (draft) |
-| S3a + S3b voice | `spike/S3-voice` | #14 (draft) |
-| S4 actions | `spike/S4-tools` | #13 (draft) |
-| `TESTING.md` | `docs/testing-guide` | #15 |
-| This setup (agent-board in the repo, this guide) | `chore/local-setup` | see the PR list |
+| S1 overlay | `main` → `spikes/s1-overlay/` | #10 (merged) |
+| S2 local LLM | `main` → `spikes/s2-llm/` | #12, #22 (merged) |
+| S2 chat-mode soak | `feature/5-s2-conversation-soak` | #23 (open) |
+| S3a + S3b voice | `main` → `spikes/s3-voice/` | #14 (merged) |
+| S4 actions | `main` → `spikes/s4-tools/` | #13, #19 (merged) |
+| `TESTING.md`, this guide, plugins | `main` | #15, #16, #18, #20, #21 (merged) |
+
+Current state and next steps: [project_status.md](project_status.md).
 
 To have several branches open at once without switching (as the cloud sessions did), use `git worktree add ../bibi-s2 spike/S2-llm`.
 

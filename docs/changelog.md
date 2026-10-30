@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - S3 voice results on the vivo Y17s: `spikes/s3-voice/results/RESULTS.md`, `analyze.py` and raw logs on branch `spike/S3-voice` (Kokoro fails, Piper passes; S3b default recognizer open).
 - Decision: Parakeet TDT 0.6B v2 int8 is the S3b default recognizer by owner override of the PRD 0.7 STT memory limit.
 - S2 Qwen3-0.6B LiteRT-LM smoke results on the vivo Y17s recorded in `docs/project_status.md` (open item 11; not a gate run).
+- 2026-10-30: spike apps merged to `main`: S1 overlay (`spikes/s1-overlay/`, PR #10), S2 local LLM (`spikes/s2-llm/`, PR #12), S4 tools and permissions (`spikes/s4-tools/`, PR #13) and S3 voice (`spikes/s3-voice/`, PR #14); S3 results now on `main` (`spikes/s3-voice/results/RESULTS.md`).
 
 ### Changed
 - Renamed the product from the working name "Pip" to **Bibi AI** across all docs, config, and the repo folder (`bibi-ai/`). The PRD in `reference/` is unchanged.
@@ -37,3 +38,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - `docs/project_status.md`: S3 results row, S3a/S3b decisions, P0 milestone status, vivo Y17s device facts confirmed on device (Android 15 / API 35, model V2310), new open items 11–13, local environment notes, stopping point and next steps.
 - agent-board plugin in the repo (`plugins/agent-board`, repo marketplace) and `docs/local-setup.md` for laptop setup and resuming from phone or cloud.
 - `TESTING.md` at the repo root: the owner's single on-phone testing checklist (devices, spike status table, common settings, S1 overlay protocol and kill/restart check, how to send results). S2–S4 sections get their steps when each spike app lands.
+- 2026-10-30: status docs synced with the merged work. `docs/project_status.md`: P0 row shows the P1 gate not met; S2, S3 and S4 rows; S3 results link points to `main`; open item 11 rewritten (Gemma 3 1B soaked, Gemma 4 removed from the phone, Qwen file still open); new open items 14 (S2 chat mode for the gate), 15 (S4 pass-2) and 16 (S1 path); new stopping point and next steps; decision to keep merged branches. `TESTING.md`: status table, spikes built from `main`, S2 Chat soak 50 owner step (PR #23 build), S4 remaining on-screen checks. `docs/local-setup.md`: spike PRs shown as merged. `docs/tooling.md`: tool count.
