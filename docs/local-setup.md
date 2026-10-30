@@ -10,6 +10,7 @@ How to get the same Claude Code setup on your own laptop that the cloud sessions
 | Skills: graphify, three Strix skills | `.claude/skills/` | Automatically |
 | Agent Skills plugin (`/spec`, `/plan`, `/build`, `/review`, …) | `.claude/settings.json` | Prompt on first open → accept |
 | **agent-board** (Agents pane, toasts, `/agent-board`) | `plugins/agent-board/`, listed by `.claude-plugin/marketplace.json` | Prompt on first open → accept |
+| impeccable, ui-ux-pro-max, last30days, humanizer, ponytail (design, research and writing skills; see tooling.md) | `.claude/settings.json` | Prompt on first open → accept |
 | Context7 and 21st MCP servers | `.mcp.json` | Need keys in your shell environment (below) |
 | Graphify hooks | `.claude/settings.json` | Do nothing until `graphify` is installed |
 
@@ -36,10 +37,10 @@ How to get the same Claude Code setup on your own laptop that the cloud sessions
 ## First run
 1. Update your clone: `git fetch --all --prune`, then `git checkout main && git pull`.
 2. Open Claude Code in the repo folder (`claude` in a terminal there, or open the folder in the Desktop app).
-3. Accept the prompts: trust the folder, install `agent-skills` and `agent-board`, enable the `context7` and `21st` MCP servers.
+3. Accept the prompts: trust the folder, install `agent-skills`, `agent-board`, `impeccable`, `ui-ux-pro-max`, `last30days`, `humanizer` and `ponytail`, enable the `context7` and `21st` MCP servers.
 4. Check that everything loaded:
    - `/agents` lists the five project agents.
-   - `/plugin` shows `agent-skills` and `agent-board`.
+   - `/plugin` shows `agent-skills`, `agent-board`, `impeccable`, `ui-ux-pro-max`, `last30days`, `humanizer` and `ponytail`.
    - `/mcp` shows `context7` and `21st`.
    - `/agent-board` opens the Agents pane.
 5. Optional: build the code map with `graphify update .`. Its output in `graphify-out/` is git-ignored.
