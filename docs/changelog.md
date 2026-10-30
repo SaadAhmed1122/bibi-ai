@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
+- Project plugins impeccable, ui-ux-pro-max and last30days enabled in `.claude/settings.json`; usage rules in `docs/tooling.md`.
 - Project scaffold created: `brainstorm.md`, `project_spec.md`, `CLAUDE.md`, `.env.example`, `.gitignore`.
 - `reference/Pip_PRD_Final.md` copied unchanged from the source.
 - `docs/architecture.md`, `docs/project_status.md`, and feature docs for overlay, model runtime, memory, and tools/permissions.
