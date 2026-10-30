@@ -191,6 +191,13 @@ class Summary private constructor(
             val preface = rows.firstOrNull { it["kind"] == "preface" }
             val resetRows = rows.filter { it["kind"] == "conv_reset" }
             if (mode == MODE_CHAT && preface == null && oomKills == 0) reasons += "no preface row"
+            // The KV cache must hold the preface before the first timed turn; otherwise its prefill
+            // lands in that turn's TTFT (seen on device 2026-10-30 with prefillPrefaceOnInit alone).
+            val notPrefilled = (listOfNotNull(preface) + resetRows).filter { (it.int("ctx_tokens") ?: 0) <= 0 }
+            if (mode == MODE_CHAT && notPrefilled.isNotEmpty()) {
+                reasons += "preface not prefilled (" +
+                    notPrefilled.joinToString("/") { "${it["kind"]} ctx_tokens=${it["ctx_tokens"].ifEmpty { "?" }}" } + ")"
+            }
             if (planned != null && planned != SOAK_PROMPTS) reasons += "planned $planned prompts, the gate needs $SOAK_PROMPTS"
             if (oomKills == 0) {
                 if (planned != null && prompts.size < planned) reasons += "only ${prompts.size} of $planned prompts finished"

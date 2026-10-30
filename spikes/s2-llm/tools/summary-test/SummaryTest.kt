@@ -67,17 +67,19 @@ fun chatRun(
     n: Int = 50,
     resets: Int = 1,
     preface: Boolean = true,
+    prefaceCtx: String = "310",
+    resetCtx: String = "310",
     ttft: (Int) -> Double = { 400.0 + it * 2 },
     tps: (Int) -> Double = { 6.5 },
     end: String? = "stop",
 ): String {
     val lines = run(n = n, mode = "chat", ttft = ttft, tps = tps, end = end).trimEnd().lines().toMutableList()
     if (preface) {
-        lines.add(3, row(6_000, "preface", "chat", "detail" to "system=system_bibi.txt", "total_ms" to "15000.0", "prefill_tokens" to "310", "ctx_tokens" to "310"))
+        lines.add(3, row(6_000, "preface", "chat", "detail" to "system=system_bibi.txt", "total_ms" to "15000.0", "prefill_tokens" to prefaceCtx, "ctx_tokens" to prefaceCtx))
     }
     repeat(resets) { r ->
         val at = 4 + (r + 1) * 20 // after prompt 20, 40, ...
-        lines.add(at.coerceAtMost(lines.size), row(6_000L + (r + 1) * 200_000L, "conv_reset", "chat", "detail" to "used=3950", "total_ms" to "${16000.0 + r * 1000}", "prefill_tokens" to "310", "ctx_tokens" to "310"))
+        lines.add(at.coerceAtMost(lines.size), row(6_000L + (r + 1) * 200_000L, "conv_reset", "chat", "detail" to "used=3950", "total_ms" to "${16000.0 + r * 1000}", "prefill_tokens" to resetCtx, "ctx_tokens" to resetCtx))
     }
     return lines.joinToString("\n") + "\n"
 }
@@ -209,6 +211,14 @@ fun main(args: Array<String>) {
     check("chat: cancelled invalid, no verdict, chat label", !chCancel.valid && chCancel.gateLine() == "GATE S2 (gemma3-1b-it-int4, chat mode): no verdict, run not valid", chCancel.gateLine())
     val chNoPreface = Summary.from(chatRun(preface = false))
     check("chat: no preface row is invalid", !chNoPreface.valid && chNoPreface.validityLine().contains("no preface row"), chNoPreface.validityLine())
+    // Device run 2026-10-30 01:41: the preface row showed ctx_tokens=0, so the system prompt was
+    // prefilled inside prompt 1's timed TTFT. Such a run must not get a chat-mode verdict.
+    val chNotPrefilled = Summary.from(chatRun(prefaceCtx = "0"))
+    check("chat: preface ctx 0 is invalid", !chNotPrefilled.valid && chNotPrefilled.pass == null && chNotPrefilled.validityLine().contains("preface not prefilled"), chNotPrefilled.validityLine())
+    val chCtxUnknown = Summary.from(chatRun(prefaceCtx = ""))
+    check("chat: preface ctx unknown is invalid", !chCtxUnknown.valid && chCtxUnknown.validityLine().contains("preface not prefilled"), chCtxUnknown.validityLine())
+    val chResetNotPrefilled = Summary.from(chatRun(resets = 1, resetCtx = "0"))
+    check("chat: conv_reset ctx 0 is invalid", !chResetNotPrefilled.valid && chResetNotPrefilled.validityLine().contains("preface not prefilled"), chResetNotPrefilled.validityLine())
     val chCharging = Summary.from(chatRun().replace(",false,320,true,true,", ",true,320,true,true,"))
     check("chat: charging invalid", !chCharging.valid && chCharging.validityLine().contains("charging"), chCharging.validityLine())
     check("soak: no preface needed", a.valid && a.resets == 0 && a.prefaceMs == null, a.validityLine())
