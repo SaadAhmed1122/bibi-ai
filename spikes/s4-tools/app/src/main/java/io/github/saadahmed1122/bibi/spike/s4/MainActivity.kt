@@ -31,8 +31,10 @@ import java.util.concurrent.Executors
  * S4 spike screen (plain views, throwaway). One path for every action:
  * text → ShortcutParser or FakeLlm + ToolRouter → PermissionEngine → (confirmation) → ToolExecutor.
  * With "Real LLM path" on, a shortcut miss (and only a miss: the shortcut path is unchanged and
- * never waits for a model) goes Decision Maker → Gemma tool call (one tool exposed) →
- * LlmToolRouter (parse, validate, one repair, exposed-subset check) → the same PermissionEngine.
+ * never waits for a model) goes Decision Maker → slot extraction for that one tool (Decision
+ * 2026-10-30) → SlotToolRouter (parse, validate, exposed-subset check) → the same PermissionEngine.
+ * With "LLM tool call (experimental)" also on, pass 2 is the old Gemma 3 1B tool call instead
+ * (LlmToolRouter, one repair), kept so the first benchmark stays reproducible.
  *
  * Timing (SystemClock.elapsedRealtimeNanos, see SPEC.md §3):
  * t0 = submit (button tap handler entered) → parse done → policy done → intent/torch call built →
@@ -63,6 +65,7 @@ class MainActivity : Activity() {
     private lateinit var input: EditText
     private lateinit var fakeLlmBox: CheckBox
     private lateinit var realLlmBox: CheckBox
+    private lateinit var llmCallBox: CheckBox
     private lateinit var modelStatus: TextView
     private lateinit var llmBenchButton: Button
     private lateinit var taintBox: CheckBox
@@ -89,6 +92,8 @@ class MainActivity : Activity() {
         val onDone: (Boolean) -> Unit = {},
         /** On a shortcut miss, try the real LLM path instead of stopping at no_match. */
         val realLlm: Boolean = false,
+        /** Pass 2 by the experimental Gemma tool call instead of slot extraction. */
+        val llmToolCall: Boolean = false,
     )
 
     private class Timing(val t0: Long) {
@@ -170,14 +175,16 @@ class MainActivity : Activity() {
         col.addView(button("Submit") { submitLive(input.text.toString()) })
 
         fakeLlmBox = box("Fake LLM path (fixed mappings, baseline; text skips the shortcut matcher)")
-        realLlmBox = box("Real LLM path (on a shortcut miss: Decision Maker → Gemma 3 1B tool call)")
+        realLlmBox = box("Real LLM path (on a shortcut miss: Decision Maker → slot extraction)")
+        llmCallBox = box("LLM tool call (experimental): pass 2 by Gemma 3 1B instead of slot extraction; loads Gemma too")
         // One model path at a time.
         fakeLlmBox.setOnCheckedChangeListener { _, on -> if (on) realLlmBox.isChecked = false }
         realLlmBox.setOnCheckedChangeListener { _, on -> if (on) fakeLlmBox.isChecked = false }
         taintBox = box("Untrusted content in context (simulated notification text → taint)")
         dryRunBox = box("Dry run (resolve the intent, don't launch)")
         killBox = box("Disable all actions (kill switch)")
-        listOf(fakeLlmBox, realLlmBox, taintBox, dryRunBox, killBox).forEach(col::addView)
+        llmCallBox.setOnCheckedChangeListener { _, _ -> refreshModelStatus() }
+        listOf(fakeLlmBox, realLlmBox, llmCallBox, taintBox, dryRunBox, killBox).forEach(col::addView)
         modelStatus = text("", mono = true).apply { textSize = 11f }
         col.addView(modelStatus)
         col.addView(button("Load models") { loadModels() })
@@ -260,6 +267,7 @@ class MainActivity : Activity() {
                 autoConfirm = false,
                 ctx = null,
                 realLlm = realLlmBox.isChecked && !fakeLlmBox.isChecked,
+                llmToolCall = llmCallBox.isChecked,
             ),
         )
     }
@@ -505,32 +513,38 @@ class MainActivity : Activity() {
         fun line(f: java.io.File?, name: String) =
             if (f?.isFile == true) "  $name: present (${f.length() / (1024 * 1024)} MB)" else "  $name: MISSING"
         modelStatus.text = buildString {
-            appendLine("Real LLM path models (not in the APK). adb push both files into:")
+            appendLine("Real LLM path models (not in the APK). adb push into:")
             appendLine("  ${pipeline.modelsDir?.absolutePath ?: "external storage unavailable"}")
             appendLine(line(pipeline.dmFile, DecisionRouter.MODEL_FILE))
-            appendLine(line(pipeline.llmFile, LiteRtToolLlm.MODEL_FILE))
+            appendLine(line(pipeline.llmFile, LiteRtToolLlm.MODEL_FILE) + "  (only for LLM tool call)")
+            appendLine("Pass 2: " + if (llmCallBox.isChecked) "Gemma tool call (experimental)" else "slot extraction")
             append("Models: $loadLine")
         }
     }
 
     private fun loadModels() {
-        if (pipeline.loaded) return toast("Models already loaded")
+        val withLlm = llmCallBox.isChecked
+        if (pipeline.isLoaded(withLlm)) return toast("Models already loaded")
         if (loadJob?.isActive == true) return
-        if (!pipeline.filesPresent()) return toast("Model files missing; see the model status")
-        loadJob = scope.launch { loadAndReport() }
+        if (!pipeline.filesPresent(withLlm)) return toast("Model files missing; see the model status")
+        loadJob = scope.launch { loadAndReport(withLlm) }
     }
 
-    /** Loads both models once (off the main thread) and logs load time and PSS. False if loading failed. */
-    private suspend fun loadAndReport(): Boolean {
+    /**
+     * Loads the Decision Maker (and Gemma if [withLlm]) once, off the main thread, and logs load
+     * time and PSS. False if loading failed. Gemma, once loaded, stays until the app is closed.
+     */
+    private suspend fun loadAndReport(withLlm: Boolean): Boolean {
         loadLine = "loading…"
         refreshModelStatus()
         return try {
-            pipeline.load()?.let { rep ->
+            pipeline.load(withLlm)?.let { rep ->
+                val gemma = rep.llmMs?.let { String.format(Locale.US, "Gemma %.0f ms", it) } ?: "Gemma not loaded"
                 loadLine = String.format(
-                    Locale.US, "loaded: Decision Maker %.0f ms, Gemma %.0f ms, PSS %d MB",
-                    rep.dmMs, rep.llmMs, rep.pssKb / 1024,
+                    Locale.US, "loaded: Decision Maker %.0f ms, %s, PSS %d MB",
+                    rep.dmMs, gemma, rep.pssKb / 1024,
                 )
-                log.event("llm_load", "dm_ms=${SpikeLog.ms(rep.dmMs)}; llm_ms=${SpikeLog.ms(rep.llmMs)}; pss_kb=${rep.pssKb}", totalMs = rep.dmMs + rep.llmMs)
+                log.event("llm_load", "dm_ms=${SpikeLog.ms(rep.dmMs)}; llm_ms=${SpikeLog.ms(rep.llmMs)}; pss_kb=${rep.pssKb}", totalMs = rep.dmMs + (rep.llmMs ?: 0.0))
             }
             true
         } catch (e: kotlinx.coroutines.CancellationException) {
@@ -551,16 +565,17 @@ class MainActivity : Activity() {
             show("LLM path busy (a request or the model load is still running).")
             return r.onDone(false)
         }
-        if (!pipeline.filesPresent()) {
+        if (!pipeline.filesPresent(r.llmToolCall)) {
             log.event("no_match", "shortcut matcher: no match; LLM model files missing", path = r.path)
             show("No shortcut matched, and the model files are missing (see the model status).")
             return r.onDone(false)
         }
-        show(if (pipeline.loaded) "LLM path: thinking…" else "LLM path: loading models (first use)…")
+        val ready = pipeline.isLoaded(r.llmToolCall)
+        show(if (ready) "LLM path: thinking…" else "LLM path: loading models (first use)…")
         llmJob = scope.launch {
             // A first-use load is not part of the request time: t0 restarts after it.
-            val timing = if (pipeline.loaded) t else if (loadAndReport()) Timing(SystemClock.elapsedRealtimeNanos()) else t
-            onLlmResult(r, timing, pipeline.run(r.text), prompt = null)
+            val timing = if (ready) t else if (loadAndReport(r.llmToolCall)) Timing(SystemClock.elapsedRealtimeNanos()) else t
+            onLlmResult(r, timing, pipeline.run(r.text, r.llmToolCall, apps), prompt = null)
         }
     }
 
@@ -599,7 +614,13 @@ class MainActivity : Activity() {
             route is LlmRoute.AskUser -> {
                 outcome = "ask_user"
                 note = route.errors.joinToString("; ")
-                show("LLM path: invalid twice → ask user.\n${route.question}\nErrors: $note")
+                show(
+                    if (run.llmToolCall) {
+                        "LLM path: invalid twice → ask user.\n${route.question}\nErrors: $note"
+                    } else {
+                        "Slot extraction: missing or ambiguous → ask user.\n${route.question}\nWhy: $note"
+                    },
+                )
             }
             route is LlmRoute.NoToolCall -> {
                 outcome = "no_tool_call"
@@ -668,7 +689,8 @@ class MainActivity : Activity() {
                 "llm_ms" to SpikeLog.ms(run.llmMs),
                 "tool_name" to result?.toolName.orEmpty(),
                 "args_json" to result?.argsJsonForLog(exposed).orEmpty(),
-                "source" to result?.first?.source?.name?.lowercase(Locale.US).orEmpty(),
+                // Every slot-mode row says "slots" (also no-action rows), so LlmSummary can split the two modes.
+                "source" to if (!run.llmToolCall) LlmSummary.SLOTS_SOURCE else result?.first?.source?.name?.lowercase(Locale.US).orEmpty(),
                 "json_ok" to result?.jsonValid?.toString().orEmpty(),
                 "args_ok" to result?.argsValid?.toString().orEmpty(),
                 "repaired" to result?.repaired?.toString().orEmpty(),
@@ -686,20 +708,22 @@ class MainActivity : Activity() {
         if (llmBenchJob?.isActive == true) return stopLlmBenchmark("stopped by user")
         if (benchRunning) return toast("Shortcut benchmark running")
         if (llmJob?.isActive == true || loadJob?.isActive == true) return toast("LLM path busy")
-        if (!pipeline.filesPresent()) return toast("Model files missing; see the model status")
+        val withLlm = llmCallBox.isChecked
+        if (!pipeline.filesPresent(withLlm)) return toast("Model files missing; see the model status")
         llmBenchButton.text = "Stop LLM benchmark"
         llmBenchJob = scope.launch {
             try {
-                if (!pipeline.loaded && !loadAndReport()) return@launch
+                if (!pipeline.isLoaded(withLlm) && !loadAndReport(withLlm)) return@launch
                 // Fixed context, like the shortcut benchmark: trusted text, actions enabled.
                 val ctx = PolicyContext(setOf(Provenance.USER_TYPED), deviceLocked = keyguard.isDeviceLocked)
                 val prompts = LlmBenchPrompts.ALL
-                log.event("llm_bench_start", "${prompts.size} prompts; dry run: stops at the Permission Engine decision; nothing is launched")
+                val pass2 = if (withLlm) "Gemma tool call (experimental)" else "slot extraction"
+                log.event("llm_bench_start", "${prompts.size} prompts; pass 2: $pass2; dry run: stops at the Permission Engine decision; nothing is launched")
                 for ((i, p) in prompts.withIndex()) {
                     show("LLM benchmark ${i + 1}/${prompts.size}…")
-                    val r = Request(p.text, kind = "bench", path = "llm", dryRun = true, autoConfirm = false, ctx = ctx)
+                    val r = Request(p.text, kind = "bench", path = "llm", dryRun = true, autoConfirm = false, ctx = ctx, llmToolCall = withLlm)
                     val t = Timing(SystemClock.elapsedRealtimeNanos())
-                    onLlmResult(r, t, pipeline.run(p.text), p)
+                    onLlmResult(r, t, pipeline.run(p.text, withLlm, apps), p)
                     delay(BENCH_GAP_MS)
                 }
                 log.event("llm_bench_end", "done")
@@ -748,7 +772,7 @@ class MainActivity : Activity() {
         const val LLM_RUNS = 6
         const val BENCH_GAP_MS = 150L
         const val TORCH_TIMEOUT_MS = 1_000L
-        const val LLM_BENCH_LABEL = "LLM benchmark (110 prompts, real models, dry run; minutes)"
+        const val LLM_BENCH_LABEL = "LLM benchmark (110 prompts, real models, dry run; pass 2 per the switch above)"
 
         /** Benchmark commands for the four intent actions (dry run). Settings is on every launcher. */
         val BENCH_LAUNCH = listOf("open settings", "wake me at 7:30", "set a timer for 5 minutes", "call 0123 456 789")
