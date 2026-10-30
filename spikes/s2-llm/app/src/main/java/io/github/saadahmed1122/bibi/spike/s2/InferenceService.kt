@@ -99,11 +99,17 @@ class InferenceService : Service() {
         }
     }
 
-    /** Engine thread. One run: load, then each prompt once, then stop. */
+    /**
+     * Engine thread. One run: load, then each prompt once, then stop. Soak and smoke use a fresh
+     * conversation per prompt; chat mode keeps one conversation (system prompt prefilled once,
+     * untimed) and resets it, untimed, before a turn could overflow the KV cache.
+     */
     private fun run(path: String, mode: String) {
         val log = BenchLog(this)
         val set = PromptSet.parse(assets.open(PROMPTS_ASSET).bufferedReader().use { it.readText() })
-        val prompts = if (mode == MODE_SOAK) set.prompts else set.prompts.take(SMOKE_PROMPTS)
+        val chat = mode == MODE_CHAT
+        val prompts = if (mode == MODE_SOAK || chat) set.prompts else set.prompts.take(SMOKE_PROMPTS)
+        val chatSystem = if (chat) assets.open(CHAT_SYSTEM_ASSET).bufferedReader().use { it.readText() }.trim() else ""
         val modelFile = File(path)
         val model = modelFile.nameWithoutExtension
         val file = log.newRunFile(model, mode)
@@ -112,7 +118,7 @@ class InferenceService : Service() {
         fun row(kind: String, detail: String = "", fields: Map<String, String> = emptyMap()) =
             log.write(file, runId, kind, detail, model, mode, fields)
 
-        val llm: LlmEngine = LiteRtLmEngine(cacheDir.path, set.system)
+        val llm: LlmEngine = LiteRtLmEngine(cacheDir.path, set.system, maxNumTokens = if (chat) CHAT_CONTEXT_TOKENS else null)
         engine = llm
         val totalRamMb = ActivityManager.MemoryInfo()
             .also { getSystemService(ActivityManager::class.java).getMemoryInfo(it) }.totalMem / (1024 * 1024)
@@ -121,7 +127,8 @@ class InferenceService : Service() {
             "file=${modelFile.name} bytes=${modelFile.length()} device=${Build.MANUFACTURER} ${Build.MODEL} " +
                 "android=${Build.VERSION.RELEASE} api=${Build.VERSION.SDK_INT} ram_total_mb=$totalRamMb " +
                 "lmk_report=${ActivityManager.isLowMemoryKillReportSupported()} prompts=${prompts.size} " +
-                "max_new=$MAX_NEW_TOKENS runtime=${llm.label}",
+                "max_new=$MAX_NEW_TOKENS runtime=${llm.label}" +
+                if (chat) " system=$CHAT_SYSTEM_ASSET context=$CHAT_CONTEXT_TOKENS" else "",
         )
         try {
             setStatus("Loading $model …")
@@ -129,15 +136,46 @@ class InferenceService : Service() {
             llm.load(path)
             row("load", fields = mapOf("load_ms" to (SystemClock.elapsedRealtime() - loadStart).toString()) + memory())
 
+            // Chat mode: tokens in the KV cache, turns in the current conversation, last turn failed.
+            var used = 0
+            var turns = 0
+            var failed = false
+
+            /** Opens the chat with the preface prefilled; untimed for the gate, logged as its own row. */
+            fun openChat(kind: String, detail: String) {
+                setStatus("$model: prefilling system prompt ($kind) …")
+                val t0 = SystemClock.elapsedRealtimeNanos()
+                val tokens = llm.openChat(chatSystem, MAX_NEW_TOKENS)
+                val ms = (SystemClock.elapsedRealtimeNanos() - t0) / 1e6
+                used = tokens ?: Metrics.turnTokenEstimate(chatSystem.length)
+                turns = 0
+                failed = false
+                row(
+                    kind,
+                    detail,
+                    mapOf(
+                        "total_ms" to fmt(ms, 1),
+                        "prefill_tokens" to (tokens?.toString() ?: ""),
+                        "ctx_tokens" to used.toString(),
+                    ) + memory(),
+                )
+            }
+            if (chat) openChat("preface", "system=$CHAT_SYSTEM_ASSET chars=${chatSystem.length} context=$CHAT_CONTEXT_TOKENS")
+
             for ((i, prompt) in prompts.withIndex()) {
                 if (stopRequested) break
+                if (chat && (failed || Metrics.needsContextReset(used, turns, prompt.text.length, MAX_NEW_TOKENS, CHAT_CONTEXT_TOKENS))) {
+                    openChat("conv_reset", "before=${i + 1} used=$used turns=$turns${if (failed) " after_error" else ""}")
+                }
                 setStatus("$model: prompt ${i + 1}/${prompts.size} … ${lastLine.orEmpty()}")
                 val stream = Stream()
                 val start = SystemClock.elapsedRealtimeNanos()
                 val counts = try {
-                    llm.generate(prompt.text, MAX_NEW_TOKENS) { stream.chunk(SystemClock.elapsedRealtimeNanos()) }
+                    val onToken: (String) -> Unit = { stream.chunk(SystemClock.elapsedRealtimeNanos()) }
+                    if (chat) llm.chat(prompt.text, onToken) else llm.generate(prompt.text, MAX_NEW_TOKENS, onToken)
                 } catch (e: Throwable) {
                     if (stopRequested) break
+                    failed = true
                     row("error", "${e.javaClass.simpleName}: ${e.message}", mapOf("prompt_idx" to "${i + 1}", "prompt_id" to prompt.id) + memory())
                     continue
                 }
@@ -147,6 +185,8 @@ class InferenceService : Service() {
                 val tokens = engineTokens ?: stream.chunks
                 val ttft = if (stream.chunks > 0) Metrics.ttftMs(start, stream.firstNs) else null
                 val tps = Metrics.decodeTokensPerSecond(tokens, stream.firstNs, stream.lastNs)
+                turns++
+                used = counts.contextTokens ?: (used + Metrics.turnTokenEstimate(prompt.text.length) + tokens)
                 row(
                     "prompt",
                     fields = mapOf(
@@ -162,6 +202,7 @@ class InferenceService : Service() {
                         "total_ms" to fmt((end - start) / 1e6, 1),
                         "eng_ttft_ms" to fmt(counts.ttftMs, 1),
                         "eng_decode_tps" to fmt(counts.decodeTokensPerSecond, 2),
+                        "ctx_tokens" to if (chat) used.toString() else (counts.contextTokens?.toString() ?: ""),
                     ) + memory(),
                 )
                 lastLine = "last: TTFT ${fmt(ttft, 0)} ms, ${fmt(tps, 1)} tok/s"
@@ -224,12 +265,28 @@ class InferenceService : Service() {
         /** The 50-prompt gate run. */
         const val MODE_SOAK = "soak"
 
+        /**
+         * The 50 prompts as consecutive turns of one conversation, system prompt prefilled once
+         * (untimed). Judged separately; whether it decides the S2 gate is [OPEN] (SPEC.md §2.1).
+         */
+        const val MODE_CHAT = "chat"
+
         /** A 3-prompt check that the model loads and streams; never valid for the gate. */
         const val MODE_SMOKE = "smoke"
 
         const val SMOKE_PROMPTS = 3
         const val MAX_NEW_TOKENS = 128
         const val PROMPTS_ASSET = "prompts.tsv"
+
+        /** Chat mode's system prompt: Bibi persona + remembered facts, ~250–350 tokens. */
+        const val CHAT_SYSTEM_ASSET = "system_bibi.txt"
+
+        /**
+         * Chat mode's KV cache size, set explicitly so the reset budget matches the engine.
+         * gemma3-1b-it-int4.litertlm has no max_num_tokens in its LlmMetadata, so 0.16.1's
+         * engine_settings.cc default would also be 4096 [VERIFY on device; other models may differ].
+         */
+        const val CHAT_CONTEXT_TOKENS = 4096
 
         fun fmt(v: Double?, digits: Int): String = v?.let { "%.${digits}f".format(Locale.US, it) } ?: ""
     }

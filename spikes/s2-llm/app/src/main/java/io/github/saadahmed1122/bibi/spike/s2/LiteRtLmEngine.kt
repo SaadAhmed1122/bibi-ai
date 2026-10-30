@@ -26,6 +26,18 @@ import java.util.concurrent.TimeoutException
  *    cancelProcess, getBenchmarkInfo), Benchmark.kt (BenchmarkInfo), ExperimentalFlags.kt.
  *
  * CPU backend only: PRD 0.5 says not to rely on GPU/NPU on the floor device.
+ *
+ * Chat mode (checked against the v0.16.1 sources and `javap` of the 0.16.1 AAR's classes.jar):
+ *  - `ConversationConfig.prefillPrefaceOnInit = true` makes `createConversation()` prefill the
+ *    preface (system instruction + initial messages) before it returns; Conversation.cc then
+ *    renders later turns without the preface.
+ *  - Each later `sendMessageAsync` prefills only the new text (Conversation.cc renders the full
+ *    history and sends the suffix after the old rendering into the same session), so earlier
+ *    turns stay in the KV cache.
+ *  - `Conversation.getTokenCount()`: "number of tokens in the conversation KV Cache (prefill +
+ *    decode)".
+ *  - `EngineConfig.maxNumTokens`: "maximum number of the sum of input and output tokens ...
+ *    the size of the kv-cache"; null = model metadata, else the engine's computed default.
  */
 class LiteRtLmEngine(
     /** Writable dir; the guide says it "can improve 2nd load time". */
@@ -33,6 +45,8 @@ class LiteRtLmEngine(
     private val systemPrompt: String,
     /** null = the runtime's default thread count [VERIFY what that is on the Helio G85]. */
     private val cpuThreads: Int? = null,
+    /** KV cache size (input + output tokens); null = the model's or engine's default. */
+    private val maxNumTokens: Int? = null,
 ) : LlmEngine {
 
     override val label: String = "litert-lm $LIBRARY_VERSION CPU threads=${cpuThreads ?: "default"}"
@@ -41,6 +55,9 @@ class LiteRtLmEngine(
 
     @Volatile
     private var running: Conversation? = null
+
+    /** Chat mode: the one open conversation. Engine thread only. */
+    private var chatConversation: Conversation? = null
 
     @OptIn(ExperimentalApi::class)
     override fun load(path: String) {
@@ -52,60 +69,84 @@ class LiteRtLmEngine(
                 modelPath = path,
                 backend = Backend.CPU(threadCount = cpuThreads),
                 cacheDir = cacheDir,
+                maxNumTokens = maxNumTokens,
             ),
         )
         e.initialize() // "can take a significant amount of time (e.g., 10 seconds)"
         engine = e
     }
 
-    @OptIn(ExperimentalApi::class)
     override fun generate(prompt: String, maxTokens: Int, onToken: (String) -> Unit): EngineCounts {
         val e = checkNotNull(engine) { "load() first" }
-        val config = ConversationConfig(
-            systemInstruction = Contents.of(systemPrompt),
-            // topK = 1 is greedy decoding, so runs are repeatable across models and devices.
-            samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 1.0),
-            // Docstring: "maximum number of output tokens per decode step" [VERIFY it caps the reply].
-            maxOutputToken = maxTokens,
-        )
-        e.createConversation(config).use { conversation ->
-            val done = CountDownLatch(1)
-            var failure: Throwable? = null
-            running = conversation
-            try {
-                conversation.sendMessageAsync(
-                    prompt,
-                    object : MessageCallback {
-                        override fun onMessage(message: Message) {
-                            val text = message.toString()
-                            if (text.isNotEmpty()) onToken(text)
-                        }
+        return e.createConversation(config(systemPrompt, maxTokens, prefill = false)).use { send(it, prompt, onToken) }
+    }
 
-                        override fun onDone() = done.countDown()
+    override fun openChat(systemPrompt: String, maxTokens: Int): Int? {
+        val e = checkNotNull(engine) { "load() first" }
+        closeChat()
+        // Blocks until the preface is in the KV cache (prefillPrefaceOnInit docstring).
+        val conversation = e.createConversation(config(systemPrompt, maxTokens, prefill = true))
+        chatConversation = conversation
+        return runCatching { conversation.getTokenCount() }.getOrNull()
+    }
 
-                        override fun onError(throwable: Throwable) {
-                            failure = throwable
-                            done.countDown()
-                        }
-                    },
-                )
-                if (!done.await(TIMEOUT_S, TimeUnit.SECONDS)) {
-                    conversation.cancelProcess()
-                    done.await(5, TimeUnit.SECONDS)
-                    throw TimeoutException("no onDone within $TIMEOUT_S s")
-                }
-            } finally {
-                running = null
-            }
-            failure?.let { throw it }
-            val info = runCatching { conversation.getBenchmarkInfo() }.getOrNull()
-            return EngineCounts(
-                prefillTokens = info?.lastPrefillTokenCount,
-                decodeTokens = info?.lastDecodeTokenCount,
-                ttftMs = info?.timeToFirstTokenInSecond?.times(1000.0),
-                decodeTokensPerSecond = info?.lastDecodeTokensPerSecond,
+    override fun chat(prompt: String, onToken: (String) -> Unit): EngineCounts =
+        send(checkNotNull(chatConversation) { "openChat() first" }, prompt, onToken)
+
+    override fun closeChat() {
+        chatConversation?.let { runCatching { it.close() } }
+        chatConversation = null
+    }
+
+    private fun config(system: String, maxTokens: Int, prefill: Boolean) = ConversationConfig(
+        systemInstruction = Contents.of(system),
+        // topK = 1 is greedy decoding, so runs are repeatable across models and devices.
+        samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 1.0),
+        // Docstring: "maximum number of output tokens per decode step" [VERIFY it caps the reply].
+        maxOutputToken = maxTokens,
+        prefillPrefaceOnInit = prefill,
+    )
+
+    /** One blocking turn in [conversation]; streams chunks to [onToken]. */
+    @OptIn(ExperimentalApi::class)
+    private fun send(conversation: Conversation, prompt: String, onToken: (String) -> Unit): EngineCounts {
+        val done = CountDownLatch(1)
+        var failure: Throwable? = null
+        running = conversation
+        try {
+            conversation.sendMessageAsync(
+                prompt,
+                object : MessageCallback {
+                    override fun onMessage(message: Message) {
+                        val text = message.toString()
+                        if (text.isNotEmpty()) onToken(text)
+                    }
+
+                    override fun onDone() = done.countDown()
+
+                    override fun onError(throwable: Throwable) {
+                        failure = throwable
+                        done.countDown()
+                    }
+                },
             )
+            if (!done.await(TIMEOUT_S, TimeUnit.SECONDS)) {
+                conversation.cancelProcess()
+                done.await(5, TimeUnit.SECONDS)
+                throw TimeoutException("no onDone within $TIMEOUT_S s")
+            }
+        } finally {
+            running = null
         }
+        failure?.let { throw it }
+        val info = runCatching { conversation.getBenchmarkInfo() }.getOrNull()
+        return EngineCounts(
+            prefillTokens = info?.lastPrefillTokenCount,
+            decodeTokens = info?.lastDecodeTokenCount,
+            ttftMs = info?.timeToFirstTokenInSecond?.times(1000.0),
+            decodeTokensPerSecond = info?.lastDecodeTokensPerSecond,
+            contextTokens = runCatching { conversation.getTokenCount() }.getOrNull(),
+        )
     }
 
     override fun cancel() {
@@ -113,6 +154,7 @@ class LiteRtLmEngine(
     }
 
     override fun close() {
+        closeChat()
         engine?.close()
         engine = null
     }

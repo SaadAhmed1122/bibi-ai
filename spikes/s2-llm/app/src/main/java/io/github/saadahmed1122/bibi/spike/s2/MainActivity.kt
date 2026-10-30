@@ -178,6 +178,10 @@ class MainActivity : Activity() {
                 setOnClickListener { start(f, InferenceService.MODE_SOAK) }
             }, fullWidth())
             models.addView(Button(this).apply {
+                text = "Chat soak 50: ${f.name}"
+                setOnClickListener { start(f, InferenceService.MODE_CHAT) }
+            }, fullWidth())
+            models.addView(Button(this).apply {
                 text = "Smoke 3: ${f.name}"
                 setOnClickListener { start(f, InferenceService.MODE_SMOKE) }
             }, fullWidth())
