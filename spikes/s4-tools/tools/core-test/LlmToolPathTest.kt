@@ -46,6 +46,9 @@ fun llmToolPathTests() {
     check("label none → no action", ToolRouting.select("none", 0.99f) is ToolSelection.NoAction)
     check("low confidence → no action", ToolRouting.select("set_alarm", ToolRouting.MIN_CONFIDENCE - 0.01f) is ToolSelection.NoAction)
     check("confidence at the threshold → expose", ToolRouting.select("set_alarm", ToolRouting.MIN_CONFIDENCE) is ToolSelection.Expose)
+    // vivo slot run (RESULTS.md §6): right labels at 0.27–0.47 were dropped; "what time is it in Tokyo" was set_alarm at 0.15.
+    for (c in listOf(0.27f, 0.35f, 0.47f)) check("vivo right label at $c → expose", ToolRouting.select("open_app", c) is ToolSelection.Expose)
+    check("vivo wrong label at 0.15 → no action", ToolRouting.select("set_alarm", 0.15f) is ToolSelection.NoAction)
     check("NaN confidence → no action", ToolRouting.select("dial", Float.NaN) is ToolSelection.NoAction)
     check("unknown label → no action", ToolRouting.select("send_sms", 0.99f) is ToolSelection.NoAction)
     check("blank label → no action", ToolRouting.select("", 0.99f) is ToolSelection.NoAction)

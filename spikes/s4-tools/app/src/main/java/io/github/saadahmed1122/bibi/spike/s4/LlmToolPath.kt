@@ -24,8 +24,12 @@ sealed interface ToolSelection {
 object ToolRouting {
     const val NONE = "none"
 
-    /** Below this confidence the request is treated as "none" [OPEN: tune on device]. */
-    const val MIN_CONFIDENCE = 0.5f
+    /**
+     * Below this confidence the request is treated as "none". 0.25 from the vivo slot run (RESULTS.md §6):
+     * right labels came in at 0.27–0.47; slot extraction still asks when a label is wrong. Tuned on
+     * the same 110 prompts it was measured on [VERIFY on a fresh prompt set].
+     */
+    const val MIN_CONFIDENCE = 0.25f
 
     const val INSTRUCTIONS = "Select the single phone action the user's request asks for, or none if it asks for no phone action."
 
