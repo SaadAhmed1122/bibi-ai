@@ -1,5 +1,6 @@
 package io.github.saadahmed1122.bibi
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -15,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
@@ -23,6 +25,8 @@ import io.github.saadahmed1122.bibi.debug.LlmDebugRoute
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
+import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingScreen
+import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingViewModel
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
 private enum class Screen { Home, Chat, Model, Terms, CrashLog, LlmDebug }
@@ -47,8 +51,31 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 BackHandler(enabled = screen != Screen.Home, onBack = goHome)
+                val onboarding = viewModel { OnboardingViewModel(container.onboarding) }
+                val onboardingStep by onboarding.step.collectAsStateWithLifecycle()
                 when (screen) {
-                    Screen.Home -> HomeScreen(
+                    Screen.Home -> onboardingStep?.let { step ->
+                        val importer = viewModel { ModelImportViewModel(container.models) }
+                        val model by importer.state.collectAsStateWithLifecycle()
+                        val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                            if (uri != null) importer.import(UriModelSource(contentResolver, uri))
+                        }
+                        // The first permission request in the app (SPEC-onboarding.md); any answer finishes.
+                        val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+                            onboarding.finish()
+                        }
+                        OnboardingScreen(
+                            step = step,
+                            modelState = model,
+                            onNext = onboarding::next,
+                            onBack = onboarding::back,
+                            onPickModel = { picker.launch(arrayOf("*/*")) },
+                            onCancelImport = importer::cancel,
+                            onOpenTerms = { screen = Screen.Terms },
+                            onAllowNotifications = { notifications.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                            onNotNow = onboarding::finish,
+                        )
+                    } ?: HomeScreen(
                         onOpenChat = { screen = Screen.Chat },
                         onOpenModel = { screen = Screen.Model },
                         onOpenTerms = { screen = Screen.Terms },

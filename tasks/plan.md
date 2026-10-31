@@ -102,7 +102,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 - [ ] On the vivo, the overlay and chat card work over other apps. The owner tries them.
 
 ### Phase 5: Onboarding
-- [ ] **Task 15 (#46): First run.** Welcome, Model (with the terms link) and Notifications, plus a completed flag.
+- [x] **Task 15 (#46): First run.** Welcome, Model (with the terms link) and Notifications, plus a completed flag.
   - Acceptance: `OnboardingViewModel` tests; on a clean install there is no permission dialog before the Notifications step.
   - Verify: tests; manual clean install.
   - Files: `feature/onboarding/*`, `MainActivity` nav. **M**

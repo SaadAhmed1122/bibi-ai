@@ -1,0 +1,20 @@
+<resources>
+    <string name="onb_step">Step %1$d of 3</string>
+    <string name="onb_welcome_title">Hi, I\'m Bibi</string>
+    <string name="onb_welcome_body">I\'m a small companion that lives on this phone. I chat with you using an AI model that runs right here: no internet, no account, and nothing is sent anywhere. Our chats are stored only on this phone.</string>
+    <string name="onb_next">Next</string>
+    <string name="onb_back">Back</string>
+    <string name="onb_model_title">My AI model</string>
+    <string name="onb_model_body">To think, I need the model file %1$s (about 585 MB). Copy it to the phone, then choose it here. It is checked before use and never leaves the phone.</string>
+    <string name="onb_model_choose">Choose model file</string>
+    <string name="onb_model_importing">Copying and checking… %1$d%%</string>
+    <string name="onb_model_cancel">Cancel</string>
+    <string name="onb_model_ready">The model is ready.</string>
+    <string name="onb_model_invalid">That file didn\'t work. Choose %1$s, or skip for now.</string>
+    <string name="onb_model_skip">Skip for now</string>
+    <string name="onb_terms">Model: Gemma 3 1B — Gemma Terms of Use</string>
+    <string name="onb_notif_title">Notifications</string>
+    <string name="onb_notif_body">If you turn on floating Bibi, I show a small notification so you can hide me or turn me off anytime. Android asks you to allow notifications for that. Saying no is fine: chat still works.</string>
+    <string name="onb_notif_allow">Allow notifications</string>
+    <string name="onb_notif_not_now">Not now</string>
+</resources>
