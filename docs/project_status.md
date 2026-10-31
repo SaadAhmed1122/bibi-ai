@@ -117,6 +117,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-31 ~23:00: P2 Task 2 (#73) `core:tools` built on `feature/73-core-tools`: the S4 pure-Kotlin tool core (parser, validator, Permission Engine with dial Sensitive, shortcut matcher, slot extraction, app resolver) moved unchanged apart from the package and spike wording; 7 JUnit suites, 491 checks pass. PR waits for the owner (Permission Engine = major merge). Strix CLI not installed, so the Strix pass is not done [VERIFY]. Next: Task 3 (#74) router in `:inference`, branched from this one.
+
 2026-10-31 ~22:50: P2 Task 1 (#72) memory check done on the vivo: voice on demand (Decisions). #71 merged (PR #92); design module added (PR #95, tasks #93–#94). Next: Task 2 (#73) `core:tools` from S4 (security-sensitive: owner approves the merge).
 
 2026-10-31 ~16:30: P2 planned: SPEC-P2.md approved by the owner with four answers (side-load, plain Room, voice in app and card, dial Sensitive); seven module specs; tasks/plan-p2.md; issues #72–#90. Bug #71 fixed (PR on `bugfix/71-card-keyboard`): the card lifts above the keyboard itself, since Android pushed it up without shrinking it and then reported 0 px covered; checked on the vivo in portrait (whole card above the keyboard, back to rest when it hides) and landscape (floating keyboard, unchanged; send works, TTFT 1,320 ms). Next: P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools`.
