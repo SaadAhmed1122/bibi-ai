@@ -8,6 +8,7 @@ import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
 import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
+import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
 import java.io.File
 
 /** Hand-wired app dependencies (SPEC-app-shell.md: wiring by hand). One per process. */
@@ -42,6 +43,14 @@ class AppContainer(context: Context) {
         }
         return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected)
             .apply { addCloseable { setConnected(false) } }
+    }
+
+    /** The first-run flag (SPEC-onboarding.md). */
+    val onboarding: OnboardingStore = object : OnboardingStore {
+        private val prefs = appContext.getSharedPreferences("app", Context.MODE_PRIVATE)
+        override var completed: Boolean
+            get() = prefs.getBoolean("onboarding_completed", false)
+            set(value) = prefs.edit().putBoolean("onboarding_completed", value).apply()
     }
 
     val chatHistory: ChatHistoryRepository by lazy { RoomChatHistoryRepository.create(appContext) }
