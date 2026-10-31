@@ -23,6 +23,7 @@ Product name **Bibi AI**; the character is **Bibi**. The PRD in `reference/` use
 ```
 brainstorm.md               raw ideas, flows, name candidates, voice-note inbox
 project_spec.md             unified MVP spec (product + engineering)
+SPEC.md, SPEC-<module>.md   P1 capability map and per-module specs
 CLAUDE.md                   this file
 .env.example                required variable names (no values)
 .env                        local values; git-ignored
