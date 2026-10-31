@@ -51,6 +51,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 BackHandler(enabled = screen != Screen.Home, onBack = goHome)
+                val floating by container.floating.state.collectAsStateWithLifecycle()
+                val overlaySettings = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                    container.floating.onReturnFromSettings()
+                }
                 val onboarding = viewModel { OnboardingViewModel(container.onboarding) }
                 val onboardingStep by onboarding.step.collectAsStateWithLifecycle()
                 when (screen) {
@@ -81,8 +85,14 @@ class MainActivity : ComponentActivity() {
                         onOpenTerms = { screen = Screen.Terms },
                         onOpenCrashLog = if (BuildConfig.DEBUG) ({ screen = Screen.CrashLog }) else null,
                         onOpenLlmDebug = if (BuildConfig.DEBUG) ({ screen = Screen.LlmDebug }) else null,
-                        // Debug-only until the Floating Bibi switch (Task 16, #47) asks for the permission.
-                        onToggleOverlay = if (BuildConfig.DEBUG) ::toggleOverlay else null,
+                        floating = floating,
+                        onFloatingSwitch = container.floating::onSwitch,
+                        onCalmSwitch = container.floating::onCalm,
+                        onExplainerContinue = {
+                            container.floating.onExplainerContinue()
+                            overlaySettings.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+                        },
+                        onExplainerDismiss = container.floating::onExplainerDismiss,
                     )
                     Screen.Chat -> ChatRoute(
                         // Activity-scoped: survives rotation, so the model stays loaded.
@@ -116,12 +126,9 @@ class MainActivity : ComponentActivity() {
         if (intent.getBooleanExtra(OverlayService.EXTRA_OPEN_CHAT, false)) openChatRequested = true
     }
 
-    /** Debug: starts floating Bibi, or opens the overlay permission page first. Stop is in its notification. */
-    private fun toggleOverlay() {
-        if (Settings.canDrawOverlays(this)) {
-            OverlayService.start(this)
-        } else {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-        }
+    override fun onResume() {
+        super.onResume()
+        // Picks up the notification's Turn off, and brings floating Bibi back after a process kill.
+        (application as BibiApplication).container.floating.onAppVisible()
     }
 }

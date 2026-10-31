@@ -18,5 +18,6 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
 }

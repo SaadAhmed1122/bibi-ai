@@ -54,6 +54,7 @@ class OverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        running = true
         windowManager = getSystemService(WindowManager::class.java)
         screenOn = getSystemService(PowerManager::class.java).isInteractive
         getSystemService(NotificationManager::class.java).createNotificationChannel(
@@ -72,12 +73,26 @@ class OverlayService : Service() {
             ACTION_START, ACTION_SHOW -> {
                 // Answer startForegroundService() first, even if the overlay can't be shown.
                 startForeground(NOTIFICATION_ID, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-                if (!Settings.canDrawOverlays(this) || !controller.show()) stopEverything() else refreshNotification()
+                // START comes on every app visit (FloatingToggle): it must not undo a Hide.
+                val hidden = controller.state == OverlayController.State.Hidden
+                if (intent.action == ACTION_START && hidden) {
+                    refreshNotification()
+                } else if (!Settings.canDrawOverlays(this) || !controller.show()) {
+                    stopEverything()
+                } else {
+                    refreshNotification()
+                }
             }
             ACTION_HIDE -> {
                 card.close()
                 controller.hide()
                 refreshNotification()
+            }
+            ACTION_CALM -> view?.calm = prefs.getBoolean(KEY_CALM, false)
+            ACTION_TURN_OFF -> {
+                // The notification's Turn off: the app's switch shows off from now on.
+                prefs.edit().putBoolean(KEY_ENABLED, false).apply()
+                stopEverything()
             }
             else -> stopEverything() // ACTION_STOP, or an unexpected restart
         }
@@ -152,6 +167,7 @@ class OverlayService : Service() {
     }
 
     override fun onDestroy() {
+        running = false
         unregisterReceiver(screenReceiver)
         card.close()
         cardOwner.destroy()
@@ -174,7 +190,7 @@ class OverlayService : Service() {
             .setContentIntent(open)
             .addAction(action(if (hidden) ACTION_SHOW else ACTION_HIDE, if (hidden) R.string.overlay_show else R.string.overlay_hide, 1))
             .addAction(Notification.Action.Builder(icon(), getString(R.string.overlay_open_chat), open).build())
-            .addAction(action(ACTION_STOP, R.string.overlay_stop, 2))
+            .addAction(action(ACTION_TURN_OFF, R.string.overlay_stop, 2))
             .build()
     }
 
@@ -198,6 +214,8 @@ class OverlayService : Service() {
         private const val ACTION_SHOW = "io.github.saadahmed1122.bibi.overlay.SHOW"
         private const val ACTION_HIDE = "io.github.saadahmed1122.bibi.overlay.HIDE"
         private const val ACTION_STOP = "io.github.saadahmed1122.bibi.overlay.STOP"
+        private const val ACTION_TURN_OFF = "io.github.saadahmed1122.bibi.overlay.TURN_OFF"
+        private const val ACTION_CALM = "io.github.saadahmed1122.bibi.overlay.CALM"
 
         private const val CHANNEL_ID = "bibi_overlay"
         private const val NOTIFICATION_ID = 1
@@ -206,15 +224,41 @@ class OverlayService : Service() {
         private const val KEY_X = "x"
         private const val KEY_Y = "y"
         private const val KEY_CALM = "calm"
+        private const val KEY_ENABLED = "enabled"
 
-        /** Call from a visible activity, with the overlay permission granted. */
-        fun start(context: Context) {
-            context.startForegroundService(Intent(context, OverlayService::class.java).setAction(ACTION_START))
+        /** The saved switch and Calm mode, in the same file the service reads. */
+        fun settings(context: Context): FloatingSettings = object : FloatingSettings {
+            private val prefs = context.getSharedPreferences(PREFS, MODE_PRIVATE)
+            override var enabled: Boolean
+                get() = prefs.getBoolean(KEY_ENABLED, false)
+                set(value) = prefs.edit().putBoolean(KEY_ENABLED, value).apply()
+            override var calm: Boolean
+                get() = prefs.getBoolean(KEY_CALM, false)
+                set(value) = prefs.edit().putBoolean(KEY_CALM, value).apply()
         }
 
-        fun stop(context: Context) {
-            context.startService(Intent(context, OverlayService::class.java).setAction(ACTION_STOP))
+        /** Start needs a visible activity and the overlay permission (FloatingToggle checks it). */
+        fun control(context: Context): OverlayControl = object : OverlayControl {
+            override fun start() {
+                context.startForegroundService(Intent(context, OverlayService::class.java).setAction(ACTION_START))
+            }
+
+            override fun stop() {
+                // startService of a stopped service would start it just to stop: skip when not running.
+                if (running) send(context, ACTION_STOP)
+            }
+
+            override fun applyCalm() {
+                if (running) send(context, ACTION_CALM)
+            }
         }
+
+        private fun send(context: Context, action: String) {
+            context.startService(Intent(context, OverlayService::class.java).setAction(action))
+        }
+
+        /** True between onCreate and onDestroy; the service runs in the app's own process. */
+        @Volatile private var running = false
 
         private fun openChatIntent(context: Context): Intent =
             checkNotNull(context.packageManager.getLaunchIntentForPackage(context.packageName))

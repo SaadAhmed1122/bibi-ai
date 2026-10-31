@@ -10,7 +10,7 @@ A short first run that gets a new user to a working chat. Success: on a clean in
   1. **Welcome:** what Bibi is. Says that it runs offline, sends nothing, and stores chats only on this phone.
   2. **Model:** explains the side-load step and starts the import (SPEC-model-import.md). It can be skipped; the chat then shows "Import the model".
   3. **Notifications:** asks for `POST_NOTIFICATIONS`, explaining that it is needed for the floating Bibi's notification. Denying is fine.
-- **Floating Bibi:** a switch on Home and in settings. Turning it on, when the overlay permission isn't granted, shows an explainer and opens `Settings.ACTION_MANAGE_OVERLAY_PERMISSION` for this package. On return, if granted, the overlay service starts; if not, the switch stays off and chat still works in the app.
+- **Floating Bibi:** a switch on Home and in settings. Turning it on, when the overlay permission isn't granted, shows an explainer and opens `Settings.ACTION_MANAGE_OVERLAY_PERMISSION` for this package (on the vivo this opens the full app list, so the explainer says "find Bibi and turn it on"). On return, if granted, the overlay service starts; if not, the switch stays off and chat still works in the app.
 - The Gemma terms link is shown on the Model step (app-shell).
 
 ## Acceptance criteria

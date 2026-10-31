@@ -106,7 +106,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: `OnboardingViewModel` tests; on a clean install there is no permission dialog before the Notifications step.
   - Verify: tests; manual clean install.
   - Files: `feature/onboarding/*`, `MainActivity` nav. **M**
-- [ ] **Task 16 (#47): Floating Bibi switch.** The overlay permission is asked only when the switch is turned on (explainer → system settings → back), and the service starts or the switch stays off.
+- [x] **Task 16 (#47): Floating Bibi switch.** The overlay permission is asked only when the switch is turned on (explainer → system settings → back), and the service starts or the switch stays off.
   - Acceptance: `FloatingToggle` logic tests; on the vivo, chat works with both permissions denied.
   - Verify: tests; manual.
   - Files: `FloatingToggle.kt`, the Home/settings UI. **S**

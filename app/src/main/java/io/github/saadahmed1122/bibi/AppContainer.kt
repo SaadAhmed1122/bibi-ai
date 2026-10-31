@@ -1,6 +1,9 @@
 package io.github.saadahmed1122.bibi
 
 import android.content.Context
+import android.provider.Settings
+import io.github.saadahmed1122.bibi.companion.overlay.FloatingToggle
+import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
@@ -44,6 +47,13 @@ class AppContainer(context: Context) {
         return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected)
             .apply { addCloseable { setConnected(false) } }
     }
+
+    /** The Floating Bibi switch (SPEC-onboarding.md): asks for the overlay permission only when turned on. */
+    val floating = FloatingToggle(
+        settings = OverlayService.settings(appContext),
+        canDrawOverlays = { Settings.canDrawOverlays(appContext) },
+        overlay = OverlayService.control(appContext),
+    )
 
     /** The first-run flag (SPEC-onboarding.md). */
     val onboarding: OnboardingStore = object : OnboardingStore {

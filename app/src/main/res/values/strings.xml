@@ -4,6 +4,14 @@
     <string name="home_body">Your offline companion. Everything stays on this phone.</string>
     <string name="home_chat">Chat with Bibi</string>
     <string name="home_model">Bibi\'s model</string>
+    <string name="home_floating">Floating Bibi</string>
+    <string name="home_floating_hint">Bibi sits on top of other apps. Tap it to chat.</string>
+    <string name="home_calm">Calm mode</string>
+    <string name="home_calm_hint">Slower animation (2 frames a second) to save battery.</string>
+    <string name="floating_explainer_title">Let Bibi float over other apps?</string>
+    <string name="floating_explainer_body">To sit on top of other apps, Bibi needs Android\'s \"Display over other apps\" permission. On the next screen, find Bibi and turn it on, then come back. Bibi doesn\'t read or record what\'s on your screen. You can turn this off anytime.</string>
+    <string name="floating_explainer_open">Open settings</string>
+    <string name="floating_explainer_not_now">Not now</string>
     <string name="back">Back</string>
     <string name="loading">Loading…</string>
     <!-- Gemma terms notice -->
@@ -16,7 +24,6 @@
     <string name="crash_log_empty">No crashes logged.</string>
     <!-- Debug-only LLM screen -->
     <string name="llm_debug_title">LLM check</string>
-    <string name="overlay_debug_start">Floating Bibi (debug)</string>
     <string name="llm_debug_state">Engine: %1$s</string>
     <string name="llm_debug_message">Message</string>
     <string name="llm_debug_send">Send</string>
