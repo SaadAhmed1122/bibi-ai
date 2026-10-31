@@ -53,6 +53,17 @@ class ExitInfoCollectorTest {
     }
 
     @Test
+    fun duplicateRecordsFromTheSystemAreLoggedOnce() {
+        // vivo Y17s, 2026-10-31: one crash came back twice from getHistoricalProcessExitReasons (#55).
+        val exits = listOf(exit(7, ExitReason.CRASH, desc = "same"), exit(7, ExitReason.CRASH, desc = "same"))
+
+        val added = ExitInfoCollector({ exits }, FakeStore(), writer).collect()
+
+        assertEquals(1, added)
+        assertEquals(1, Regex("exit=CRASH").findAll(writer.read()).count())
+    }
+
+    @Test
     fun secondRunAddsNothing() {
         val store = FakeStore()
         val exits = listOf(exit(5, ExitReason.CRASH), exit(7, ExitReason.ANR))

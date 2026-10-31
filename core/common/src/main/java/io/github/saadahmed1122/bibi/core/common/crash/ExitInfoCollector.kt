@@ -50,7 +50,8 @@ class ExitInfoCollector(
         val lastSeen = store.lastSeenMillis
         val fresh = source.exits().filter { it.timestampMillis > lastSeen }
         if (fresh.isEmpty()) return 0
-        val logged = fresh.filter { it.reason != null }.sortedBy { it.timestampMillis }
+        // The system can return the same exit twice (vivo Y17s, #55): log each one once.
+        val logged = fresh.filter { it.reason != null }.distinct().sortedBy { it.timestampMillis }
         logged.forEach { writer.writeExit(it.timestampMillis, it.processName, it.reason!!.name, it.description) }
         store.lastSeenMillis = fresh.maxOf { it.timestampMillis }
         return logged.size
