@@ -3,6 +3,7 @@ package io.github.saadahmed1122.bibi.feature.chat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +36,8 @@ fun ChatCard(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.fillMaxSize(),
+        // In portrait the card is taller than the space above the keyboard: shrink by the overlap.
+        modifier = modifier.imePadding().fillMaxSize(),
         shape = RoundedCornerShape(24.dp),
         tonalElevation = 6.dp,
         shadowElevation = 8.dp,
