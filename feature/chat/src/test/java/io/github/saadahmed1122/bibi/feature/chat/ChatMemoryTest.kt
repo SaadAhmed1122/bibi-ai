@@ -4,6 +4,7 @@ import io.github.saadahmed1122.bibi.ai.inference.api.FakeInferenceClient
 import io.github.saadahmed1122.bibi.domain.model.Message.Role.BIBI
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.usecase.NeverStore
+import io.github.saadahmed1122.bibi.domain.usecase.Recall
 import io.github.saadahmed1122.bibi.domain.usecase.Remember
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -32,7 +33,7 @@ class ChatMemoryTest {
 
     private fun TestScope.viewModel(client: FakeInferenceClient) = ChatViewModel(
         client, history, model,
-        memory = ChatMemory(Remember(memory) { 7 }, Texts),
+        memory = ChatMemory(Remember(memory) { 7 }, Texts, Recall(memory)),
         scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
     ).also { runCurrent() }
 
@@ -51,6 +52,16 @@ class ChatMemoryTest {
         assertEquals(listOf("My sister is Sara"), memory.items.map { it.text })
         assertTrue(client.sentTexts.isEmpty())
         assertEquals(BIBI to "saved", vm.state.value.messages.last().let { it.role to it.text })
+    }
+
+    @Test
+    fun aMatchingNoteReachesTheModelButNotTheSavedMessage() = runTest {
+        val client = FakeInferenceClient().apply { enqueueReply("Her name is Sara.") }
+        val vm = viewModel(client)
+        send(vm, "remember that my sister is Sara")
+        send(vm, "what's my sister's name?")
+        assertEquals(listOf("(Remember: Your sister is Sara.)\nwhat's my sister's name?"), client.sentTexts)
+        assertEquals("what's my sister's name?", vm.state.value.messages[2].text)
     }
 
     @Test

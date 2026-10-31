@@ -58,6 +58,9 @@ class InferenceService : Service() {
     /** Written on the engine thread; read on main for [LiteRtLmEngine.cancel]. */
     @Volatile private var engine: LiteRtLmEngine? = null
 
+    /** Pinned memory notes; read on the engine thread whenever a conversation opens. */
+    @Volatile private var memoryNotes = ""
+
     /** Main thread only. The personality preset; clients send it before Load. */
     private var persona = Persona.FRIENDLY
 
@@ -138,6 +141,8 @@ class InferenceService : Service() {
                 routerThread.execute { loadRouter(m.modelPath) }
             }
             is ProtocolMessage.Route -> routerThread.execute { route(m.requestId, m.text) }
+            // No reopen: the notes join the next conversation (after a reset, a preset change or a restart).
+            is ProtocolMessage.SetMemory -> memoryNotes = m.notes
             is ProtocolMessage.SetPersona -> {
                 val next = PersonaPrompt.normalize(m.persona)
                 val reopen = PersonaPrompt.needsReopen(persona, next, modelLoaded = loadedPath != null)
@@ -160,12 +165,12 @@ class InferenceService : Service() {
             e.load(path)
             val t1 = SystemClock.elapsedRealtime()
             systemPrompt = prompt(persona)
-            // Room for the longer of the two prompts, so switching presets keeps the budget and its turns.
-            val longest = maxOf(prompt(Persona.FRIENDLY).length, prompt(Persona.CONCISE).length)
+            // Room for the longer of the two prompts plus the notes, so a preset or notes change keeps the budget and its turns.
+            val longest = maxOf(prompt(Persona.FRIENDLY).length, prompt(Persona.CONCISE).length) + PersonaPrompt.MAX_NOTES_CHARS + 2
             budget = ContextBudget(
                 prefaceChars = longest + LiteRtLmEngine.PRIMER_USER.length + LiteRtLmEngine.PRIMER_REPLY.length,
             )
-            e.openChat(systemPrompt)
+            e.openChat(PersonaPrompt.compose(systemPrompt, memoryNotes))
             Log.i(TAG, "load_ms=${t1 - t0} preface_prefill_ms=${SystemClock.elapsedRealtime() - t1}")
             setState(EngineState.Ready)
         } catch (e: Exception) {
@@ -294,7 +299,7 @@ class InferenceService : Service() {
     private fun openConversation(e: LiteRtLmEngine) {
         val carried = checkNotNull(budget).reopen()
         val t0 = SystemClock.elapsedRealtime()
-        e.openChat(systemPrompt, carried)
+        e.openChat(PersonaPrompt.compose(systemPrompt, memoryNotes), carried)
         Log.i(
             TAG,
             "conversation reopened, carried_turns=${carried.size} used_est=${budget?.usedTokens} " +

@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Teaching a 1B model who "my" is
+- **Test:** Bibi answering with a saved memory ("My sister is Sara"), each run from an empty chat, on the vivo.
+- **Numbers:**
+  - Without memory, Gemma 3 1B **invented a sister called "Lily"** and once looped "Smith-Jones-Smith-Jones…" for 256 tokens.
+  - With the note, **2 of 3** answers were right ("Sara was your sister!").
+  - The one miss: "what is my sister called?" got "**You're** called Sara!". "My" in the note confused it, so notes are now rewritten as "**Your** sister is Sara".
+  - A note placed next to the question beat the same note in the system prompt: "Green!" vs "You can be blue!".
+  - It costs no extra time: the first word still came in about **1.3 s**.
+- **Lesson:** with small models, *where* and *how* you put a fact matters as much as having it.
+- Source: `docs/measurements/2026-11-01-memory-recall/RESULTS.md`, #80.
+
 ### 2026-11-01: "Remember that…" and the things Bibi refuses to remember
 - **Test:** saving memories on the vivo, typed and by long-press, then editing them in the new Memory screen.
 - **Numbers:**

@@ -84,6 +84,7 @@ class ChatViewModel(
         client,
         history,
         handleAction = if (actions == null && memory == null) null else { text -> rememberPhrase(text) ?: actions?.let { planAndRun(it, text) } },
+        modelText = { text -> memory?.recall?.invoke(text) ?: text },
     )
     private val notice = MutableStateFlow<String?>(null)
     private var noticeJob: Job? = null

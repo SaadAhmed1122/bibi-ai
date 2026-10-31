@@ -26,6 +26,9 @@ sealed interface ProtocolMessage {
     /** Bibi's personality preset (SPEC-personality.md): [Persona.FRIENDLY] or [Persona.CONCISE]. */
     data class SetPersona(val persona: String) : ProtocolMessage
 
+    /** Pinned memory notes for the system prompt (SPEC-memory.md); "" for none. Applies at the next conversation open. */
+    data class SetMemory(val notes: String) : ProtocolMessage
+
     // Service -> client.
     data class State(val state: EngineState) : ProtocolMessage
 
@@ -50,6 +53,7 @@ object InferenceProtocol {
     const val MSG_LOAD_ROUTER = 6
     const val MSG_ROUTE = 7
     const val MSG_SET_PERSONA = 8
+    const val MSG_SET_MEMORY = 9
 
     // Service -> client.
     const val MSG_STATE = 101
@@ -67,6 +71,7 @@ object InferenceProtocol {
     const val KEY_LABEL = "label"
     const val KEY_CONFIDENCE = "confidence"
     const val KEY_PERSONA = "persona"
+    const val KEY_NOTES = "notes"
 
     fun encode(message: ProtocolMessage): Envelope = when (message) {
         ProtocolMessage.Register -> Envelope(MSG_REGISTER, emptyMap())
@@ -77,6 +82,7 @@ object InferenceProtocol {
         is ProtocolMessage.LoadRouter -> Envelope(MSG_LOAD_ROUTER, mapOf(KEY_MODEL_PATH to message.modelPath))
         is ProtocolMessage.Route -> Envelope(MSG_ROUTE, mapOf(id(message.requestId), KEY_TEXT to message.text))
         is ProtocolMessage.SetPersona -> Envelope(MSG_SET_PERSONA, mapOf(KEY_PERSONA to message.persona))
+        is ProtocolMessage.SetMemory -> Envelope(MSG_SET_MEMORY, mapOf(KEY_NOTES to message.notes))
         is ProtocolMessage.Routed -> Envelope(
             MSG_ROUTED,
             when (val r = message.result) {
@@ -113,6 +119,7 @@ object InferenceProtocol {
             MSG_ROUTE -> if (requestId != null && text != null) ProtocolMessage.Route(requestId, text) else null
             MSG_ROUTED -> requestId?.let { decodeRouted(it, f) }
             MSG_SET_PERSONA -> f[KEY_PERSONA]?.let { ProtocolMessage.SetPersona(it) }
+            MSG_SET_MEMORY -> f[KEY_NOTES]?.let { ProtocolMessage.SetMemory(it) }
             MSG_STATE -> decodeState(f)?.let { ProtocolMessage.State(it) }
             MSG_TOKEN -> reply { ReplyEvent.Token(it) }
             MSG_DONE -> reply { ReplyEvent.Done(it) }

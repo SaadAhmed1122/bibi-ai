@@ -12,9 +12,11 @@ Bibi remembers what the user asks it to, plus short summaries of past chats, and
   - A never-store filter runs before every write: card numbers (13–19 digits passing Luhn), passwords ("password is …"), government ID patterns. A blocked write gets a short explanation.
   - Safe mode (privacy module) turns all writes off.
 - **Automatic summaries:** after the user has been idle 5 minutes with at least 4 new turns, `:inference` makes a one-or-two-sentence summary of those turns and saves it as SUMMARY. Never during a reply; a new message cancels it. Whether LiteRT-LM 0.16.1 allows a second conversation next to the chat one is checked with Context7 and the sources first; if not, the chat conversation is closed and reopened afterwards (≈ 7 s, only while idle) [VERIFY].
-- **Use in answers:**
-  - pinned items go into the system prompt when the conversation opens (cap ≈ 150 estimated tokens);
-  - the top 3 keyword matches for the user's message are added to that turn's text sent to the model (not shown or saved), cap ≈ 100 estimated tokens.
+- **Use in answers (built in Task 9, measured in `docs/measurements/2026-11-01-memory-recall/`):**
+  - pinned items go into the system prompt when the conversation opens (cap 450 characters ≈ 150 estimated tokens);
+  - the top 3 keyword matches for the user's message, pinned ones included, are added before that turn's text as "(Remember: …)" (not shown or saved), cap 240 characters ≈ 80 estimated tokens. On the vivo the 1B model used a note next to the question far more often than the same note in the system prompt;
+  - notes are turned into the second person ("My sister is Sara" → "Your sister is Sara") so the model doesn't mix up who "my" is;
+  - common words ("my", "what", "name"…) are ignored in the keyword search, so they don't match every note.
 - **Retention:** options 1 week, 1 month, 3 months (default), 1 year, forever (FR-093). A daily WorkManager job (`androidx.work`, new dependency) deletes expired unpinned items. Deletes are real deletes plus `PRAGMA secure_delete` (best effort on flash; UI copy doesn't over-claim).
 - **Memory screen** (Home → Memory): list, search, pin/unpin, edit, delete, retention picker, Export to `bibimem.json` through the system file picker (no permission).
 

@@ -51,6 +51,8 @@ class MessengerInferenceClient(
     private val routerPath: () -> String? = { null },
     /** The saved personality preset, sent before every Load so the first prompt is the right one. */
     private val persona: () -> String = { Persona.FRIENDLY },
+    /** The pinned memory notes block, sent before every Load (SPEC-memory.md). */
+    private val memoryNotes: () -> String = { "" },
 ) : InferenceClient {
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Unbound)
@@ -80,6 +82,7 @@ class MessengerInferenceClient(
             service = s
             sendTo(s, ProtocolMessage.Register, replyTo = replies)
             sendTo(s, ProtocolMessage.SetPersona(persona()))
+            sendTo(s, ProtocolMessage.SetMemory(memoryNotes()))
             sendTo(s, ProtocolMessage.Load(modelPath()))
             routerPath()?.let { sendTo(s, ProtocolMessage.LoadRouter(it)) }
         }
@@ -147,6 +150,11 @@ class MessengerInferenceClient(
     /** Applies a new preset now; the service reopens the conversation (about 7 s). Main thread. */
     fun setPersona(id: String) {
         service?.let { sendTo(it, ProtocolMessage.SetPersona(id)) }
+    }
+
+    /** New pinned notes for a running service; they join the next conversation open. Main thread. */
+    fun setMemoryNotes(notes: String) {
+        service?.let { sendTo(it, ProtocolMessage.SetMemory(notes)) }
     }
 
     /** Loads the router into a running service, e.g. right after its import. Main thread. */

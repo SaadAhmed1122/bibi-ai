@@ -30,4 +30,11 @@ class PersonaPromptTest {
         assertTrue(PersonaPrompt.needsReopen(Persona.FRIENDLY, Persona.CONCISE, modelLoaded = true))
         assertFalse(PersonaPrompt.needsReopen(Persona.FRIENDLY, Persona.CONCISE, modelLoaded = false))
     }
+
+    @Test
+    fun notesFollowThePromptAndAreCapped() {
+        assertEquals("Base.", PersonaPrompt.compose("Base.", "  "))
+        assertEquals("Base.\n\nNotes.", PersonaPrompt.compose("Base.", "Notes."))
+        assertEquals("Base.".length + 2 + PersonaPrompt.MAX_NOTES_CHARS, PersonaPrompt.compose("Base.", "x".repeat(5_000)).length)
+    }
 }
