@@ -10,7 +10,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
-| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Task 1 (root Gradle project) done, PR open |
+| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–4, 10, 12 (PRs #50–#54); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Next: Task 5 (#36) |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
@@ -103,7 +103,7 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-31 ~02:40: S1 PASS recorded (PR #27), Qwen dropped (PR #28, closed #5), P1 go recorded. The vivo's display settings are restored (screen timeout 1800000, auto-brightness, 90 Hz, min refresh unset; stay-awake off).
+2026-10-31 ~10:40: P1 Tasks 1–4, 10 and 12 merged (PRs #50–#54). Checkpoint A checked on the vivo: Home opens, no INTERNET permission, a test crash is logged and shown after relaunch. Bug #55 (duplicate exit-info records) fixed on `bugfix/55-exit-info-duplicates`. Next: Task 5 (#36), the LiteRT-LM service in `:inference`.
 
 2026-10-30 evening: S4 pass 2 (slot extraction) built on `feature/8-s4-slot-extraction` (worktree `/Users/saadahmed/bibi-wt/s4-slots`): `SlotExtractor.kt`, `SlotToolRouter`, pipeline switch, slot summary table, docs. JVM suite 547 checks pass (ceiling 100/100 with the correct label); `assembleDebug` builds; not run on a phone. Stopped at: PR open, device benchmark next.
 
@@ -112,7 +112,7 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. P1 Task 2 (#33, crash/ANR log) and Task 3 (#34, Gemma notice), then Task 4 (#35, inference contract). Install the Task 1 build on the vivo when it is connected.
-2. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
-3. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY].
-4. Run the spikes on the Galaxy A23 if it is available (open item 10).
+1. P1 Task 5 (#36): LiteRT-LM service in `:inference` with the debug model path; then Task 6 (#37) chat slice → Checkpoint B on the vivo (10 turns, TTFT p95 ≤ 3 s, Stop).
+2. Then Tasks 7–9, 11 (robustness, history, import UI), 13–14 (overlay), 15–16 (onboarding), 17–18 (release, exit gate). Task list: `tasks/plan.md`.
+3. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
+4. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY]; Galaxy A23 (open item 10).

@@ -5,7 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased] - 2026-10-28
 
+### Fixed
+- Crash log: an exit the system reports twice is now logged once (#55).
+
 ### Added
+- P1 Tasks 2–4, 10, 12: local crash/ANR log with a debug viewer, Gemma terms notice, the `InferenceClient` contract with Messenger codec and fake, model-import logic (copy, SHA-256, size, cancel), and overlay snap/clamp/frame-schedule logic (#33–#35, #41, #43).
 - P1 app project at the repo root (`app`, `core:common`, `core:designsystem`): empty Home screen, Bibi theme, and a build check that fails if any merged manifest requests INTERNET (#32).
 - P1 implementation plan `tasks/plan.md`: 18 tasks in 6 phases with checkpoints, riskiest path (model streaming in `:inference`) first.
 - P1 specs: `SPEC.md` (capability map, shared stack and rules) and eight module specs (`SPEC-<module>.md`).

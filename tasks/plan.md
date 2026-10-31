@@ -19,24 +19,24 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 ## Task list
 
 ### Phase 1: Foundation (app-shell)
-- [ ] **Task 1 (#32): Root Gradle project and empty app.** Adds `settings.gradle.kts`, the version catalog, `app`, `core:common` and `core:designsystem`, plus a Home screen and the theme. LiteRT-LM 0.16.1 must resolve.
+- [x] **Task 1 (#32): Root Gradle project and empty app.** Adds `settings.gradle.kts`, the version catalog, `app`, `core:common` and `core:designsystem`, plus a Home screen and the theme. LiteRT-LM 0.16.1 must resolve.
   - Acceptance: `./gradlew :app:assembleDebug test lint` passes; the app opens to Home on the vivo; a test fails the build if the merged manifest has INTERNET.
   - Verify: the commands above; install on the vivo.
   - Files: settings/build scripts, `libs.versions.toml`, `app/…/BibiApplication.kt`, `MainActivity.kt`, `core/designsystem/Theme.kt`. **M**
-- [ ] **Task 2 (#33): Local crash and ANR log.** `CrashLogWriter` (256 KB cap), `ExitInfoCollector`, the handler installed in both processes, and a debug Crash log screen with a Crash now button.
+- [x] **Task 2 (#33): Local crash and ANR log.** `CrashLogWriter` (256 KB cap), `ExitInfoCollector`, the handler installed in both processes, and a debug Crash log screen with a Crash now button.
   - Acceptance: JVM tests for the record format, the cap, and exit-info de-duplication; on the vivo a forced crash shows up after relaunch.
   - Verify: `./gradlew :core:common:test`; manual crash.
   - Files: `core/common/crash/*`, `app/…/debug/CrashLogScreen.kt`. **M**
-- [ ] **Task 3 (#34): Gemma terms notice.** A Home link to a screen showing the bundled terms notice asset.
+- [x] **Task 3 (#34): Gemma terms notice.** A Home link to a screen showing the bundled terms notice asset.
   - Acceptance: the link opens the notice; the text is in assets.
   - Verify: a preview plus a manual check.
   - Files: `app/…/TermsScreen.kt`, the asset. **XS**
 
 ### Checkpoint A: foundation
-- [ ] All tests pass and the debug build installs on the vivo. The owner reviews the project layout.
+- [x] All tests pass and the debug build installs on the vivo. The owner reviews the project layout.
 
 ### Phase 2: Core loop (inference + chat, riskiest first)
-- [ ] **Task 4 (#35): Inference contract.** `ai:inference-api` with `InferenceClient`, `EngineState`, `ReplyEvent`, the Messenger protocol codec, and `FakeInferenceClient`.
+- [x] **Task 4 (#35): Inference contract.** `ai:inference-api` with `InferenceClient`, `EngineState`, `ReplyEvent`, the Messenger protocol codec, and `FakeInferenceClient`.
   - Acceptance: round-trip tests for every message; fake-client contract tests for Done, Stop and Error.
   - Verify: `./gradlew :ai:inference-api:test`.
   - Files: 4–5 in `ai/inference-api`. **M**
@@ -72,7 +72,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: updated use-case and ViewModel tests; on the vivo, the history survives a force-stop.
   - Verify: tests; manual.
   - Files: `SendMessage.kt`, `ChatViewModel.kt`, `AppContainer.kt`. **S**
-- [ ] **Task 10 (#41): Model import logic.** `ImportModel` copies to `.part` with SHA-256 and size checks, progress and cancel; the expected-file constants live in `domain:model`.
+- [x] **Task 10 (#41): Model import logic.** `ImportModel` copies to `.part` with SHA-256 and size checks, progress and cancel; the expected-file constants live in `domain:model`.
   - Acceptance: the five JVM tests in SPEC-model-import.md criterion 1.
   - Verify: `./gradlew :domain:usecase:test`.
   - Files: `ImportModel.kt`, `ModelFile.kt`, the test. **S**
@@ -85,7 +85,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 - [ ] All tests pass. On the vivo: import → chat → kill → reopen keeps history; the `:inference` kill recovers. The owner reviews.
 
 ### Phase 4: Overlay
-- [ ] **Task 12 (#43): Overlay logic.** `snapTarget`, clamp on rotation, and `FrameSchedule` (port the S1 logic and tests) in `companion:overlay`, pure Kotlin.
+- [x] **Task 12 (#43): Overlay logic.** `snapTarget`, clamp on rotation, and `FrameSchedule` (port the S1 logic and tests) in `companion:overlay`, pure Kotlin.
   - Acceptance: JVM tests.
   - Verify: `./gradlew :companion:overlay:test`.
   - Files: `SnapMath.kt`, `FrameSchedule.kt`, the tests. **S**
