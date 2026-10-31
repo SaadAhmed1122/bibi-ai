@@ -1,0 +1,7 @@
+Model: Gemma 3 1B
+
+Bibi uses the Gemma 3 1B model, which runs entirely on this device.
+
+Gemma is a model by Google.
+
+Gemma is provided under and subject to the Gemma Terms of Use found at https://ai.google.dev/gemma/terms
