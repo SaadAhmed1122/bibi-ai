@@ -49,6 +49,7 @@ docs/
   tooling.md                setup and when-to-use for agent tools
   linkedin/posts.md         LinkedIn log of test findings (+ media/ charts)
   local-setup.md            same setup on your laptop; resuming from phone/cloud
+  p1-gate.md                P1 exit gate: 1-hour session results
   features/overlay.md       floating character, foreground service (S1)
   features/model-runtime.md LLM runtime, gates, decision rule (S2)
   features/memory.md        memory, retention, export/delete
