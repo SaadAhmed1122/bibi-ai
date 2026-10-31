@@ -12,4 +12,10 @@
     <string name="crash_log_crash_now">Crash now</string>
     <string name="crash_log_clear">Clear</string>
     <string name="crash_log_empty">No crashes logged.</string>
+    <!-- Debug-only LLM screen -->
+    <string name="llm_debug_title">LLM check</string>
+    <string name="llm_debug_state">Engine: %1$s</string>
+    <string name="llm_debug_message">Message</string>
+    <string name="llm_debug_send">Send</string>
+    <string name="llm_debug_stop">Stop</string>
 </resources>

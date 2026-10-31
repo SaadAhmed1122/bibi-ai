@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+            The LLM runs in its own process (PRD §11.3, SPEC-inference.md), so a crash or a
+            low-memory kill of the model does not take the UI down.
+        -->
+        <service
+            android:name=".InferenceService"
+            android:exported="false"
+            android:process=":inference" />
+    </application>
+</manifest>
