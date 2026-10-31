@@ -9,7 +9,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
-| P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | In progress, gate **not met**: S1 partial (baseline run missing); S2 per-prompt soak FAIL on TTFT p95, chat-mode re-test pending (PR #23); S3 done; S4 gate PASS. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
+| P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Qwen 0.5B-class soak, Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
 | P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | Not started |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
@@ -20,7 +20,7 @@ Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xl
 
 | Spike | Pass threshold | Result | Device | Date |
 |---|---|---|---|---|
-| S1 Overlay | Stable 1 h; battery ≤ 3%/h, screen on | **Partial:** 53 min Calm run with no kill (stability likely pass); Bibi's extra drain not measured yet (baseline run missing). Total drain 15.8 %/h at ~930 mA. [Details](../spikes/s1-overlay/results/RESULTS.md) | vivo Y17s | 2026-10-29 |
+| S1 Overlay | Stable 1 h; battery ≤ 3%/h, screen on | **PASS**: four valid runs (baseline, Bibi 12, baseline, Calm), each ≥ 62 min, clean Stop, no kill. Bibi's extra current **27.8 mA** at 12 fps (0.51 %/h), **11.5 mA** in Calm (0.15 %/h); gate ≤ 150 mA and ≤ 3 %/h. Brightness 15, 60 Hz, 1-min settle instead of 10 [VERIFY]. [Details](../spikes/s1-overlay/results/RESULTS.md) | vivo Y17s | 2026-10-31 |
 | S2 LLM | ≥ 5 tokens/s; first token ≤ 3 s; 0 OOM kills in a 50-prompt soak | Gemma 3 1B int4: per-prompt soak **FAIL** (TTFT p95 3,493 ms); **chat-mode soak PASS** (system prompt prefilled once): TTFT p95 2,409 ms, 7.04 tok/s, 0 OOM, PSS 1,189 MB. **Chat mode decides the gate (owner, 2026-10-30) → Gemma 3 1B PASS on vivo.** Qwen 0.5B-class not soaked [OPEN]. [Details](../spikes/s2-llm/results/RESULTS.md) | vivo Y17s | 2026-10-30 |
 | S3a TTS / S3b STT | TTS RTF ≤ 1.0 / STT RTF ≤ 0.7, peak ≤ 600 MB | **S3a:** Kokoro FAIL (best median RTF 3.769, en v0.19 t4); Piper PASS (0.248 t4, p95 0.271). **S3b:** Zipformer 20M passes numbers (RTF 0.177 t2, PSS 119 MiB) but drops utterance starts (model limit), so not usable as default; Parakeet FAIL memory (PSS 903 MiB, RTF 0.324); **owner override 2026-10-29: Parakeet is the S3b default despite memory**. Battery runs and Parakeet with an idle Qwen3 LLM resident: no kills, min MemAvailable 2,023 MB. [Details](../spikes/s3-voice/results/RESULTS.md) | vivo Y17s (charging; A23 not tested) | 2026-10-29 |
 | S4 Tools | Shortcut path < 300 ms | **PASS**: shortcut p95 6.2–19.4 ms per action (20 dry runs each, 0 failures). Info: Decision Maker router 85–100 % per action, ~0.5 s; Gemma 3 1B tool calling 0/100 valid (dropped). **Slot extraction (PR #25): 87/100 right call and values, ~0.5 s, 600 MB, 0 calls on "none"**. Tuning (threshold 0.25, alarm→timer re-route, vendor-name check) in tests only, device re-run pending [VERIFY]. | vivo Y17s (charging) | 2026-10-30 |
@@ -57,7 +57,7 @@ Notes on the vivo Y17s:
 | 13 | Spike JVM test scripts (`spikes/*/tools/*/run.sh`, now on `main`) hard-code `/opt/gradle-*/lib` (cloud path) | Locally run via a copy pointed at `~/.gradle/wrapper/dists/gradle-9.1.0-bin/.../lib` plus trove4j from gradle-8.11 | Open — small chore |
 | 14 | S2: does the chat-mode soak (one conversation, system prompt prefilled once; PR #23) count for the S2 gate instead of the per-prompt soak? | Per-prompt soak result stands (FAIL on TTFT p95) | Resolved 2026-10-30: chat mode decides (see Decisions) |
 | 15 | S4 pass-2 approach for tool arguments (Gemma 3 1B gave 0/100 valid tool calls) | Shortcut path only; slot extraction recommended over FunctionGemma 270M | Resolved 2026-10-30: deterministic slot extraction (see Decisions, #8) |
-| 16 | S1 path: four measured runs (baseline, Bibi 12, baseline, Calm, ~61 min each) or an owner override of the S1 gate | Runs needed; the S1 app is no longer installed on the vivo, so reinstall from `main` first | Open [OPEN] — owner to decide (#4) |
+| 16 | S1 path: four measured runs (baseline, Bibi 12, baseline, Calm, ~61 min each) or an owner override of the S1 gate | Four runs | Resolved 2026-10-31: four valid runs, S1 PASS (#4) |
 
 ## Local environment (2026-10-29)
 - graphify installed and graph built (`graphify-out/`, git-ignored); gh CLI installed and logged in; Context7 MCP works without a key.
@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — S1 gate PASS on vivo Y17s: four valid runs (baseline 148.4 mA, Bibi 12 fps 176.2 mA, baseline 150.9 mA, Bibi Calm 162.4 mA; each ≥ 62 min, unplugged, screen on, brightness 15, 60 Hz, clean Stop, no exit reasons). Bibi cost 27.8 mA / 0.51 %/h at 12 fps and 11.5 mA / 0.15 %/h in Calm (gate ≤ 150 mA and ≤ 3 %/h). Protocol change: Start ~1 min after unplugging instead of a 10-min settle, the same for all four runs. Galaxy A23 untested [VERIFY] — spikes/s1-overlay/results/RESULTS.md, #4
 - 2026-10-30 — S4 slot tuning: router confidence threshold 0.5 → 0.25; under the set_alarm label a duration with no clock time re-routes to start_timer (the only cross-tool route, still through parser, validator and Permission Engine); a vendor word followed by an uninstalled app name asks instead of opening the vendor's app. JVM tests pass; device re-run pending — Owner approved the follow-up after merging PR #25 — spikes/s4-tools/results/RESULTS.md §7, #8
 - 2026-10-30 — S4 slot-extraction pass 2 measured on vivo Y17s (110 prompts, dry run): 87/100 action prompts right call and values (Gemma tool calls: 0/100), ~0.5 s end to end, PSS 600 MB (Decision Maker only); 0 calls on "none" prompts; one wrong-app call (google drive → Google). Remaining misses are a strict 0.5 router threshold and timer/alarm confusion [OPEN] — spikes/s4-tools/results/RESULTS.md §6, #8
 - 2026-10-30 — S4 pass 2 (tool arguments) uses deterministic slot extraction after the Decision Maker label, not an LLM tool call: Gemma 3 1B gave 0/100 valid calls; slot extraction is fast and fully testable; the LLM stays for chat only. FunctionGemma not pursued now — Owner decision — spikes/s4-tools/results/RESULTS.md, #8
@@ -98,15 +99,17 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-31 ~02:40: S1 gate runs done on the vivo (four valid runs, PASS), recorded on `spike/S1-gate-runs`. S4 tuning PR #26 open (JVM tests only). Phone settings changed for S1 and still to restore: `screen_off_timeout` (was 1800000), brightness mode (was auto), `peak_refresh_rate` (was 90.0), `min_refresh_rate` (was unset).
+
 2026-10-30 evening: S4 pass 2 (slot extraction) built on `feature/8-s4-slot-extraction` (worktree `/Users/saadahmed/bibi-wt/s4-slots`): `SlotExtractor.kt`, `SlotToolRouter`, pipeline switch, slot summary table, docs. JVM suite 547 checks pass (ceiling 100/100 with the correct label); `assembleDebug` builds; not run on a phone. Stopped at: PR open, device benchmark next.
 
 2026-10-30 ~02:00 local session: PR #23 (`feature/5-s2-conversation-soak`, S2 chat-mode soak) is being fixed for the preface-prefill issue: in LiteRT-LM 0.16.1 `prefillPrefaceOnInit` did not prefill (turn 1 TTFT 10.3 s with all 311 system-prompt tokens), so the fix adds a scripted, untimed first exchange and marks the run invalid if the prefix was not prefilled. A plugged-in device check (not a gate run) showed turns 2–8 TTFT 1.25–1.33 s; the device check of the fix is pending. Worktrees under `/Users/saadahmed/bibi-wt/`. Main checkout `/Users/saadahmed/bibi-ai` is on `main`, up to date.
 
-GitHub: PRs #12–#22 merged; #3 (ImgBot) closed unmerged; #23 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
+GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Finish PR #23, check it on the device, then the owner runs Chat soak 50 (unplugged, airplane on; TESTING.md → S2); record the result and the owner's decision on whether it counts for the gate (open item 14, #5).
-2. S4 pass 2 = slot extraction (open item 15 resolved): review and merge the PR from `feature/8-s4-slot-extraction`, then run the **LLM benchmark** on the vivo in slot mode (README steps 11–15) and record the slot table in `spikes/s4-tools/results/RESULTS.md` (#8).
-3. S1: reinstall from `main` and do the four runs, or record an owner override (open item 16, #4).
-4. S4 owner on-screen checks (README steps 2–8, 13–14; #8).
+1. Merge the S1 results PR and PR #26 (owner), then re-run the S4 slot benchmark on the vivo with the tuning (#8).
+2. S2: Qwen 0.5B-class soak (unplugged, airplane on; #5), the last open S2 item.
+3. P0 gate is met on the vivo: record the owner's go for P1 (walking skeleton) as a Decision.
+4. Optional: S1 kill/restart check; S4 owner on-screen checks (README steps 2–8, 13–14; #8).
 5. Run the spikes on the Galaxy A23 if it is available (open item 10).
