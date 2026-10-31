@@ -1,5 +1,57 @@
 # First LinkedIn post: Bibi AI (draft, 2026-11-01)
 
+**Two options.** Option B (below, recommended for now) shares only the model comparisons and findings, without revealing the product. Option A reveals Bibi; keep it for later, when there's a demo or a closed test to point to.
+
+---
+
+## Option B (recommended first post): findings only, no product reveal
+
+> I spent the last weeks testing how far you can push AI that runs entirely on an ordinary phone. No cloud, no internet. The test phone is a mid-range vivo Y17s (6 GB RAM, MediaTek Helio G85, Android 15), not a flagship.
+>
+> Here's what the numbers said.
+>
+> 🧠 Chat models (4-bit, Google's LiteRT-LM runtime, CPU only)
+> • Gemma 3 1B: about 7 tokens/s; first word in 2.4 s (p95) once the system prompt is reused, and 3.5 s when it isn't.
+> • Qwen3 0.6B: smaller, yet slower to the first word (4.4–6 s).
+> • Gemma 4 E2B: a 2.5 GB file, too heavy for this phone.
+> Same model, different setup: reusing the prompt mattered more than model size.
+>
+> 🛠️ Turning requests into actions ("set an alarm for 7")
+> • A 1B model writing structured tool calls: 0 valid out of 100.
+> • A 270M embedding model as a router plus simple rules: 95 out of 100 right, in about 0.5 s, with 0 wrong actions.
+> • Fixed phrase patterns: under 20 ms, no model at all.
+>
+> 🎙️ Voice
+> • Kokoro TTS: 3.8× slower than real time. Piper: 4× faster than real time.
+> • Parakeet 0.6B speech-to-text: 1 s of audio in 0.32 s, but about 900 MB of memory.
+> • Zipformer 20M was even faster, but cut off the first 1–2 s of every sentence.
+>
+> ⚙️ Running them together
+> Two models fit in memory (1.6 GB still free), but sharing the CPU made speech-to-text 2.3× slower and chat 33–50 % slower.
+>
+> ✍️ Prompting a 1B model
+> • "Answer in one short sentence" shortened answers by 39 %; "one or two sentences" only by 27 %.
+> • A note saying "My sister is Sara" got the answer "You're called Sara!". Rewriting it as "Your sister is Sara" fixed it.
+> • An instruction placed as a "system" message was silently ignored: Gemma 3 has no system turn.
+>
+> Lessons: measure on the phones people actually own, give small models small jobs, and let simple rules do what rules do best.
+>
+> I'm building something with these. More soon. 👀
+>
+> #OnDeviceAI #EdgeAI #LLM #Gemma #Android #MachineLearning #BuildInPublic
+
+About 330 words. Every number is in the findings log (`posts.md`) and the results files.
+
+**Images (in this order):** `media/s2-first-word-time.png`, `media/s4-actions-right.png` (it shows the first run's 87; the post says the tuned 95), `media/s3-voice-speed.png`, `media/p2-sharing-the-cpu.png`. No app screenshots, so nothing is revealed.
+
+**When people ask "what are you building?":** "An offline assistant for Android. Everything runs on the phone. I'll share it when it's ready to try." Don't name it, show screenshots or describe the floating character until you choose to reveal it.
+
+**The answers in section 3 below still apply**, minus anything about Bibi itself (memory, the floating kitten, the dial card).
+
+---
+
+# Option A: reveal Bibi (for later)
+
 Everything here comes from the measured results in this repo (`docs/project_status.md`, `spikes/*/results/RESULTS.md`, `docs/measurements/`, `docs/linkedin/posts.md`). Where something isn't measured yet, it says so. The repo is **private**, so the post doesn't link to it.
 
 ---
