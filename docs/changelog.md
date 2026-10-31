@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
+- P1 specs: `SPEC.md` (capability map, shared stack and rules) and eight module specs (`SPEC-<module>.md`).
 - Decision: P1 (walking skeleton) starts; the P0 gate is met on the vivo Y17s.
 - Decision: Qwen dropped; Gemma 3 1B int4 is the only LLM (S2 closed on the vivo).
 - S1 gate runs on the vivo Y17s (four valid runs, logs in `spikes/s1-overlay/results/`): PASS, Bibi costs 27.8 mA at 12 fps and 11.5 mA in Calm.
