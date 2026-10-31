@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Shrinking the release app: the AI library needs a rule
+- **Test:** the release build (the one that goes to Google Play) with R8 turned on. R8 shrinks the app by removing and renaming code it thinks is unused. Tested on the vivo in portrait and landscape.
+- **Numbers:**
+  - Release app bundle: **44 MB** (most of it is the AI runtime's native code; the 585 MB model is separate).
+  - With 1 keep rule, everything worked: first word in **1.26–1.29 s**, the same as the debug build; Stop, floating Bibi and the chat card all fine.
+- **Surprises:**
+  - The on-device AI library (LiteRT-LM 0.16.1) ships **no shrink rules**. Its native code calls back into Java classes by name, so without a rule R8 could remove or rename them. Fix: keep the library's whole package.
+  - R8 also renamed my own classes in the logs: a reply that ended normally showed up as `end=r`. Fix: log fixed words instead of class names.
+- **Lesson:** always test the shrunk release build on a real phone before uploading. Debug builds hide this class of problem.
+- Source: issue #48, PR #67.
+
 ### 2026-10-31: Ask for a permission only when it's needed
 - **Test:** the first run and the "Floating Bibi" switch on the vivo, in portrait and landscape.
 - **What happens now:**
