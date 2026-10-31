@@ -4,6 +4,14 @@
     <string name="home_body">Your offline companion. Everything stays on this phone.</string>
     <string name="home_chat">Chat with Bibi</string>
     <string name="home_model">Bibi\'s model</string>
+    <string name="home_settings">Settings</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_personality">How Bibi talks</string>
+    <string name="persona_friendly">Friendly</string>
+    <string name="persona_friendly_desc">Warm and a little playful, like a thoughtful friend.</string>
+    <string name="persona_concise">Concise</string>
+    <string name="persona_concise_desc">Calm and to the point, with the answer first.</string>
+    <string name="settings_personality_note">A change starts a fresh conversation in a few seconds; Bibi keeps your last messages.</string>
     <string name="home_floating">Floating Bibi</string>
     <string name="home_floating_hint">Bibi sits on top of other apps. Tap it to chat.</string>
     <string name="home_calm">Calm mode</string>

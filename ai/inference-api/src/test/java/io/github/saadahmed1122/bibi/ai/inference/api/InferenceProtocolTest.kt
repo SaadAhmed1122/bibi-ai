@@ -18,6 +18,7 @@ class InferenceProtocolTest {
         roundTrip(ProtocolMessage.Reset)
         roundTrip(ProtocolMessage.LoadRouter("/data/user/0/app/files/models/router.litertlm"))
         roundTrip(ProtocolMessage.Route(requestId = 9, text = "set a timer for 5 minutes"))
+        roundTrip(ProtocolMessage.SetPersona(Persona.CONCISE))
     }
 
     @Test
@@ -72,6 +73,7 @@ class InferenceProtocolTest {
             ProtocolMessage.Reset,
             ProtocolMessage.LoadRouter("p"),
             ProtocolMessage.Route(1, "t"),
+            ProtocolMessage.SetPersona(Persona.FRIENDLY),
             ProtocolMessage.State(EngineState.Ready),
             ProtocolMessage.Reply(1, ReplyEvent.Token("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Done("a")),
@@ -88,6 +90,7 @@ class InferenceProtocolTest {
                 InferenceProtocol.MSG_RESET,
                 InferenceProtocol.MSG_LOAD_ROUTER,
                 InferenceProtocol.MSG_ROUTE,
+                InferenceProtocol.MSG_SET_PERSONA,
                 InferenceProtocol.MSG_STATE,
                 InferenceProtocol.MSG_TOKEN,
                 InferenceProtocol.MSG_DONE,

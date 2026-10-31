@@ -46,6 +46,12 @@ sealed interface EngineState {
     data class Failed(val reason: String) : EngineState
 }
 
+/** The two personality presets (PRD 0.8). Unknown ids fall back to [FRIENDLY]. */
+object Persona {
+    const val FRIENDLY = "friendly"
+    const val CONCISE = "concise"
+}
+
 sealed interface RouteResult {
     /** [label] is a tool wire name or "none"; [confidence] as the Decision Maker reports it. */
     data class Label(val label: String, val confidence: Float) : RouteResult
