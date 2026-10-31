@@ -23,6 +23,7 @@ fun HomeScreen(
     onOpenTerms: () -> Unit,
     onOpenCrashLog: (() -> Unit)?,
     onOpenLlmDebug: (() -> Unit)?,
+    onToggleOverlay: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
@@ -38,6 +39,9 @@ fun HomeScreen(
             if (onOpenLlmDebug != null) {
                 TextButton(onClick = onOpenLlmDebug) { Text(stringResource(R.string.llm_debug_title)) }
             }
+            if (onToggleOverlay != null) {
+                TextButton(onClick = onToggleOverlay) { Text(stringResource(R.string.overlay_debug_start)) }
+            }
         }
     }
 }
@@ -45,11 +49,11 @@ fun HomeScreen(
 @Preview
 @Composable
 private fun HomeScreenDebugPreview() {
-    BibiTheme { HomeScreen(onOpenChat = {}, onOpenModel = {}, onOpenTerms = {}, onOpenCrashLog = {}, onOpenLlmDebug = {}) }
+    BibiTheme { HomeScreen(onOpenChat = {}, onOpenModel = {}, onOpenTerms = {}, onOpenCrashLog = {}, onOpenLlmDebug = {}, onToggleOverlay = {}) }
 }
 
 @Preview
 @Composable
 private fun HomeScreenReleasePreview() {
-    BibiTheme { HomeScreen(onOpenChat = {}, onOpenModel = {}, onOpenTerms = {}, onOpenCrashLog = null, onOpenLlmDebug = null) }
+    BibiTheme { HomeScreen(onOpenChat = {}, onOpenModel = {}, onOpenTerms = {}, onOpenCrashLog = null, onOpenLlmDebug = null, onToggleOverlay = null) }
 }

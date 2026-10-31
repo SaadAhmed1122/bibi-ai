@@ -82,14 +82,14 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Files: `ModelRepository.kt`, `feature/chat/ModelImportScreen.kt`, the inference service path. **M**
 
 ### Checkpoint C: chat is complete in the app
-- [ ] All tests pass. On the vivo: import → chat → kill → reopen keeps history; the `:inference` kill recovers. The owner reviews.
+- [x] All tests pass. On the vivo: import → chat → kill → reopen keeps history; the `:inference` kill recovers. The owner reviews.
 
 ### Phase 4: Overlay
 - [x] **Task 12 (#43): Overlay logic.** `snapTarget`, clamp on rotation, and `FrameSchedule` (port the S1 logic and tests) in `companion:overlay`, pure Kotlin.
   - Acceptance: JVM tests.
   - Verify: `./gradlew :companion:overlay:test`.
   - Files: `SnapMath.kt`, `FrameSchedule.kt`, the tests. **S**
-- [ ] **Task 13 (#44): Overlay service.** `OverlayService` (`specialUse` FGS) with `BibiView` (S1 frames, 12 fps / Calm 2 fps), drag and snap, the saved position, and a notification with Hide, Show and Open chat.
+- [x] **Task 13 (#44): Overlay service.** `OverlayService` (`specialUse` FGS) with `BibiView` (S1 frames, 12 fps / Calm 2 fps), drag and snap, the saved position, and a notification with Hide, Show and Open chat.
   - Acceptance: a Show/Hide/Stop state test with a fake window wrapper; on the vivo, drag and snap work and Hide/Show from the notification work.
   - Verify: tests; manual.
   - Files: `OverlayService.kt`, `BibiView.kt`, `OverlayNotification.kt`, the manifest, the frames. **M**
