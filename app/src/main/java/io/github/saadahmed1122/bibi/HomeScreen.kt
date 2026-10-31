@@ -16,11 +16,12 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 
 /** [onOpenCrashLog] is null in release builds, which hides the debug link. */
 @Composable
-fun HomeScreen(onOpenCrashLog: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun HomeScreen(onOpenTerms: () -> Unit, onOpenCrashLog: (() -> Unit)?, modifier: Modifier = Modifier) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(Modifier.padding(padding).padding(24.dp)) {
             Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
             Text(stringResource(R.string.home_body), style = MaterialTheme.typography.bodyLarge)
+            TextButton(onClick = onOpenTerms) { Text(stringResource(R.string.terms_link)) }
             if (onOpenCrashLog != null) {
                 TextButton(onClick = onOpenCrashLog) { Text(stringResource(R.string.crash_log_title)) }
             }
@@ -31,11 +32,11 @@ fun HomeScreen(onOpenCrashLog: (() -> Unit)?, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun HomeScreenDebugPreview() {
-    BibiTheme { HomeScreen(onOpenCrashLog = {}) }
+    BibiTheme { HomeScreen(onOpenTerms = {}, onOpenCrashLog = {}) }
 }
 
 @Preview
 @Composable
 private fun HomeScreenReleasePreview() {
-    BibiTheme { HomeScreen(onOpenCrashLog = null) }
+    BibiTheme { HomeScreen(onOpenTerms = {}, onOpenCrashLog = null) }
 }

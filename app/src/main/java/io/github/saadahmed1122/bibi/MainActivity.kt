@@ -13,7 +13,7 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.debug.CrashLogRoute
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
-private enum class Screen { Home, CrashLog }
+private enum class Screen { Home, Terms, CrashLog }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,8 +27,10 @@ class MainActivity : ComponentActivity() {
                 BackHandler(enabled = screen != Screen.Home, onBack = goHome)
                 when (screen) {
                     Screen.Home -> HomeScreen(
+                        onOpenTerms = { screen = Screen.Terms },
                         onOpenCrashLog = if (BuildConfig.DEBUG) ({ screen = Screen.CrashLog }) else null,
                     )
+                    Screen.Terms -> TermsRoute(onBack = goHome)
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                 }
             }

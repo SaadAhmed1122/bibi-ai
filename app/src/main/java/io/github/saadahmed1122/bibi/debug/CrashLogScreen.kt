@@ -74,7 +74,7 @@ fun CrashLogScreen(
                 TextButton(onClick = onBack) { Text(stringResource(R.string.back)) }
             }
             val text = when {
-                log == null -> stringResource(R.string.crash_log_loading)
+                log == null -> stringResource(R.string.loading)
                 log.isEmpty() -> stringResource(R.string.crash_log_empty)
                 else -> log
             }
