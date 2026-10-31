@@ -20,3 +20,4 @@ rootProject.name = "bibi"
 include(":app")
 include(":core:common")
 include(":core:designsystem")
+include(":ai:inference-api")
