@@ -18,8 +18,10 @@ import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ImportModel
+import io.github.saadahmed1122.bibi.domain.usecase.MemoryPrompt
 import io.github.saadahmed1122.bibi.domain.usecase.MemoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
+import io.github.saadahmed1122.bibi.domain.usecase.Recall
 import io.github.saadahmed1122.bibi.domain.usecase.Remember
 import io.github.saadahmed1122.bibi.feature.chat.ChatActions
 import io.github.saadahmed1122.bibi.feature.chat.ChatMemory
@@ -30,6 +32,10 @@ import io.github.saadahmed1122.bibi.feature.chat.ResourceMemoryTexts
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
 import io.github.saadahmed1122.bibi.feature.tools.AppIndex
 import io.github.saadahmed1122.bibi.feature.tools.ToolExecutor
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.io.File
 
 /** Hand-wired app dependencies (SPEC-app-shell.md: wiring by hand). One per process. */
@@ -65,6 +71,7 @@ class AppContainer(context: Context) {
             modelPath = { (models.state.value as? ModelState.Ready)?.path.orEmpty() },
             routerPath = { (routerModel.state.value as? ModelState.Ready)?.path },
             persona = { persona.current.value },
+            memoryNotes = { pinnedNotes },
         )
     }
 
@@ -82,7 +89,7 @@ class AppContainer(context: Context) {
             }
         }
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
-        val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext))
+        val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory))
         return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected, actions = chatActions, memory = chatMemory)
             .apply { addCloseable { setConnected(false) } }
     }
@@ -133,6 +140,19 @@ class AppContainer(context: Context) {
 
     /** Bibi's memory (SPEC-memory.md), in the same database as the chat. */
     val memory: MemoryRepository by lazy { RoomMemoryRepository.create(appContext) }
+
+    /** Main process only. The pinned-notes block for the system prompt, kept current by [syncPinnedNotes]. */
+    @Volatile private var pinnedNotes = ""
+
+    /** Main process only: keeps `:inference` told about pinned memories (they apply at its next conversation open). */
+    fun syncPinnedNotes() {
+        MainScope().launch {
+            memory.observeAll().map(MemoryPrompt::pinned).distinctUntilChanged().collect {
+                pinnedNotes = it
+                inference.setMemoryNotes(it)
+            }
+        }
+    }
 
     private companion object {
         const val KEY_PERSONA = "persona"

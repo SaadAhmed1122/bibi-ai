@@ -35,6 +35,7 @@ class BibiApplication : Application(), ChatCardHost {
         )
         // One-shot read of past exits; the binder call and file I/O stay off the main thread.
         thread(name = "exit-info") { collector.collect() }
+        container.syncPinnedNotes()
     }
 
     /** The floating chat card (OverlayService). Its ViewModel lives in the overlay's own store. */

@@ -42,6 +42,17 @@ class MemoryDaoTest {
     }
 
     @Test
+    fun commonWordsDoNotMatchEveryNote() = runTest {
+        repo.add(FACT, "My sister is Sara", now = 1)
+        repo.add(FACT, "My car is a red Honda", now = 2)
+        repo.add(FACT, "My dentist is on Friday", now = 3)
+        assertEquals(listOf("My sister is Sara"), repo.search("what's my sister's name?", 3).map { it.text })
+        assertEquals("sister*", ftsQuery("what's my sister's name?"))
+        // Only common words: they are searched rather than nothing.
+        assertEquals("what* OR is* OR my*", ftsQuery("what is my"))
+    }
+
+    @Test
     fun searchFollowsEditsAndDeletes() = runTest {
         val id = repo.add(FACT, "My cat is Milo", now = 1)
         repo.updateText(id, "My cat is Luna", now = 2)

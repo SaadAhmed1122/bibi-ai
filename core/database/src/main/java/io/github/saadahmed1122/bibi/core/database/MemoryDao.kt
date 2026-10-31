@@ -54,8 +54,18 @@ interface MemoryDao {
  * nothing searchable is left.
  */
 fun ftsQuery(text: String): String? {
-    val words = Regex("[\\p{L}\\p{N}]{2,}").findAll(text.lowercase()).map { it.value }.distinct().take(MAX_TERMS).toList()
+    val all = Regex("[\\p{L}\\p{N}]{2,}").findAll(text.lowercase()).map { it.value }.distinct().toList()
+    // Common words would match almost every note ("my", "what"); search them only if nothing else is left.
+    val words = all.filterNot { it in STOP_WORDS }.ifEmpty { all }.take(MAX_TERMS)
     return if (words.isEmpty()) null else words.joinToString(" OR ") { "$it*" }
 }
 
 private const val MAX_TERMS = 12
+
+private val STOP_WORDS = setOf(
+    "a", "an", "the", "my", "me", "mine", "i", "im", "you", "your", "yours", "it", "its", "is", "are", "was", "were",
+    "be", "been", "am", "do", "does", "did", "what", "whats", "who", "whos", "when", "where", "why", "how", "which",
+    "that", "this", "these", "those", "and", "or", "but", "of", "to", "in", "on", "at", "for", "with", "about",
+    "from", "by", "as", "can", "could", "would", "should", "will", "please", "tell", "know", "remember", "name",
+    "s", "ll", "re", "ve", "d", "t", "we", "our", "us", "he", "she", "his", "her", "they", "them", "their",
+)

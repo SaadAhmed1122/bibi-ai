@@ -22,13 +22,15 @@ const val MAX_INPUT_CHARS = 2_000
  *
  * [handleAction] sees each message first (SPEC-tools.md). When it returns Bibi's reply (an action
  * done, a question, a confirmation), that reply is saved and emitted as [ReplyEvent.Done] and the
- * model is not asked; null means normal chat.
+ * model is not asked; null means normal chat. [modelText] builds what the model sees for a chat
+ * turn (e.g. with matching memories); the saved message is always what the user typed.
  */
 class SendMessage(
     private val client: InferenceClient,
     private val history: ChatHistoryRepository,
     private val clock: () -> Long = System::currentTimeMillis,
     private val handleAction: (suspend (String) -> String?)? = null,
+    private val modelText: suspend (String) -> String = { it },
 ) {
     private val running = AtomicBoolean(false)
 
@@ -51,7 +53,7 @@ class SendMessage(
                 emit(ReplyEvent.Done(actionReply))
                 return@flow
             }
-            client.send(message).collect { event ->
+            client.send(modelText(message)).collect { event ->
                 when (event) {
                     is ReplyEvent.Token -> partial.append(event.text)
                     is ReplyEvent.Done -> { saveReply(event.fullText, Message.Status.DONE); saved = true }
