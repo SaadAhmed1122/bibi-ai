@@ -1,12 +1,18 @@
 package io.github.saadahmed1122.bibi
 
+import android.app.KeyguardManager
 import android.content.Context
+import android.os.SystemClock
 import android.provider.Settings
 import io.github.saadahmed1122.bibi.companion.overlay.FloatingToggle
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
+import io.github.saadahmed1122.bibi.core.tools.ActionRunner
+import io.github.saadahmed1122.bibi.core.tools.AppResolver
+import io.github.saadahmed1122.bibi.core.tools.PermissionEngine
+import io.github.saadahmed1122.bibi.core.tools.ToolAuditLog
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
@@ -14,6 +20,8 @@ import io.github.saadahmed1122.bibi.domain.usecase.ImportModel
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
 import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
+import io.github.saadahmed1122.bibi.feature.tools.AppIndex
+import io.github.saadahmed1122.bibi.feature.tools.ToolExecutor
 import java.io.File
 
 /** Hand-wired app dependencies (SPEC-app-shell.md: wiring by hand). One per process. */
@@ -67,6 +75,23 @@ class AppContainer(context: Context) {
         return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected)
             .apply { addCloseable { setConnected(false) } }
     }
+
+    /** Main thread only (the Permission Engine is). The launcher list loads once, in the background. */
+    val actions: ActionRunner by lazy {
+        Thread({ appResolver = AppResolver(AppIndex.load(appContext.packageManager)) }, "app-index").start()
+        val executor = ToolExecutor(appContext) { appResolver }
+        ActionRunner(
+            engine = PermissionEngine(nowMs = SystemClock::elapsedRealtime),
+            audit = actionLog,
+            execute = executor::execute,
+            deviceLocked = { appContext.getSystemService(KeyguardManager::class.java).isDeviceLocked },
+        )
+    }
+
+    @Volatile private var appResolver: AppResolver? = null
+
+    /** The local action log (FR-122): capped, never leaves the phone. */
+    val actionLog = ToolAuditLog(File(context.filesDir, "audit/actions.log"))
 
     /** The Floating Bibi switch (SPEC-onboarding.md): asks for the overlay permission only when turned on. */
     val floating = FloatingToggle(
