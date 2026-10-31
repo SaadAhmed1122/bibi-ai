@@ -10,6 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P1 Task 13: floating Bibi (`companion:overlay`): drag and snap to an edge, saved position, kept on screen after rotation, notification with Hide/Show, Open chat and Turn off; a tap opens the chat. Debug start button on Home until the Floating Bibi switch (#44).
 - P1 Task 11: model screen: pick `gemma3-1b-it-int4.litertlm` with the system file picker, copy and SHA-256 check with progress and Cancel, clear messages for a wrong file, Remove model; the chat links to it when the model is missing. On the vivo the 585 MB import takes ~7 s (#42).
 - P1 Task 7: after Stop, an error or a full context, the conversation is rebuilt with the recent turns (up to 6, at most ~400 tokens), so Bibi remembers them; the app survives a crash of the `:inference` process and reloads the model by itself (#38).
 - P1 Task 6 + 9: the chat screen (`feature:chat`): streaming answers, Send turns into Stop, a model status banner, 2,000-character input cap, Clear chat; every message is saved in Room and survives restarts. The service logs first-word time per turn (`BibiInference`). On the vivo: 10 turns, first word in 1.26–1.31 s (#37, #40).

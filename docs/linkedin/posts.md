@@ -29,6 +29,18 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Bibi floats over the phone
+- **Test:** the floating character from the S1 battery spike, now inside the real app, on the vivo. Bibi sits over any app; you can drag it, and tapping it opens the chat.
+- **What works (checked on the phone):**
+  - **Drag and let go:** Bibi slides to the nearer side of the screen in 0.28 s and remembers the spot.
+  - **Hide / Show / Turn off** from the notification. Hidden means the window is really removed, so a hidden Bibi uses no drawing time at all.
+  - **Rotate the phone:** Bibi stays on screen and on an edge, clear of the camera cutout. Before this fix it could end up halfway off-screen.
+  - **Tap Bibi:** the chat opens. The chat card that opens on top of other apps is the next task.
+- **Number to remember:** from the S1 test, this animation costs about **0.5 % battery per hour** at 12 frames per second, and **0.15 %** in calm mode.
+- **Lesson:** a small detail like rotation is easy to miss. The spot that was fine in portrait (y = 1,354) is off-screen in landscape (the screen is only 720 tall), so every saved position has to be checked against the screen it's shown on.
+- Images: `media/p1-overlay-home.png`, `media/p1-overlay-rotation.png`. Video: `media/p1-overlay-drag-snap.mp4` (12 s, drag and snap).
+- Source: issue #44; S1 results `spikes/s1-overlay/results/RESULTS.md`.
+
 ### 2026-10-31: Installing a 585 MB AI model by hand takes 7 seconds
 - **Test:** the new "Bibi's model" screen on the vivo. You copy the model file to the phone, pick it in Android's own file picker, and the app copies it to its private storage and checks it. Offline, with no storage permission.
 - **Numbers:**
