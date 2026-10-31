@@ -20,6 +20,7 @@ rootProject.name = "bibi"
 include(":app")
 include(":core:common")
 include(":core:designsystem")
+include(":core:database")
 include(":domain:model")
 include(":domain:usecase")
 include(":companion:overlay")
