@@ -178,7 +178,7 @@ Full steps: `spikes/s4-tools/README.md` → "Owner test steps". Gate: each of th
 3. [ ] **Step 5:** **Fake LLM path** on: the commands again, plus "it's dark in here", "take me to maps", "broken timer test" and "send a text to mum" (must be rejected).
 4. [ ] **Step 6:** confirmation timeout: leave the call card alone for 30 s; it closes, says cancelled, nothing dialed.
 5. [ ] **Steps 7–8:** taint (**Untrusted content in context** → flashlight asks for confirmation; "injection test" too) and kill switch (**Disable all actions** → refused).
-6. [ ] **Steps 11–14:** pass 2 is now **slot extraction** (Decision 2026-10-30; only the Decision Maker model is needed, **LLM tool call (experimental)** stays off). Load models, run the **LLM benchmark** and note the slot-extraction table, then **Real LLM path** on: the phrases in the README (incl. "set an alarm" → must ask), then the taint and kill-switch checks. Not yet run on a phone [VERIFY].
+6. [ ] **Steps 11–14:** pass 2 is now **slot extraction** (Decision 2026-10-30; only the Decision Maker model is needed, **LLM tool call (experimental)** stays off). Load models, run the **LLM benchmark** and note the slot-extraction table, then **Real LLM path** on: the phrases in the README (incl. "set an alarm" → must ask), then the taint and kill-switch checks. The LLM benchmark part was run by Claude on 2026-10-31 (95/100, RESULTS.md §8); the on-screen phrases, taint and kill-switch checks are still yours.
 7. [ ] **Share log (CSV)** and post it on issue #8 with what each step did on screen. Then delete the "Bibi S4 test" alarms and timers.
 
 ## P1 checkpoint B — chat in the app (issue #37)
