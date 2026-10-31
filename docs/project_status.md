@@ -11,7 +11,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
 | P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–5, 8, 10, 12 (PRs #50–#54, #56, #57, #59); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Tasks 6 and 9 merged (PR #60); checkpoint B passed (10 turns, TTFT 1,255–1,312 ms; owner tried it). Task 7 merged (PR #61). Tasks 11 merged (PR #62); checkpoint C passed. Task 13 merged (PR #63). Task 14 merged (PR #64). Task 15 merged (PR #65). Task 16 merged (PR #66). Tasks 17–18 merged (PRs #67, #68): **code-complete**. Left: the owner's Play internal-track upload and the 1-hour exit gate |
-| P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | **Planned 2026-10-31** (owner approved the map): [SPEC-P2.md](../SPEC-P2.md), seven module specs, [tasks/plan-p2.md](../tasks/plan-p2.md); tasks are issues #72–#90 |
+| P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | **Planned 2026-10-31** (owner approved the map): [SPEC-P2.md](../SPEC-P2.md), seven module specs, [tasks/plan-p2.md](../tasks/plan-p2.md); tasks are issues #72–#90, plus design #93–#94 |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
 
@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — P2 gains a `design` module: design system, navigation and a screen-by-screen restyle (modern, not AI-looking), using the UI/UX plugins and tools; tasks T20 (#93) and T21 (#94) run after privacy and before the closed-test paperwork; the owner picks a direction from mock-ups first — Owner request — SPEC-design.md
 - 2026-10-31 — P2 plan approved: modules tools → personality → memory → avatar-states → voice → privacy → closed-test (SPEC-P2.md), tasks #72–#90; P2 starts alongside the owner's P1 exit gate and internal-track upload — Owner decision ("approve") — SPEC-P2.md, tasks/plan-p2.md
 - 2026-10-31 — P2 keeps the side-loaded model import for the closed test; no `INTERNET` permission and no model download in P2. Overrides PRD 0.8 "Model: download with resume" until a host is chosen (open item 6) — Owner decision — SPEC-P2.md
 - 2026-10-31 — Memory uses plain Room (Android file-based encryption only), not the encrypted database of PRD §18; revisit before production — Owner decision — SPEC-P2.md, SPEC-memory.md

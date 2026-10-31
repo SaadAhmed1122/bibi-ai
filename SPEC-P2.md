@@ -23,9 +23,10 @@ P2 (PRD 0.6) delivers memory, the five safe actions, two personalities, a Privac
 | [`avatar-states`](SPEC-avatar-states.md) | Bibi's four states (idle with blink, thinking, speaking, confused) on floating Bibi and in the app, driven by the chat and voice state. | overlay, chat (P1) |
 | [`voice`](SPEC-voice.md) | Push-to-talk with Parakeet TDT 0.6B v2 int8 (STT) and spoken replies with Piper en_US amy low (TTS), in the in-app chat and the floating card. Microphone permission asked on first use. `microphone` foreground-service type while the card is listening. Voice models side-loaded like Gemma. | chat, overlay, avatar-states |
 | [`privacy`](SPEC-privacy.md) | Privacy dashboard: what is stored and for how long, export, delete all. Safe mode toggle (FR-076: no tools, no memory writes). Licenses screen (Gemma terms, LiteRT-LM, MediaPipe, Piper, Parakeet). Privacy policy screen plus the text for the owner to host. "Report this reply" on a Bibi message through the share sheet (PRD 0.9; no network). | memory, tools, personality, voice |
+| [`design`](SPEC-design.md) | Design system in `core/designsystem` (tokens light/dark, type, components), navigation, and a screen-by-screen restyle of every screen; a modern look built around Bibi that doesn't read as AI-made. Owner picks a direction from mock-ups first. | all screens above |
 | [`closed-test`](SPEC-closed-test.md) | PRD 0.9 checklist evidence, Data safety answers ("no data collected or shared"), foreground-service declarations (`specialUse`, `microphone`), store listing text, version bump. **The owner builds, signs and uploads.** | all |
 
-Build order: tools → personality → memory → avatar-states → voice → privacy → closed-test.
+Build order: tools → personality → memory → avatar-states → voice → privacy → design → closed-test (design added at the owner's request, 2026-10-31).
 
 Why this order: tools is mostly a port of measured S4 code; personality and memory both change what goes into the prompt, so they are built one after the other; voice is the biggest memory risk, so its RAM check runs first (as the plan's Task 1) even though the module is built later.
 
