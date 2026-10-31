@@ -5,7 +5,7 @@ Run a small language model fully on device, in the `:inference` process, with st
 
 ## Requirements
 - **PRD 0.7 S2 gate:**
-  - Test a Gemma 3 1B-class and a 0.5B Qwen-class model, int4, locally.
+  - Test a Gemma 3 1B-class and a 0.5B Qwen-class model, int4, locally. (2026-10-31: Qwen dropped by owner decision; Gemma 3 1B int4 is the model.)
   - Pass: **≥ 5 tokens/s**, **first token ≤ 3 s**, and **zero out-of-memory kills in a 50-prompt soak**.
   - If it fails: a smaller model, shorter answers, typed chat only, and apply the 0.5 decision rule.
 - **PRD 0.5 decision rule (binding).** If S2 fails on the A23 but would pass on better hardware:
