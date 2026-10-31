@@ -206,6 +206,27 @@ Claude's runs on the vivo passed in portrait and landscape: the permission expla
 6. [ ] Turn on **Calm mode**: the animation slows down.
 7. [ ] Note anything odd on issue #44.
 
+## P1 exit gate — 1 hour without a crash (issue #49)
+The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
+
+**Before you start**
+1. [ ] Install the **release** build: from the Play internal track if it's set up (docs/release.md), or the signed release APK.
+2. [ ] The model is imported (Home → Bibi's model shows "ready"), and **Floating Bibi** is on.
+3. [ ] Charge to at least 80 %, then **unplug**. Write down the time and the battery %.
+
+**During the hour** (use the phone normally between these; spread them out)
+1. [ ] About **20 messages** in total: some in the app (Home → Chat with Bibi), some in the chat card (tap floating Bibi over another app).
+2. [ ] At least **2 times**, ask for a long story and tap **Stop** halfway.
+3. [ ] **Clear chat** once (app chat screen, top right).
+4. [ ] Rotate to landscape at least once while the card is open.
+5. [ ] Hide Bibi from the notification and show it again once.
+6. [ ] Note anything odd: a wait over 10 s, a wrong-looking answer, a frozen screen.
+
+**At the end (60 minutes or more)**
+1. [ ] Send one more message: it must get an answer.
+2. [ ] Write down the time and battery %.
+3. [ ] Plug in and tell Claude "gate done". Claude reads the crash and ANR history and fills in `docs/p1-gate.md`.
+
 ## How to send results
 1. In the spike app, tap **Share log** (S1: **Share log (CSV)**, plus **Share exit reasons** at the end) and send the file to yourself or straight to the browser.
 2. On the spike's GitHub issue, add a comment: attach the file (or paste its contents) and add the notes asked for above (start %, device, battery setting, anything odd).

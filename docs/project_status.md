@@ -108,6 +108,7 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-31 ~15:50: Task 18 (#49) exit-gate script written (TESTING.md "P1 exit gate", `docs/p1-gate.md`). The gate itself needs the owner: 1 hour unplugged, release build. P1 is code-complete once PR #67 (release build) is merged.
 2026-10-31 ~15:45: Task 16 merged (PR #66). Task 17 (#48) release build on `feature/48-release-build`: R8 + resource shrinking with a LiteRT-LM keep rule, upload signing from `~/.gradle/gradle.properties` (unsigned without it), `docs/release.md` owner checklist. AAB builds signed and unsigned; a release APK signed with the local debug key ran chat, Stop + rebuild, floating Bibi and the chat card on the vivo in portrait and landscape. bundletool could not be downloaded in the session (blocked), so the AAB install is checked by the owner's internal-track upload. PR waits for the owner (signing change). Next: Task 18 (#49) exit-gate script.
 
 2026-10-31 ~15:35: Task 15 merged (PR #65). Task 16 (#47) built on `feature/47-floating-switch`: `FloatingToggle` (switch, explainer, permission round trip, restore on app start, Calm) with 9 tests; Home has Floating Bibi and Calm mode switches; the debug start button is gone. On the vivo in portrait and landscape: Not now and "back without allowing" keep the switch off; allowing in Settings starts Bibi; Turn off in the notification shows the switch off; a force-stop with the switch on brings Bibi back on the next app open; a hidden Bibi stays hidden; Calm measured 12.3 → 2.0 fps. Next: Task 17 (#48) release build.
@@ -133,7 +134,8 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Owner: try floating Bibi and the chat card for Checkpoint D (TESTING.md). Claude continues with Task 16 (#47) Floating Bibi switch, then Tasks 17–18 (release build, exit gate).
+1. Owner: merge PR #67 (release build); set up the upload key and the Play internal track (docs/release.md).
+2. Owner: Checkpoint D (TESTING.md, floating Bibi and the chat card), then the 1-hour P1 exit gate (TESTING.md → "P1 exit gate"); Claude records the result in docs/p1-gate.md.
 2. Then Tasks 11 (robustness, history, import UI), 13–14 (overlay), 15–16 (onboarding), 17–18 (release, exit gate). Task list: `tasks/plan.md`.
 3. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
 4. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY]; Galaxy A23 (open item 10).
