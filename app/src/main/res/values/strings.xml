@@ -28,4 +28,5 @@
     <string name="llm_debug_message">Message</string>
     <string name="llm_debug_send">Send</string>
     <string name="llm_debug_stop">Stop</string>
+    <string name="llm_debug_route">Route</string>
 </resources>

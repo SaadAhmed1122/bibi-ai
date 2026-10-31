@@ -14,8 +14,11 @@ import io.github.saadahmed1122.bibi.ai.inference.api.InferenceClient
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceProtocol
 import io.github.saadahmed1122.bibi.ai.inference.api.ProtocolMessage
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
+import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
 import io.github.saadahmed1122.bibi.ai.inference.api.toEnvelope
 import io.github.saadahmed1122.bibi.ai.inference.api.toMessage
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -36,10 +40,14 @@ import java.util.concurrent.atomic.AtomicLong
  * service on its own and [ServiceConnection.onServiceConnected] reloads the model. A second death
  * before the model is Ready again gives up with [EngineState.Failed], so a model that crashes on
  * load doesn't loop.
+ *
+ * The action router loads next to the model when [routerPath] gives a file (at bind, or later
+ * through [loadRouter]); [route] waits for the answer with its request id.
  */
 class MessengerInferenceClient(
     private val context: Context,
     private val modelPath: () -> String,
+    private val routerPath: () -> String? = { null },
 ) : InferenceClient {
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Unbound)
@@ -60,18 +68,23 @@ class MessengerInferenceClient(
     /** Main thread only. Screens using the client (app chat, chat card); unbinds when it drops to 0. */
     private var users = 0
 
+    /** Main thread only. Route requests waiting for their answer, by request id. */
+    private val routes = HashMap<Long, CompletableDeferred<RouteResult>>()
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             val s = Messenger(binder)
             service = s
             sendTo(s, ProtocolMessage.Register, replyTo = replies)
             sendTo(s, ProtocolMessage.Load(modelPath()))
+            routerPath()?.let { sendTo(s, ProtocolMessage.LoadRouter(it)) }
         }
 
         /** Only called when `:inference` crashed or was killed, not on unbind. */
         override fun onServiceDisconnected(name: ComponentName) {
             service = null
             active.fail(REASON_DISCONNECTED)
+            failRoutes()
             if (recovering) {
                 giveUp()
             } else {
@@ -123,7 +136,13 @@ class MessengerInferenceClient(
         recovering = false
         service = null
         active.fail(REASON_DISCONNECTED)
+        failRoutes()
         _state.value = EngineState.Unbound
+    }
+
+    /** Loads the router into a running service, e.g. right after its import. Main thread. */
+    fun loadRouter(path: String) {
+        service?.let { sendTo(it, ProtocolMessage.LoadRouter(path)) }
     }
 
     override fun send(text: String): Flow<ReplyEvent> = callbackFlow {
@@ -154,6 +173,24 @@ class MessengerInferenceClient(
         service?.let { sendTo(it, ProtocolMessage.Reset) }
     }
 
+    override suspend fun route(text: String): RouteResult = withContext(Dispatchers.Main.immediate) {
+        val s = service ?: return@withContext RouteResult.Unavailable(REASON_DISCONNECTED)
+        val id = nextRequestId.getAndIncrement()
+        val answer = CompletableDeferred<RouteResult>()
+        routes[id] = answer
+        try {
+            if (!sendTo(s, ProtocolMessage.Route(id, text))) return@withContext RouteResult.Unavailable("send failed")
+            answer.await()
+        } finally {
+            routes.remove(id)
+        }
+    }
+
+    private fun failRoutes() {
+        routes.values.forEach { it.complete(RouteResult.Unavailable(REASON_DISCONNECTED)) }
+        routes.clear()
+    }
+
     private fun onReply(msg: android.os.Message) {
         when (val m = InferenceProtocol.decode(msg.toEnvelope())) {
             is ProtocolMessage.State -> if (bound) {
@@ -161,6 +198,7 @@ class MessengerInferenceClient(
                 if (m.state == EngineState.Ready) recovering = false
             }
             is ProtocolMessage.Reply -> active.deliver(m.requestId, m.event)
+            is ProtocolMessage.Routed -> routes[m.requestId]?.complete(m.result)
             else -> Unit
         }
     }

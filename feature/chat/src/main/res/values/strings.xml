@@ -28,6 +28,11 @@
     <string name="model_remove">Remove model</string>
     <string name="model_invalid_size">This isn\'t Bibi\'s model file (the size is wrong). Choose %1$s.</string>
     <string name="model_invalid_checksum">This file is damaged or a different version. Copy %1$s again and choose it.</string>
+    <string name="router_title">Phone actions (optional)</string>
+    <string name="router_missing">To understand requests like \"wake me up at seven\", Bibi uses a second, smaller model: the file %1$s (about 165 MB). Without it, Bibi still does actions for simple phrases such as \"set a timer for 5 minutes\".</string>
+    <string name="router_choose">Choose action model</string>
+    <string name="router_ready">The action model is ready.</string>
+    <string name="router_remove">Remove action model</string>
     <string name="model_invalid_read">The file couldn\'t be read. Try again, or copy it to the phone first.</string>
     <string name="chat_close">Close</string>
 </resources>

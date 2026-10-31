@@ -23,6 +23,7 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.debug.CrashLogRoute
 import io.github.saadahmed1122.bibi.debug.LlmDebugRoute
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
+import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingScreen
@@ -105,12 +106,23 @@ class MainActivity : ComponentActivity() {
                         val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                             if (uri != null) importer.import(UriModelSource(contentResolver, uri))
                         }
+                        val router = viewModel(key = "router") { ModelImportViewModel(container.routerModel) }
+                        val routerPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                            if (uri != null) router.import(UriModelSource(contentResolver, uri))
+                        }
+                        // A router imported while the chat is connected loads right away; otherwise at the next bind.
+                        val routerState by router.state.collectAsStateWithLifecycle()
+                        LaunchedEffect(routerState) {
+                            (routerState as? ModelState.Ready)?.let { container.inference.loadRouter(it.path) }
+                        }
                         ModelImportRoute(
                             viewModel = importer,
                             // The .litertlm type has no registered MIME type, so allow any file.
                             onPick = { picker.launch(arrayOf("*/*")) },
                             onOpenChat = { screen = Screen.Chat },
                             onBack = goHome,
+                            router = router,
+                            onPickRouter = { routerPicker.launch(arrayOf("*/*")) },
                         )
                     }
                     Screen.Terms -> TermsRoute(onBack = goHome)

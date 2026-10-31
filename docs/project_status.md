@@ -117,6 +117,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-11-01 ~01:40: P2 Task 3 (#74) built on `feature/74-router`: the Decision Maker router runs in `:inference` on its own thread (`LoadRouter`/`Route`/`Routed` messages, `InferenceClient.route`), the router model imports on the model screen ("Phone actions (optional)", SHA-256 and size checked; 164,626,432 bytes), and the debug LLM check has a Route button. On the vivo: import OK, router load 12.5 s, 6/6 test requests routed right in 519–576 ms; the merged manifest has no INTERNET or ACCESS_NETWORK_STATE. Confidences came out 0.64–1.00, higher than S4's 0.27–0.47, so the 0.25 threshold is re-checked in Task 5 [VERIFY]. Next: Task 4 (#75) ToolExecutor and the five actions.
+
 2026-10-31 ~23:00: P2 Task 2 (#73) `core:tools` built on `feature/73-core-tools`: the S4 pure-Kotlin tool core (parser, validator, Permission Engine with dial Sensitive, shortcut matcher, slot extraction, app resolver) moved unchanged apart from the package and spike wording; 7 JUnit suites, 491 checks pass. PR waits for the owner (Permission Engine = major merge). Strix CLI not installed, so the Strix pass is not done [VERIFY]. Next: Task 3 (#74) router in `:inference`, branched from this one.
 
 2026-10-31 ~22:50: P2 Task 1 (#72) memory check done on the vivo: voice on demand (Decisions). #71 merged (PR #92); design module added (PR #95, tasks #93–#94). Next: Task 2 (#73) `core:tools` from S4 (security-sensitive: owner approves the merge).
@@ -151,6 +153,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Claude: P2 Task 2 (#73) `core:tools` from S4, then Tasks 3–5 (tasks/plan-p2.md).
+1. Claude: P2 Task 4 (#75) ToolExecutor and the five actions (new SET_ALARM permission: owner approves the merge), then Task 5 (#76) tools in chat.
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).

@@ -8,7 +8,9 @@ import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
 import io.github.saadahmed1122.bibi.domain.model.ModelState
+import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
+import io.github.saadahmed1122.bibi.domain.usecase.ImportModel
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
 import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
@@ -26,9 +28,27 @@ class AppContainer(context: Context) {
     /** The imported model in app-private storage; the `:inference` process (same app) reads it there. */
     val models: ModelRepository by lazy { ModelRepository(File(appContext.filesDir, "models")) }
 
+    /** The optional action router model, next to the chat model (SPEC-tools.md). */
+    val routerModel: ModelRepository by lazy {
+        ModelRepository(
+            modelsDir = File(appContext.filesDir, "models"),
+            importModel = ImportModel(
+                fileName = RouterModelFile.NAME,
+                expectedSize = RouterModelFile.SIZE_BYTES,
+                expectedSha256 = RouterModelFile.SHA256,
+            ),
+            fileName = RouterModelFile.NAME,
+            expectedSize = RouterModelFile.SIZE_BYTES,
+        )
+    }
+
     /** Lazy, so the `:inference` process (which never asks for it) creates no client. */
     val inference: MessengerInferenceClient by lazy {
-        MessengerInferenceClient(appContext) { (models.state.value as? ModelState.Ready)?.path.orEmpty() }
+        MessengerInferenceClient(
+            context = appContext,
+            modelPath = { (models.state.value as? ModelState.Ready)?.path.orEmpty() },
+            routerPath = { (routerModel.state.value as? ModelState.Ready)?.path },
+        )
     }
 
     /**

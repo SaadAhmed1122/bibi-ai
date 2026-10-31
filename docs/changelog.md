@@ -11,6 +11,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 3: the action router (MediaPipe Decision Maker 1.2.0) runs in `:inference` on its own thread; its model is imported on the model screen under "Phone actions (optional)"; the debug LLM check can route a message. On the vivo 6/6 test requests routed right in about 0.55 s (#74).
 - P2 Task 2: `core:tools`, the S4 tool core moved into the app as a pure-Kotlin module (parser, validator, Permission Engine, shortcut matcher, slot extraction), 491 checks under JUnit (#73).
 - P2 memory check on the vivo: Gemma with Parakeet, Piper and the router, one pair at a time; voice models will load on demand (#72).
 - P2 design module: `SPEC-design.md`, tasks #93 (design system and navigation) and #94 (screen-by-screen restyle).
