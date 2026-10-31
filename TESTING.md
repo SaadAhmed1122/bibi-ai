@@ -181,6 +181,14 @@ Full steps: `spikes/s4-tools/README.md` → "Owner test steps". Gate: each of th
 6. [ ] **Steps 11–14:** pass 2 is now **slot extraction** (Decision 2026-10-30; only the Decision Maker model is needed, **LLM tool call (experimental)** stays off). Load models, run the **LLM benchmark** and note the slot-extraction table, then **Real LLM path** on: the phrases in the README (incl. "set an alarm" → must ask), then the taint and kill-switch checks. Not yet run on a phone [VERIFY].
 7. [ ] **Share log (CSV)** and post it on issue #8 with what each step did on screen. Then delete the "Bibi S4 test" alarms and timers.
 
+## P1 checkpoint B — chat in the app (issue #37)
+Claude's scripted run on the vivo passed: 10 turns, first word in 1.26–1.31 s, Stop and Clear work, history survives a force-stop. The checkpoint also needs **your own try**:
+1. [ ] Install the debug build from the Task 6 branch (`./gradlew :app:installDebug`). The model must be at `Android/data/io.github.saadahmed1122.bibi/files/models/` (already there on the vivo).
+2. [ ] Home → **Chat with Bibi**. Wait for "Bibi is waking up…" to go away (about 7 s).
+3. [ ] Chat for a few turns. Ask for a long story and tap **Stop**: the partial answer stays, marked "Stopped", and "Bibi is getting ready again…" shows for about 7 s.
+4. [ ] Rotate the phone, swipe the app away, reopen: the chat is still there.
+5. [ ] Note anything odd (wording, slow moments, answers that look wrong) on issue #37. Known: after Stop or Clear, Bibi forgets earlier turns until Task 7 (#38).
+
 ## How to send results
 1. In the spike app, tap **Share log** (S1: **Share log (CSV)**, plus **Share exit reasons** at the end) and send the file to yourself or straight to the browser.
 2. On the spike's GitHub issue, add a comment: attach the file (or paste its contents) and add the notes asked for above (start %, device, battery setting, anything odd).

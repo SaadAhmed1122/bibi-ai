@@ -1,0 +1,19 @@
+<resources>
+    <string name="chat_title">Chat with Bibi</string>
+    <string name="chat_empty">Say hi to Bibi. Everything stays on this phone.</string>
+    <string name="chat_input_label">Message</string>
+    <string name="chat_input_count">%1$d / %2$d</string>
+    <string name="chat_send">Send</string>
+    <string name="chat_stop">Stop</string>
+    <string name="chat_clear">Clear chat</string>
+    <string name="chat_back">Back</string>
+    <string name="chat_you">You</string>
+    <string name="chat_bibi">Bibi</string>
+    <string name="chat_stopped">Stopped</string>
+    <string name="chat_error">Bibi couldn\'t finish that answer. Try again.</string>
+    <string name="chat_thinking">Bibi is thinking…</string>
+    <string name="chat_banner_import">Import the model to start chatting.</string>
+    <string name="chat_banner_loading">Bibi is waking up…</string>
+    <string name="chat_banner_restarting">Bibi is getting ready again…</string>
+    <string name="chat_banner_error">Bibi\'s model stopped working. Close and reopen the app.</string>
+</resources>

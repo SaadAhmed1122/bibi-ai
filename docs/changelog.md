@@ -6,9 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Fixed
+- After Stop or Clear chat, the inference service reports Loading while it reopens the conversation (~7 s), so Send is blocked and the chat shows "Bibi is getting ready again…" (#37).
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P1 Task 6 + 9: the chat screen (`feature:chat`): streaming answers, Send turns into Stop, a model status banner, 2,000-character input cap, Clear chat; every message is saved in Room and survives restarts. The service logs first-word time per turn (`BibiInference`). On the vivo: 10 turns, first word in 1.26–1.31 s (#37, #40).
+- P1 Task 5: Gemma 3 1B on LiteRT-LM in the `:inference` process with a debug LLM screen (#36).
+- P1 Task 8: Room message history (`core:database`) (#39).
 - P1 Tasks 2–4, 10, 12: local crash/ANR log with a debug viewer, Gemma terms notice, the `InferenceClient` contract with Messenger codec and fake, model-import logic (copy, SHA-256, size, cancel), and overlay snap/clamp/frame-schedule logic (#33–#35, #41, #43).
 - P1 app project at the repo root (`app`, `core:common`, `core:designsystem`): empty Home screen, Bibi theme, and a build check that fails if any merged manifest requests INTERNET (#32).
 - P1 implementation plan `tasks/plan.md`: 18 tasks in 6 phases with checkpoints, riskiest path (model streaming in `:inference`) first.

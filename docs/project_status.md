@@ -10,7 +10,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
-| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–4, 10, 12 (PRs #50–#54); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Next: Task 5 (#36) |
+| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–5, 8, 10, 12 (PRs #50–#54, #56, #57, #59); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Tasks 6 and 9 (chat screen with saved history) in review; checkpoint B measured on the vivo (10 turns, TTFT 1,255–1,312 ms), waiting for the owner's own try |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
@@ -65,6 +65,8 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — `SendMessage` lives in `feature:chat`, not `domain:usecase` as SPEC-chat.md said: `InferenceClient` is in an Android module (`ai:inference-api`) that the pure-Kotlin `domain:usecase` can't depend on. Task 9 (save the chat in Room) was folded into Task 6, since the Room repository was already merged — Spec deviation, owner's "start building all the tasks" — SPEC-chat.md, #37, #40
+- 2026-10-31 — Room's code generator is KSP 2.3.12 (KSP 2.3.x is versioned apart from Kotlin; the 2.2.21-x line refuses AGP 9 built-in Kotlin) — Build requirement — gradle/libs.versions.toml, #39
 - 2026-10-31 — P1 toolchain: AGP 9.0.1 with built-in Kotlin, Kotlin 2.2.21 (the version LiteRT-LM 0.16.1 is built with; set through the Compose compiler plugin), compileSdk/targetSdk 36, Compose BOM 2026.06.01, core-ktx 1.18.0, lifecycle 2.10.0, activity-compose 1.13.0. Newer AndroidX releases need AGP 9.1+ and compileSdk 37; moving the toolchain is deferred — keeps the setup proven by the spikes — gradle/libs.versions.toml, #32
 - 2026-10-31 — P1 scope and approach (owner approved the capability map and assumptions): overlay with drag/snap/hide and notification, in-app chat fallback, streaming chat with Stop on Gemma 3 1B int4, Room history, side-loaded model with SHA-256 check, local crash/ANR log, Gemma terms notice; code at the repo root in the architecture.md §3 modules; manual DI; plain (unencrypted) Room in P1; S1 sprite frames; exit gate on the vivo Y17s; **the owner builds and uploads the signed AAB**. Voice, tools, memory, licenses screen, privacy policy, safe mode deferred to P2 — Owner decision — SPEC.md, PRD 0.6/0.8/0.9
 - 2026-10-31 — P1 (walking skeleton) starts: the P0 gate (PRD 0.6) is met on the vivo Y17s (S1 PASS, S2 PASS in chat mode; S3 done; S4 PASS). The vivo is not the floor device, so the Galaxy A23 run stays open [VERIFY]; P1 uses Gemma 3 1B int4 on LiteRT-LM 0.16.1, Piper TTS, Parakeet STT, slot extraction for tools — Owner decision — PRD 0.6, #4, #5, #8
@@ -103,7 +105,9 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-31 ~10:40: P1 Tasks 1–4, 10 and 12 merged (PRs #50–#54). Checkpoint A checked on the vivo: Home opens, no INTERNET permission, a test crash is logged and shown after relaunch. Bug #55 (duplicate exit-info records) fixed on `bugfix/55-exit-info-duplicates`. Next: Task 5 (#36), the LiteRT-LM service in `:inference`.
+2026-10-31 ~13:30: Task 6 (#37) chat slice plus Task 9 (#40) saved history built on `feature/37-chat-slice` (new module `feature:chat`: `SendMessage`, `ChatViewModel`, `ChatScreen`; Home → Chat with Bibi). On the vivo: 10 turns with TTFT 1,255–1,312 ms (service log `BibiInference turn ttft_ms`), Stop keeps the partial answer, history survives force-stop and reinstall, rotation keeps the model loaded. Fixed on the way: during the ~7 s conversation reopen after Stop or Clear, the service now reports Loading, so the chat shows "Bibi is getting ready again…" and blocks Send. Stopped at: PR open. Next: owner tries the chat (checkpoint B), then Task 7 (#38).
+
+2026-10-31 ~10:40: P1 Tasks 1–4, 10 and 12 merged (PRs #50–#54). Checkpoint A checked on the vivo: Home opens, no INTERNET permission, a test crash is logged and shown after relaunch. Bug #55 (duplicate exit-info records) fixed on `bugfix/55-exit-info-duplicates`.
 
 2026-10-30 evening: S4 pass 2 (slot extraction) built on `feature/8-s4-slot-extraction` (worktree `/Users/saadahmed/bibi-wt/s4-slots`): `SlotExtractor.kt`, `SlotToolRouter`, pipeline switch, slot summary table, docs. JVM suite 547 checks pass (ceiling 100/100 with the correct label); `assembleDebug` builds; not run on a phone. Stopped at: PR open, device benchmark next.
 
@@ -112,7 +116,8 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. P1 Task 5 (#36): LiteRT-LM service in `:inference` with the debug model path; then Task 6 (#37) chat slice → Checkpoint B on the vivo (10 turns, TTFT p95 ≤ 3 s, Stop).
-2. Then Tasks 7–9, 11 (robustness, history, import UI), 13–14 (overlay), 15–16 (onboarding), 17–18 (release, exit gate). Task list: `tasks/plan.md`.
+1. Owner: try the chat on the vivo (Home → Chat with Bibi) to close checkpoint B; merge the Task 6 PR.
+2. Task 7 (#38): rebuild the conversation with the last 6 turns after Stop, Clear or a reset (today Bibi forgets earlier turns and the reopen takes ~7 s), and recover from an `:inference` crash.
+3. Then Tasks 11 (robustness, history, import UI), 13–14 (overlay), 15–16 (onboarding), 17–18 (release, exit gate). Task list: `tasks/plan.md`.
 3. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
 4. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY]; Galaxy A23 (open item 10).

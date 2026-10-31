@@ -137,10 +137,13 @@ class InferenceService : Service() {
         var chunks = 0
         var capped = false
         var failure: String? = null
+        val t0 = SystemClock.elapsedRealtime()
+        var firstTokenMs = -1L
         try {
             if (e == null) error("engine not loaded")
             e.chat(text) { chunk ->
                 if (!capped) {
+                    if (chunks == 0) firstTokenMs = SystemClock.elapsedRealtime() - t0
                     reply.append(chunk)
                     chunks++
                     post(ProtocolMessage.Reply(requestId, ReplyEvent.Token(chunk)))
@@ -154,6 +157,8 @@ class InferenceService : Service() {
             failure = "${ex.javaClass.simpleName}: ${ex.message}"
         }
         val terminal = ReplyOutcome.terminal(reply.toString(), stopRequested, capped, failure)
+        // Service-side timing for the chat checks (Checkpoint B); excludes the IPC hop to the UI.
+        Log.i(TAG, "turn ttft_ms=$firstTokenMs chunks=$chunks total_ms=${SystemClock.elapsedRealtime() - t0} end=${terminal.javaClass.simpleName}")
         if (terminal is ReplyEvent.Error) Log.w(TAG, "turn failed: ${terminal.reason}")
         if (ReplyOutcome.needsNewConversation(terminal, capped)) {
             // A cancelled or failed turn poisons the conversation (LiteRtLmEngine.cancel), so the
@@ -161,7 +166,6 @@ class InferenceService : Service() {
             // TODO(#38): rebuild with the last turns instead of the preface only.
             post(ProtocolMessage.Reply(requestId, terminal))
             reset()
-            if (state == EngineState.Generating) setState(EngineState.Ready)
         } else {
             // Ready first, so a client that gets the terminal event can send right away.
             setState(EngineState.Ready)
@@ -173,12 +177,17 @@ class InferenceService : Service() {
         }
     }
 
-    /** Engine thread. Fresh conversation: system prompt and primer only. */
+    /**
+     * Engine thread. Fresh conversation: system prompt and primer only. Reports Loading while the
+     * preface is prefilled (about 7 s on the vivo), so clients don't offer Send meanwhile.
+     */
     private fun reset() {
         try {
+            setState(EngineState.Loading)
             val t0 = SystemClock.elapsedRealtime()
             checkNotNull(engine) { "engine not loaded" }.openChat(systemPrompt())
             Log.i(TAG, "conversation reopened, preface_prefill_ms=${SystemClock.elapsedRealtime() - t0}")
+            setState(EngineState.Ready)
         } catch (e: Exception) {
             setState(EngineState.Failed("${e.javaClass.simpleName}: ${e.message}"))
         }
