@@ -11,6 +11,13 @@ activityCompose = "1.13.0"
 lifecycle = "2.10.0"
 junit = "4.13.2"
 coroutines = "1.9.0"
+# Room 2.8.x builds with compileSdk 36 / AGP 9.0.1; room-ktx is empty since 2.7 (merged into runtime).
+room = "2.8.5"
+# KSP 2.3.x is versioned apart from Kotlin; 2.3.1+ is the first line that supports AGP 9 built-in
+# Kotlin (2.2.21-2.0.5 refuses it). 2.3.10 fixed R-class resolution under built-in Kotlin.
+ksp = "2.3.12"
+robolectric = "4.17"
+androidxTestCore = "1.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,9 +32,14 @@ litertlm-android = { group = "com.google.ai.edge.litertlm", name = "litertlm-and
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
