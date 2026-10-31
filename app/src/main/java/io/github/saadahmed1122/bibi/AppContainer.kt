@@ -9,6 +9,7 @@ import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.database.RoomMemoryRepository
 import io.github.saadahmed1122.bibi.core.tools.ActionRunner
 import io.github.saadahmed1122.bibi.core.tools.AppResolver
@@ -35,6 +36,9 @@ import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
 import io.github.saadahmed1122.bibi.feature.tools.AppIndex
 import io.github.saadahmed1122.bibi.feature.tools.ToolExecutor
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -92,11 +96,29 @@ class AppContainer(context: Context) {
         }
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
         val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory))
+        val key = Any()
         return ChatViewModel(
             inference, chatHistory, models.state,
             onModelReady = setConnected, actions = chatActions, memory = chatMemory, summaries = summaries,
-        )
-            .apply { addCloseable { setConnected(false) } }
+            onMood = { reportMood(key, it) },
+        ).apply {
+            addCloseable {
+                setConnected(false)
+                reportMood(key, null)
+            }
+        }
+    }
+
+    private val moods = HashMap<Any, BibiMood>()
+    private val _bibiMood = MutableStateFlow(BibiMood.IDLE)
+
+    /** What floating Bibi shows: the strongest mood of the open chats (app screen and floating card). */
+    val bibiMood: StateFlow<BibiMood> = _bibiMood.asStateFlow()
+
+    /** Main thread. [mood] null removes a chat that closed. */
+    private fun reportMood(key: Any, mood: BibiMood?) {
+        if (mood == null) moods.remove(key) else moods[key] = mood
+        _bibiMood.value = BibiMood.strongest(moods.values)
     }
 
     /** Bibi's personality preset (SPEC-personality.md), kept in the "app" preferences. */

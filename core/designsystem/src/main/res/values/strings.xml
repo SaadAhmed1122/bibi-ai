@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From docs/design/character/states/states.json (PRD §17.6). -->
+    <string name="bibi_mood_idle">Bibi sits calmly, ready to help.</string>
+    <string name="bibi_mood_thinking">Bibi tilts its head with a paw on its chin, thinking.</string>
+    <string name="bibi_mood_speaking">Bibi is talking and gesturing with one paw.</string>
+    <string name="bibi_mood_confused">Bibi tilts its head, puzzled; something didn\'t work.</string>
+</resources>
