@@ -6,7 +6,7 @@ Shared rules: [SPEC-P2.md](SPEC-P2.md). Background: [docs/features/memory.md](do
 Bibi remembers what the user asks it to, plus short summaries of past chats, and uses them in later answers. The user can see, search, pin, edit, delete and export everything, and old items expire after 90 days unless pinned.
 
 ## Scope
-- **Storage (Room migration 1 → 2, a major merge):** `memory_item(id, profileId = 1, kind FACT|SUMMARY, text, pinned, createdAt, updatedAt)` plus a Room `@Fts4` table on `text` for keyword search. PRD §18.3.3 says FTS5; Room only generates FTS3/4, and FTS4 is enough for keyword search (recorded as a deviation). `MigrationTestHelper` test with the exported schemas.
+- **Storage (Room migration 1 → 2, a major merge):** `memory_item(id, profileId = 1, kind FACT|SUMMARY, text, pinned, createdAt, updatedAt)` plus a Room `@Fts4` table on `text` for keyword search. PRD §18.3.3 says FTS5; Room only generates FTS3/4, and FTS4 is enough for keyword search (recorded as a deviation). Migration test with the exported schemas (built: Room auto migration; the test creates version 1 from `1.json` by hand because `MigrationTestHelper`'s Android constructor needs instrumentation, then opens it as version 2, which validates against `2.json`).
 - **Writes:**
   - "Remember this" on a long-press of any message, and phrases like "remember that …", "my name is …" (deterministic, no model). Bibi replies "Got it, I'll remember that."
   - A never-store filter runs before every write: card numbers (13–19 digits passing Luhn), passwords ("password is …"), government ID patterns. A blocked write gets a short explanation.

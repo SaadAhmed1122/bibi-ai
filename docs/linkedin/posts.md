@@ -29,6 +29,13 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Giving Bibi a memory without losing a single message
+- **Test:** the first database upgrade on a real phone. Bibi's chat database went from version 1 to version 2, adding memory tables and a keyword search index.
+- **Numbers:** **191 of 191** chat messages kept, the new tables and **4** sync triggers in place, chat still saving. **14** database tests, including the upgrade itself on a real version-1 file.
+- **Gotcha:** the search index ignored `"sister"*` but found `sister*`. One quote character, zero results.
+- **Lesson:** test the upgrade on real data before anyone else installs the update.
+- Source: #78.
+
 ### 2026-11-01: Two personalities, one tiny model
 - **Test:** the same 3 questions to Bibi as "Friendly" and as "Concise", each from an empty conversation, on the vivo.
 - **Numbers:**
