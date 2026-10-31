@@ -14,9 +14,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 
-/** [onOpenCrashLog] is null in release builds, which hides the debug link. */
+/** [onOpenCrashLog] and [onOpenLlmDebug] are null in release builds, which hides the debug links. */
 @Composable
-fun HomeScreen(onOpenTerms: () -> Unit, onOpenCrashLog: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun HomeScreen(
+    onOpenTerms: () -> Unit,
+    onOpenCrashLog: (() -> Unit)?,
+    onOpenLlmDebug: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(Modifier.padding(padding).padding(24.dp)) {
             Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
@@ -25,6 +30,9 @@ fun HomeScreen(onOpenTerms: () -> Unit, onOpenCrashLog: (() -> Unit)?, modifier:
             if (onOpenCrashLog != null) {
                 TextButton(onClick = onOpenCrashLog) { Text(stringResource(R.string.crash_log_title)) }
             }
+            if (onOpenLlmDebug != null) {
+                TextButton(onClick = onOpenLlmDebug) { Text(stringResource(R.string.llm_debug_title)) }
+            }
         }
     }
 }
@@ -32,11 +40,11 @@ fun HomeScreen(onOpenTerms: () -> Unit, onOpenCrashLog: (() -> Unit)?, modifier:
 @Preview
 @Composable
 private fun HomeScreenDebugPreview() {
-    BibiTheme { HomeScreen(onOpenTerms = {}, onOpenCrashLog = {}) }
+    BibiTheme { HomeScreen(onOpenTerms = {}, onOpenCrashLog = {}, onOpenLlmDebug = {}) }
 }
 
 @Preview
 @Composable
 private fun HomeScreenReleasePreview() {
-    BibiTheme { HomeScreen(onOpenTerms = {}, onOpenCrashLog = null) }
+    BibiTheme { HomeScreen(onOpenTerms = {}, onOpenCrashLog = null, onOpenLlmDebug = null) }
 }
