@@ -52,6 +52,12 @@ class InferenceService : Service() {
     /** Written on the engine thread; read on main for [LiteRtLmEngine.cancel]. */
     @Volatile private var engine: LiteRtLmEngine? = null
 
+    /** Engine thread only. Set once the system prompt is read in [load]. */
+    private var budget: ContextBudget? = null
+
+    /** Engine thread only. */
+    private lateinit var systemPrompt: String
+
     override fun onBind(intent: Intent): IBinder = messenger.binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_NOT_STICKY
@@ -101,7 +107,10 @@ class InferenceService : Service() {
                 engine?.cancel()
             }
             ProtocolMessage.Reset -> if (state == EngineState.Ready) {
-                engineThread.execute { reset() }
+                engineThread.execute {
+                    budget?.clear()
+                    reset()
+                }
             }
             // Service -> client messages and unknown codes are ignored.
             is ProtocolMessage.State, is ProtocolMessage.Reply, null -> Unit
@@ -117,7 +126,11 @@ class InferenceService : Service() {
             val t0 = SystemClock.elapsedRealtime()
             e.load(path)
             val t1 = SystemClock.elapsedRealtime()
-            e.openChat(systemPrompt())
+            systemPrompt = assets.open(SYSTEM_PROMPT_ASSET).bufferedReader().use { it.readText() }.trim()
+            budget = ContextBudget(
+                prefaceChars = systemPrompt.length + LiteRtLmEngine.PRIMER_USER.length + LiteRtLmEngine.PRIMER_REPLY.length,
+            )
+            e.openChat(systemPrompt)
             Log.i(TAG, "load_ms=${t1 - t0} preface_prefill_ms=${SystemClock.elapsedRealtime() - t1}")
             setState(EngineState.Ready)
         } catch (e: Exception) {
@@ -141,6 +154,11 @@ class InferenceService : Service() {
         var firstTokenMs = -1L
         try {
             if (e == null) error("engine not loaded")
+            if (checkNotNull(budget).needsReset(text)) {
+                // Lands in this turn's TTFT; rare (a few thousand tokens of chat between resets).
+                Log.i(TAG, "context reset before turn, used_est=${budget?.usedTokens}")
+                openConversation(e)
+            }
             e.chat(text) { chunk ->
                 if (!capped) {
                     if (chunks == 0) firstTokenMs = SystemClock.elapsedRealtime() - t0
@@ -160,10 +178,12 @@ class InferenceService : Service() {
         // Service-side timing for the chat checks (Checkpoint B); excludes the IPC hop to the UI.
         Log.i(TAG, "turn ttft_ms=$firstTokenMs chunks=$chunks total_ms=${SystemClock.elapsedRealtime() - t0} end=${terminal.javaClass.simpleName}")
         if (terminal is ReplyEvent.Error) Log.w(TAG, "turn failed: ${terminal.reason}")
+        // A stopped or failed turn is carried over with the text the user saw.
+        budget?.record(text, reply.toString())
         if (ReplyOutcome.needsNewConversation(terminal, capped)) {
             // A cancelled or failed turn poisons the conversation (LiteRtLmEngine.cancel), so the
-            // next turn needs a fresh one. The reply reaches the UI first; Ready comes after.
-            // TODO(#38): rebuild with the last turns instead of the preface only.
+            // next turn needs a fresh one, rebuilt with the recent turns. The reply reaches the UI
+            // first; Ready comes after.
             post(ProtocolMessage.Reply(requestId, terminal))
             reset()
         } else {
@@ -178,22 +198,30 @@ class InferenceService : Service() {
     }
 
     /**
-     * Engine thread. Fresh conversation: system prompt and primer only. Reports Loading while the
-     * preface is prefilled (about 7 s on the vivo), so clients don't offer Send meanwhile.
+     * Engine thread. Fresh conversation with the recent turns (none after Clear). Reports Loading
+     * while it prefills (about 7 s for the preface alone on the vivo), so clients don't offer Send.
      */
     private fun reset() {
         try {
             setState(EngineState.Loading)
-            val t0 = SystemClock.elapsedRealtime()
-            checkNotNull(engine) { "engine not loaded" }.openChat(systemPrompt())
-            Log.i(TAG, "conversation reopened, preface_prefill_ms=${SystemClock.elapsedRealtime() - t0}")
+            openConversation(checkNotNull(engine) { "engine not loaded" })
             setState(EngineState.Ready)
         } catch (e: Exception) {
             setState(EngineState.Failed("${e.javaClass.simpleName}: ${e.message}"))
         }
     }
 
-    private fun systemPrompt(): String = assets.open(SYSTEM_PROMPT_ASSET).bufferedReader().use { it.readText() }.trim()
+    /** Engine thread. Reopens the conversation with the turns [ContextBudget.reopen] picks. */
+    private fun openConversation(e: LiteRtLmEngine) {
+        val carried = checkNotNull(budget).reopen()
+        val t0 = SystemClock.elapsedRealtime()
+        e.openChat(systemPrompt, carried)
+        Log.i(
+            TAG,
+            "conversation reopened, carried_turns=${carried.size} used_est=${budget?.usedTokens} " +
+                "prefill_ms=${SystemClock.elapsedRealtime() - t0}",
+        )
+    }
 
     /** Any thread. */
     private fun setState(newState: EngineState) {

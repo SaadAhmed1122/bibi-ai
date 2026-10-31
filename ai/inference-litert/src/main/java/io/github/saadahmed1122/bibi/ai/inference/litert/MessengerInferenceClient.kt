@@ -31,8 +31,11 @@ import java.util.concurrent.atomic.AtomicLong
  * service to load the model at [modelPath]. Replies arrive on the main thread and are routed to
  * the current send by request id; others are dropped.
  *
- * Recovery after the `:inference` process dies is Task 7 (#38): for now the state just goes to
- * [EngineState.Failed] and an in-flight reply ends with [ReplyEvent.Error].
+ * Recovery (SPEC-inference.md): if `:inference` dies, an in-flight reply ends with
+ * [ReplyEvent.Error] and the state goes to [EngineState.Loading]. The system restarts a bound
+ * service on its own and [ServiceConnection.onServiceConnected] reloads the model. A second death
+ * before the model is Ready again gives up with [EngineState.Failed], so a model that crashes on
+ * load doesn't loop.
  */
 class MessengerInferenceClient(
     private val context: Context,
@@ -51,6 +54,9 @@ class MessengerInferenceClient(
     /** Main thread only. */
     private var bound = false
 
+    /** Main thread only. True from a death of `:inference` until the reloaded model is Ready. */
+    private var recovering = false
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             val s = Messenger(binder)
@@ -62,9 +68,31 @@ class MessengerInferenceClient(
         /** Only called when `:inference` crashed or was killed, not on unbind. */
         override fun onServiceDisconnected(name: ComponentName) {
             service = null
-            _state.value = EngineState.Failed(REASON_DISCONNECTED)
             active.fail(REASON_DISCONNECTED)
+            if (recovering) {
+                giveUp()
+            } else {
+                recovering = true
+                _state.value = EngineState.Loading
+            }
         }
+
+        /**
+         * The binding can't come back by itself: bind once more. If that one dies too before
+         * Ready, [onServiceDisconnected] gives up and unbinds, and this returns early.
+         */
+        override fun onBindingDied(name: ComponentName) {
+            if (!bound) return
+            context.unbindService(this)
+            bound = false
+            connect()
+        }
+    }
+
+    private fun giveUp() {
+        _state.value = EngineState.Failed(REASON_DISCONNECTED)
+        if (bound) context.unbindService(connection)
+        bound = false
     }
 
     /** Binds the service, which then loads the model. Main thread; no-op when already bound. */
@@ -79,6 +107,7 @@ class MessengerInferenceClient(
         if (!bound) return
         context.unbindService(connection)
         bound = false
+        recovering = false
         service = null
         active.fail(REASON_DISCONNECTED)
         _state.value = EngineState.Unbound
@@ -114,7 +143,10 @@ class MessengerInferenceClient(
 
     private fun onReply(msg: android.os.Message) {
         when (val m = InferenceProtocol.decode(msg.toEnvelope())) {
-            is ProtocolMessage.State -> if (bound) _state.value = m.state
+            is ProtocolMessage.State -> if (bound) {
+                _state.value = m.state
+                if (m.state == EngineState.Ready) recovering = false
+            }
             is ProtocolMessage.Reply -> active.deliver(m.requestId, m.event)
             else -> Unit
         }
