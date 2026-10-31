@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Fixed
+- The floating chat card no longer hides its message box under the keyboard in portrait: it moves above the keyboard and shrinks to fit (#71).
 - After Stop or Clear chat, the inference service reports Loading while it reopens the conversation (~7 s), so Send is blocked and the chat shows "Bibi is getting ready again…" (#37).
 - Crash log: an exit the system reports twice is now logged once (#55).
 

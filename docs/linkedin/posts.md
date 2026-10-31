@@ -29,6 +29,13 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: The keyboard that hid the message box
+- **Test:** floating Bibi's chat card in portrait on the vivo, with the keyboard open.
+- **Numbers:** the card is 967 px tall; the space above the keyboard is 925 px. Android pushed the card up to the status bar but didn't shrink it, so **41 px of the message box stayed under the keyboard**, and the window was then told the keyboard covered **0 px**.
+- **Fix:** the card now measures where the keyboard is and moves above it, shrinking to fit (5 unit tests). Landscape uses a floating keyboard, so nothing changes there.
+- **Lesson:** overlay windows over other apps don't get the keyboard handling normal screens get; measure, don't trust the default.
+- Images: `media/card-keyboard-before.png`, `media/card-keyboard-after.png`. Source: #71.
+
 ### 2026-10-31: Phone actions: from 87 to 95 out of 100, and 0 wrong actions
 - **Test:** the same 100 requests as before ("wake me at 6:45", "open Maps", "flashlight off", …) plus 10 chat messages that should do nothing, on the vivo, after 3 small fixes. Dry run: nothing really opens.
 - **Numbers:**
