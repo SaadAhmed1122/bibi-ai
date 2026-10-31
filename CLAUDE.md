@@ -5,12 +5,12 @@ An offline, on-device AI companion for Android: a small animated character float
 It's a portfolio piece and technical experiment by Saad (solo) plus Claude Code. Funding only if results justify it.
 Product name **Bibi AI**; the character is **Bibi**. The PRD in `reference/` uses the old working name "Pip"; treat it as Bibi.
 
-**Current phase: P0 — Feasibility spikes.** No app code until S1 and S2 are measured. Status: [docs/project_status.md](docs/project_status.md).
+**Current phase: P1 — Walking skeleton** (P0 gate met on the vivo Y17s, 2026-10-31). Status: [docs/project_status.md](docs/project_status.md).
 
 ## 2. Stack and constraints
 - **Platform:** Android only, minSdk = Android 14 (API 34).
 - **Stack:** Kotlin, Jetpack Compose, Material 3, Room.
-- **LLM runtime:** chosen by spike S2 [OPEN].
+- **LLM runtime:** LiteRT-LM 0.16.1 with Gemma 3 1B int4, chat mode with prefix reuse (S2, 2026-10-30/31).
 - **Processes:** a separate `:inference` process for native AI runtimes (bound service).
 - **Language:** English first; strings and prompts externalized.
 - **Distribution:** Google Play (internal → closed test → production).

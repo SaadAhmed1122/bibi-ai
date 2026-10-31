@@ -3,14 +3,14 @@
 Updated at the end of every session (see CLAUDE.md §6).
 
 ## Current phase
-**P0 — Feasibility spikes.** No app code yet. Goal: measure S1 and S2 on the Galaxy A23 (PRD 0.7).
+**P1 — Walking skeleton** (started 2026-10-31). P0 gate met on the vivo Y17s; the Galaxy A23 is still untested (open item 10).
 
 ## Milestones
 
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
-| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | Not started |
+| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Spec next |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — P1 (walking skeleton) starts: the P0 gate (PRD 0.6) is met on the vivo Y17s (S1 PASS, S2 PASS in chat mode; S3 done; S4 PASS). The vivo is not the floor device, so the Galaxy A23 run stays open [VERIFY]; P1 uses Gemma 3 1B int4 on LiteRT-LM 0.16.1, Piper TTS, Parakeet STT, slot extraction for tools — Owner decision — PRD 0.6, #4, #5, #8
 - 2026-10-31 — Qwen is dropped from the project: the SPEC's second S2 model (0.5B Qwen-class) is not soaked; Gemma 3 1B int4 (LiteRT-LM 0.16.1, chat mode) is the only LLM. Its smoke runs were slower to first token than Gemma. Note: the S3 co-residence check (Parakeet + LLM) was done with an idle Qwen3, so Parakeet + Gemma is unmeasured [VERIFY]. Overrides SPEC §2 / PRD S2 two-model test — Owner decision — #5
 - 2026-10-31 — S1 gate PASS on vivo Y17s: four valid runs (baseline 148.4 mA, Bibi 12 fps 176.2 mA, baseline 150.9 mA, Bibi Calm 162.4 mA; each ≥ 62 min, unplugged, screen on, brightness 15, 60 Hz, clean Stop, no exit reasons). Bibi cost 27.8 mA / 0.51 %/h at 12 fps and 11.5 mA / 0.15 %/h in Calm (gate ≤ 150 mA and ≤ 3 %/h). Protocol change: Start ~1 min after unplugging instead of a 10-min settle, the same for all four runs. Galaxy A23 untested [VERIFY] — spikes/s1-overlay/results/RESULTS.md, #4
 - 2026-10-30 — S4 slot tuning: router confidence threshold 0.5 → 0.25; under the set_alarm label a duration with no clock time re-routes to start_timer (the only cross-tool route, still through parser, validator and Permission Engine); a vendor word followed by an uninstalled app name asks instead of opening the vendor's app. JVM tests pass; device re-run pending — Owner approved the follow-up after merging PR #25 — spikes/s4-tools/results/RESULTS.md §7, #8
@@ -100,7 +101,7 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-31 ~02:40: S1 gate runs done on the vivo (four valid runs, PASS), recorded on `spike/S1-gate-runs`. S4 tuning PR #26 open (JVM tests only). Phone settings changed for S1 and still to restore: `screen_off_timeout` (was 1800000), brightness mode (was auto), `peak_refresh_rate` (was 90.0), `min_refresh_rate` (was unset).
+2026-10-31 ~02:40: S1 PASS recorded (PR #27), Qwen dropped (PR #28, closed #5), P1 go recorded. The vivo's display settings are restored (screen timeout 1800000, auto-brightness, 90 Hz, min refresh unset; stay-awake off).
 
 2026-10-30 evening: S4 pass 2 (slot extraction) built on `feature/8-s4-slot-extraction` (worktree `/Users/saadahmed/bibi-wt/s4-slots`): `SlotExtractor.kt`, `SlotToolRouter`, pipeline switch, slot summary table, docs. JVM suite 547 checks pass (ceiling 100/100 with the correct label); `assembleDebug` builds; not run on a phone. Stopped at: PR open, device benchmark next.
 
@@ -109,7 +110,7 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Merge the S1 results PR and PR #26 (owner), then re-run the S4 slot benchmark on the vivo with the tuning (#8).
-2. P0 gate is met on the vivo: record the owner's go for P1 (walking skeleton) as a Decision.
-3. Optional: S1 kill/restart check; S4 owner on-screen checks (README steps 2–8, 13–14; #8).
+1. P1 spec → plan (CLAUDE.md §9 `/spec` → `/plan`): overlay + typed chat + Gemma 3 1B + Room storage, installable from the Play internal track (PRD 0.6). Scope check with scope-guard first.
+2. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
+3. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY].
 4. Run the spikes on the Galaxy A23 if it is available (open item 10).
