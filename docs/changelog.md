@@ -10,6 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P1 Task 17: release build with R8 and resource shrinking (LiteRT-LM keep rule), upload signing from `~/.gradle/gradle.properties` (unsigned without it), and the owner's upload checklist `docs/release.md` (#48).
 - P1 Task 16: Floating Bibi and Calm mode switches on Home. The overlay permission is asked only when the switch is turned on, after an explainer; without it the switch stays off. The notification's Turn off turns the switch off; Bibi comes back when the app opens if the switch is on (#47).
 - P1 Task 15: first-run screens (`feature:onboarding`): Welcome, Model (import or skip, Gemma terms link), Notifications (allow or not); the first permission request in the app is on step 3 (#46).
 - P1 Task 14: tapping floating Bibi opens a chat card over any app (type, stream, Stop), closed with Back, a tap outside, or Close; the keyboard's Send key sends (the vivo's landscape keyboard covers the Send button). The app chat and the card share one model connection (#45).

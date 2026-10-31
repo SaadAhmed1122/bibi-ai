@@ -112,7 +112,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Files: `FloatingToggle.kt`, the Home/settings UI. **S**
 
 ### Phase 6: Release and exit gate
-- [ ] **Task 17 (#48): Release build.**
+- [x] **Task 17 (#48): Release build.**
   - R8 with LiteRT-LM and Room keep rules; version 1 / `0.1.0-p1`.
   - Signing from `~/.gradle/gradle.properties`: unsigned when the properties are missing.
   - The variable names added to `.env.example`, and the owner checklist in `docs/release.md`.
