@@ -29,6 +29,19 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Two personalities, one tiny model
+- **Test:** the same 3 questions to Bibi as "Friendly" and as "Concise", each from an empty conversation, on the vivo.
+- **Numbers:**
+  - Friendly: **70** chunks of text in total. Concise: **43**, about **39 % shorter**.
+  - "A good way to start the morning": Friendly 19 chunks, Concise 7 ("Get some sunlight and drink water!").
+  - Switching takes **10.6 s** and keeps the recent messages.
+- **Gotchas:**
+  - Asked inside the same conversation, "Concise" just repeated its earlier Friendly answers word for word. A small model copies what is in its context.
+  - The 1B model ignores "no exclamation marks".
+  - The first Concise prompt ("one or two sentences") saved only 27 %. "One short sentence, no extra tips" did better.
+- **Lesson:** test prompts from a clean start, and write the instruction as a measurable rule.
+- Image: `media/settings-personality.png`. Source: #77.
+
 ### 2026-11-01: "It's dark in here" turns the torch on
 - **Test:** typing requests into Bibi's chat on the vivo, in the app and in the floating card, in portrait and landscape.
 - **Numbers:**

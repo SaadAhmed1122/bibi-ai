@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 6: two personalities, Friendly and Concise, chosen in the new Settings screen; the choice is saved and applies in about 10 s, keeping the recent messages (#77).
 - P2 Task 5: phone actions from chat, in the app and the floating card: shortcut phrases, then the router, then slot extraction; Bibi asks when a value is missing; dial shows a confirmation card (Confirm, Cancel, 30 s timeout) (#76).
 - P2 Task 4: the five phone actions run through one `ActionRunner` (Permission Engine, executor, local audit log with phone numbers masked); `feature:tools` builds every intent from checked values; `SET_ALARM` permission and launcher `<queries>`; debug "Actions check" screen (#75).
 - P2 Task 3: the action router (MediaPipe Decision Maker 1.2.0) runs in `:inference` on its own thread; its model is imported on the model screen under "Phone actions (optional)"; the debug LLM check can route a message. On the vivo 6/6 test requests routed right in about 0.55 s (#74).
