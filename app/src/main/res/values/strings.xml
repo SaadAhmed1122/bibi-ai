@@ -2,4 +2,11 @@
     <string name="app_name">Bibi</string>
     <string name="home_title">Bibi</string>
     <string name="home_body">Your offline companion. Chat arrives in the next steps.</string>
+    <string name="back">Back</string>
+    <!-- Debug-only crash log screen -->
+    <string name="crash_log_title">Crash log</string>
+    <string name="crash_log_crash_now">Crash now</string>
+    <string name="crash_log_clear">Clear</string>
+    <string name="crash_log_loading">Loading…</string>
+    <string name="crash_log_empty">No crashes logged.</string>
 </resources>
