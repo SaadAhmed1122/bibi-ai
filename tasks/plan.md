@@ -3,7 +3,7 @@
 ## Overview
 Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: a Gemma 3 1B chat in its own `:inference` process, an in-app chat screen, Room history, a side-loaded model with a checksum, floating Bibi, onboarding, and a release build the owner signs and uploads. The work is ordered so the riskiest path comes first: a typed message streaming back from the model in a separate process. Everything else is added around that working loop.
 
-**Tasks are tracked as GitHub Issues** in milestone "P1 — Walking skeleton" (CLAUDE.md §10: Issues are the source of truth). The list below is the ordered index; issue numbers are filled in when the issues are created after this plan is approved. One task = one branch `feature/<issue>-<name>` = one PR.
+**Tasks are tracked as GitHub Issues** in milestone "P1 — Walking skeleton" (CLAUDE.md §10: Issues are the source of truth). The list below is the ordered index; issues #32–#49 (task N = issue N+31). One task = one branch `feature/<issue>-<name>` = one PR.
 
 ## Architecture decisions
 - **Walking skeleton first.** Task 4 loads the model from a debug-only path (pushed with `adb` + `run-as`), so the in-process risk (Compose + AGP 9 + LiteRT-LM 0.16.1 in `:inference`) is proven before model import, history and overlay exist. Task 10 removes the debug path.
@@ -19,15 +19,15 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 ## Task list
 
 ### Phase 1: Foundation (app-shell)
-- [ ] **Task 1: Root Gradle project and empty app.** Adds `settings.gradle.kts`, the version catalog, `app`, `core:common` and `core:designsystem`, plus a Home screen and the theme. LiteRT-LM 0.16.1 must resolve.
+- [ ] **Task 1 (#32): Root Gradle project and empty app.** Adds `settings.gradle.kts`, the version catalog, `app`, `core:common` and `core:designsystem`, plus a Home screen and the theme. LiteRT-LM 0.16.1 must resolve.
   - Acceptance: `./gradlew :app:assembleDebug test lint` passes; the app opens to Home on the vivo; a test fails the build if the merged manifest has INTERNET.
   - Verify: the commands above; install on the vivo.
   - Files: settings/build scripts, `libs.versions.toml`, `app/…/BibiApplication.kt`, `MainActivity.kt`, `core/designsystem/Theme.kt`. **M**
-- [ ] **Task 2: Local crash and ANR log.** `CrashLogWriter` (256 KB cap), `ExitInfoCollector`, the handler installed in both processes, and a debug Crash log screen with a Crash now button.
+- [ ] **Task 2 (#33): Local crash and ANR log.** `CrashLogWriter` (256 KB cap), `ExitInfoCollector`, the handler installed in both processes, and a debug Crash log screen with a Crash now button.
   - Acceptance: JVM tests for the record format, the cap, and exit-info de-duplication; on the vivo a forced crash shows up after relaunch.
   - Verify: `./gradlew :core:common:test`; manual crash.
   - Files: `core/common/crash/*`, `app/…/debug/CrashLogScreen.kt`. **M**
-- [ ] **Task 3: Gemma terms notice.** A Home link to a screen showing the bundled terms notice asset.
+- [ ] **Task 3 (#34): Gemma terms notice.** A Home link to a screen showing the bundled terms notice asset.
   - Acceptance: the link opens the notice; the text is in assets.
   - Verify: a preview plus a manual check.
   - Files: `app/…/TermsScreen.kt`, the asset. **XS**
@@ -36,11 +36,11 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 - [ ] All tests pass and the debug build installs on the vivo. The owner reviews the project layout.
 
 ### Phase 2: Core loop (inference + chat, riskiest first)
-- [ ] **Task 4: Inference contract.** `ai:inference-api` with `InferenceClient`, `EngineState`, `ReplyEvent`, the Messenger protocol codec, and `FakeInferenceClient`.
+- [ ] **Task 4 (#35): Inference contract.** `ai:inference-api` with `InferenceClient`, `EngineState`, `ReplyEvent`, the Messenger protocol codec, and `FakeInferenceClient`.
   - Acceptance: round-trip tests for every message; fake-client contract tests for Done, Stop and Error.
   - Verify: `./gradlew :ai:inference-api:test`.
   - Files: 4–5 in `ai/inference-api`. **M**
-- [ ] **Task 5: LiteRT-LM service.** `ai:inference-litert`:
+- [ ] **Task 5 (#36): LiteRT-LM service.** `ai:inference-litert`:
   - `LiteRtLmEngine`, ported from S2, with the primer prefill and the token cap;
   - `InferenceService` in `:inference`;
   - the bound client (`MessengerInferenceClient`);
@@ -48,7 +48,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: on the vivo, the debug screen loads the model and streams a reply; the `:inference` pid differs from the app pid.
   - Verify: build; manual on the vivo, with the debug log showing TTFT.
   - Files: `ai/inference-litert/*` (engine, service, manifest), the client. **M**
-- [ ] **Task 6: Chat slice.** `SendMessage` (in-memory history for now), `ChatViewModel` (MVI), and `ChatScreen` with streaming, Send→Stop, the model banner, and the 2,000-character cap.
+- [ ] **Task 6 (#37): Chat slice.** `SendMessage` (in-memory history for now), `ChatViewModel` (MVI), and `ChatScreen` with streaming, Send→Stop, the model banner, and the 2,000-character cap.
   - Acceptance: use-case and ViewModel tests with the fake client (SPEC-chat.md criteria 1–2); previews; on the vivo, type → streamed answer → Stop keeps the partial text.
   - Verify: `./gradlew :feature:chat:test :domain:usecase:test`; manual.
   - Files: `domain/usecase/SendMessage.kt`, `feature/chat/*`. **M**
@@ -60,23 +60,23 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - the owner tries it.
 
 ### Phase 3: Robustness, history, model import
-- [ ] **Task 7: Context reset and recovery.** `needsContextReset`, ported from S2, with the conversation reopened from the system prompt plus the last 6 turns. Binder death → `Failed` → rebind once → reload, and the UI shows "Bibi is restarting".
+- [ ] **Task 7 (#38): Context reset and recovery.** `needsContextReset`, ported from S2, with the conversation reopened from the system prompt plus the last 6 turns. Binder death → `Failed` → rebind once → reload, and the UI shows "Bibi is restarting".
   - Acceptance: JVM tests for the reset rule and rebuild; on the vivo, killing `:inference` mid-answer leaves the UI alive and the next message works; a 30-turn chat crosses a reset without an error.
   - Verify: tests; `adb shell kill <pid>`.
   - Files: the service, the client, `ContextBudget.kt`. **M**
-- [ ] **Task 8: Room history.** `core:database` with `BibiDatabase`, `MessageEntity`, `MessageDao` and the exported schema, plus `ChatHistoryRepository`.
+- [ ] **Task 8 (#39): Room history.** `core:database` with `BibiDatabase`, `MessageEntity`, `MessageDao` and the exported schema, plus `ChatHistoryRepository`.
   - Acceptance: Robolectric DAO tests and mapping tests; the schema JSON is committed.
   - Verify: `./gradlew :core:database:test`.
   - Files: 4–5 in `core/database`. **M**
-- [ ] **Task 9: Persist the chat.** `SendMessage` saves the user message and the final DONE/STOPPED/ERROR answer; Clear deletes history and resets the conversation.
+- [ ] **Task 9 (#40): Persist the chat.** `SendMessage` saves the user message and the final DONE/STOPPED/ERROR answer; Clear deletes history and resets the conversation.
   - Acceptance: updated use-case and ViewModel tests; on the vivo, the history survives a force-stop.
   - Verify: tests; manual.
   - Files: `SendMessage.kt`, `ChatViewModel.kt`, `AppContainer.kt`. **S**
-- [ ] **Task 10: Model import logic.** `ImportModel` copies to `.part` with SHA-256 and size checks, progress and cancel; the expected-file constants live in `domain:model`.
+- [ ] **Task 10 (#41): Model import logic.** `ImportModel` copies to `.part` with SHA-256 and size checks, progress and cancel; the expected-file constants live in `domain:model`.
   - Acceptance: the five JVM tests in SPEC-model-import.md criterion 1.
   - Verify: `./gradlew :domain:usecase:test`.
   - Files: `ImportModel.kt`, `ModelFile.kt`, the test. **S**
-- [ ] **Task 11: Model import UI.** `ModelRepository` (`StateFlow<ModelState>`, startup size check), the SAF picker, a progress screen, Remove model, and the chat banner wired to it. The debug model path is removed.
+- [ ] **Task 11 (#42): Model import UI.** `ModelRepository` (`StateFlow<ModelState>`, startup size check), the SAF picker, a progress screen, Remove model, and the chat banner wired to it. The debug model path is removed.
   - Acceptance: the restart test (Ready without hashing); on the vivo, importing from Downloads reaches Ready, a wrong file is refused, and Remove works.
   - Verify: tests; manual.
   - Files: `ModelRepository.kt`, `feature/chat/ModelImportScreen.kt`, the inference service path. **M**
@@ -85,15 +85,15 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 - [ ] All tests pass. On the vivo: import → chat → kill → reopen keeps history; the `:inference` kill recovers. The owner reviews.
 
 ### Phase 4: Overlay
-- [ ] **Task 12: Overlay logic.** `snapTarget`, clamp on rotation, and `FrameSchedule` (port the S1 logic and tests) in `companion:overlay`, pure Kotlin.
+- [ ] **Task 12 (#43): Overlay logic.** `snapTarget`, clamp on rotation, and `FrameSchedule` (port the S1 logic and tests) in `companion:overlay`, pure Kotlin.
   - Acceptance: JVM tests.
   - Verify: `./gradlew :companion:overlay:test`.
   - Files: `SnapMath.kt`, `FrameSchedule.kt`, the tests. **S**
-- [ ] **Task 13: Overlay service.** `OverlayService` (`specialUse` FGS) with `BibiView` (S1 frames, 12 fps / Calm 2 fps), drag and snap, the saved position, and a notification with Hide, Show and Open chat.
+- [ ] **Task 13 (#44): Overlay service.** `OverlayService` (`specialUse` FGS) with `BibiView` (S1 frames, 12 fps / Calm 2 fps), drag and snap, the saved position, and a notification with Hide, Show and Open chat.
   - Acceptance: a Show/Hide/Stop state test with a fake window wrapper; on the vivo, drag and snap work and Hide/Show from the notification work.
   - Verify: tests; manual.
   - Files: `OverlayService.kt`, `BibiView.kt`, `OverlayNotification.kt`, the manifest, the frames. **M**
-- [ ] **Task 14: Chat card window.** A tap opens a focusable second overlay window hosting `ChatCard`, with `OverlayLifecycleOwner` (lifecycle, ViewModel store, saved state). It closes on back, an outside tap, or the close button.
+- [ ] **Task 14 (#45): Chat card window.** A tap opens a focusable second overlay window hosting `ChatCard`, with `OverlayLifecycleOwner` (lifecycle, ViewModel store, saved state). It closes on back, an outside tap, or the close button.
   - Acceptance: on the vivo, a message streams in the card; the keyboard works; it closes cleanly; no leaked windows after 10 open/close cycles.
   - Verify: manual, plus a leak check with `dumpsys window`.
   - Files: `ChatCardWindow.kt`, `OverlayLifecycleOwner.kt`, `feature/chat/ChatCard.kt`. **M**
@@ -102,24 +102,24 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
 - [ ] On the vivo, the overlay and chat card work over other apps. The owner tries them.
 
 ### Phase 5: Onboarding
-- [ ] **Task 15: First run.** Welcome, Model (with the terms link) and Notifications, plus a completed flag.
+- [ ] **Task 15 (#46): First run.** Welcome, Model (with the terms link) and Notifications, plus a completed flag.
   - Acceptance: `OnboardingViewModel` tests; on a clean install there is no permission dialog before the Notifications step.
   - Verify: tests; manual clean install.
   - Files: `feature/onboarding/*`, `MainActivity` nav. **M**
-- [ ] **Task 16: Floating Bibi switch.** The overlay permission is asked only when the switch is turned on (explainer → system settings → back), and the service starts or the switch stays off.
+- [ ] **Task 16 (#47): Floating Bibi switch.** The overlay permission is asked only when the switch is turned on (explainer → system settings → back), and the service starts or the switch stays off.
   - Acceptance: `FloatingToggle` logic tests; on the vivo, chat works with both permissions denied.
   - Verify: tests; manual.
   - Files: `FloatingToggle.kt`, the Home/settings UI. **S**
 
 ### Phase 6: Release and exit gate
-- [ ] **Task 17: Release build.**
+- [ ] **Task 17 (#48): Release build.**
   - R8 with LiteRT-LM and Room keep rules; version 1 / `0.1.0-p1`.
   - Signing from `~/.gradle/gradle.properties`: unsigned when the properties are missing.
   - The variable names added to `.env.example`, and the owner checklist in `docs/release.md`.
   - Acceptance: `bundleRelease` builds with and without signing; the bundletool local-testing install runs chat with the real model on the vivo.
   - Verify: the commands; manual.
   - Files: `app/build.gradle.kts`, `proguard-rules.pro`, `.env.example`, `docs/release.md`. **M**
-- [ ] **Task 18: Exit-gate script.** The 1-hour session script in TESTING.md (unplugged, release build, overlay on, about 20 chats, at least 2 Stops and 1 Clear) and the `docs/p1-gate.md` template.
+- [ ] **Task 18 (#49): Exit-gate script.** The 1-hour session script in TESTING.md (unplugged, release build, overlay on, about 20 chats, at least 2 Stops and 1 Clear) and the `docs/p1-gate.md` template.
   - Acceptance: the owner runs it; the result and a Decision line are recorded.
   - Verify: crash log empty; `dumpsys activity exit-info` shows no crash or ANR.
   - Files: `TESTING.md`, `docs/p1-gate.md`, `docs/project_status.md`. **S**
