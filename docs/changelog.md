@@ -10,6 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P1 Task 15: first-run screens (`feature:onboarding`): Welcome, Model (import or skip, Gemma terms link), Notifications (allow or not); the first permission request in the app is on step 3 (#46).
 - P1 Task 14: tapping floating Bibi opens a chat card over any app (type, stream, Stop), closed with Back, a tap outside, or Close; the keyboard's Send key sends (the vivo's landscape keyboard covers the Send button). The app chat and the card share one model connection (#45).
 - P1 Task 13: floating Bibi (`companion:overlay`): drag and snap to an edge, saved position, kept on screen after rotation, notification with Hide/Show, Open chat and Turn off; a tap opens the chat. Debug start button on Home until the Floating Bibi switch (#44).
 - P1 Task 11: model screen: pick `gemma3-1b-it-int4.litertlm` with the system file picker, copy and SHA-256 check with progress and Cancel, clear messages for a wrong file, Remove model; the chat links to it when the model is missing. On the vivo the 585 MB import takes ~7 s (#42).

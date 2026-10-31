@@ -10,7 +10,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
-| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–5, 8, 10, 12 (PRs #50–#54, #56, #57, #59); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Tasks 6 and 9 merged (PR #60); checkpoint B passed (10 turns, TTFT 1,255–1,312 ms; owner tried it). Task 7 merged (PR #61). Tasks 11 merged (PR #62); checkpoint C passed. Task 13 merged (PR #63). Task 14 (chat card) in review |
+| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–5, 8, 10, 12 (PRs #50–#54, #56, #57, #59); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Tasks 6 and 9 merged (PR #60); checkpoint B passed (10 turns, TTFT 1,255–1,312 ms; owner tried it). Task 7 merged (PR #61). Tasks 11 merged (PR #62); checkpoint C passed. Task 13 merged (PR #63). Task 14 merged (PR #64). Task 15 (onboarding) in review |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — Routine P1 task PRs are merged by Claude after tests, lint, device checks (portrait and landscape) and docs, without waiting; big or major merges (release/signing, schema migrations, permission/security code, toolchain upgrades) still need the owner — Owner instruction — PRs #64+
 - 2026-10-31 — The overlay service is `START_NOT_STICKY`: if the system kills the process, floating Bibi returns the next time the app starts it. S1's restart path (overlay first, then `startForeground` after the first frame, for Android 15's background-start rules) is not ported; S1 saw no kills in 4 one-hour runs — Simplicity (ponytail); revisit if the exit gate shows kills — SPEC-overlay.md, #44
 - 2026-10-31 — Reopened conversations carry the last 6 turns but at most ~400 estimated tokens (`ContextBudget.MAX_CARRY_TOKENS`): a reopen prefills about 50 estimated tokens/s on the vivo, and carrying 6 long turns (2,000–2,750 tokens) made the first word wait 46–66 s in a 28-turn run. With the cap: 9.4 s after a long answer and Stop (1 turn carried). Cost: after long answers Bibi keeps only the last exchange — Measured on the vivo — #38
 - 2026-10-31 — `SendMessage` lives in `feature:chat`, not `domain:usecase` as SPEC-chat.md said: `InferenceClient` is in an Android module (`ai:inference-api`) that the pure-Kotlin `domain:usecase` can't depend on. Task 9 (save the chat in Room) was folded into Task 6, since the Room repository was already merged — Spec deviation, owner's "start building all the tasks" — SPEC-chat.md, #37, #40
@@ -107,6 +108,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-31 ~15:25: Task 14 merged (PR #64; owner pre-authorized routine task merges). Task 15 (#46) onboarding built on `feature/46-onboarding` (`feature:onboarding`: Welcome → Model (skippable, with the terms link) → Notifications, first-run flag in SharedPreferences). On the vivo (first-run state reset without wiping chats or the model), in portrait and landscape: no permission dialog before step 3, "Don't allow" finishes onboarding, chat works with notifications and overlay denied, onboarding doesn't return after a restart. Next: Task 16 (#47) Floating Bibi switch.
+
 2026-10-31 ~15:20: Task 14 (#45) built on `feature/45-chat-card`: tapping floating Bibi opens a chat card (a second, focusable overlay window with `OverlayLifecycleOwner`, `ChatCardWindow`, `ChatCard`); the app provides the content through `ChatCardHost`; `MessengerInferenceClient` now counts connections so the app chat and the card can share the model. Tested on the vivo in portrait and landscape: chat in the card, Back / outside tap / Close, 10 open-close cycles in each orientation with no leaked window, rotation with the card open. Stopped at: PR open. Next: Checkpoint D (the owner tries floating Bibi), then Task 15 (#46) onboarding.
 
 2026-10-31 ~15:00: Checkpoint C passed on the vivo (import → chat → force-stop keeps history; `:inference` kill recovers). Task 13 (#44) built on `feature/44-overlay-service`: `OverlayService` (specialUse FGS, `START_NOT_STICKY`), `BibiView` ported from S1, `OverlayController` (Show/Hide/Stop) with fake-window tests, a notification with Hide/Show, Open chat and Turn off; tapping Bibi opens the app's chat until the chat card (Task 14). Started from a debug-only Home button until Task 16. On the vivo: drag and snap, saved position, Hide/Show/Turn off, tap → chat, rotation keeps Bibi on an edge. Stopped at: PR open. Next: Task 14 (#45) chat card window.
@@ -126,7 +129,7 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Owner: review and merge the Task 14 PR (#45); try floating Bibi and the chat card for Checkpoint D (TESTING.md).
+1. Owner: try floating Bibi and the chat card for Checkpoint D (TESTING.md). Claude continues with Task 16 (#47) Floating Bibi switch, then Tasks 17–18 (release build, exit gate).
 2. Then Tasks 11 (robustness, history, import UI), 13–14 (overlay), 15–16 (onboarding), 17–18 (release, exit gate). Task list: `tasks/plan.md`.
 3. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
 4. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY]; Galaxy A23 (open item 10).
