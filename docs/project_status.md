@@ -117,6 +117,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-11-01 ~02:00: P2 Task 4 (#75) built on `feature/75-tool-executor`: `ActionRunner` (Permission Engine → execute → audit) and `ToolAuditLog` in `core:tools` (11 JVM tests); `feature:tools` with `ToolExecutor` (intents from validated values, NEW_TASK from the app context), the torch and the launcher index; `SET_ALARM`, `<queries>` and the optional flash in the manifest; a debug "Actions check" screen. On the vivo all five actions ran through the runner (torch on/off, 10 s timer rang and was stopped, Settings opened, dial asked first, Cancel ran nothing, Confirm opened the dialer prefilled with no call, alarm 07:30 set); torch also in landscape. Found and fixed: the audit outcome logged the full dialled number. The test alarms ("Bibi" and an old "Bibi S4 test") were deleted from the Clock app; the owner's "Example" alarms untouched. PR waits for the owner (new permission). Next: Task 5 (#76) tools in chat.
+
 2026-11-01 ~01:40: P2 Task 3 (#74) built on `feature/74-router`: the Decision Maker router runs in `:inference` on its own thread (`LoadRouter`/`Route`/`Routed` messages, `InferenceClient.route`), the router model imports on the model screen ("Phone actions (optional)", SHA-256 and size checked; 164,626,432 bytes), and the debug LLM check has a Route button. On the vivo: import OK, router load 12.5 s, 6/6 test requests routed right in 519–576 ms; the merged manifest has no INTERNET or ACCESS_NETWORK_STATE. Confidences came out 0.64–1.00, higher than S4's 0.27–0.47, so the 0.25 threshold is re-checked in Task 5 [VERIFY]. Next: Task 4 (#75) ToolExecutor and the five actions.
 
 2026-10-31 ~23:00: P2 Task 2 (#73) `core:tools` built on `feature/73-core-tools`: the S4 pure-Kotlin tool core (parser, validator, Permission Engine with dial Sensitive, shortcut matcher, slot extraction, app resolver) moved unchanged apart from the package and spike wording; 7 JUnit suites, 491 checks pass. PR waits for the owner (Permission Engine = major merge). Strix CLI not installed, so the Strix pass is not done [VERIFY]. Next: Task 3 (#74) router in `:inference`, branched from this one.
@@ -153,6 +155,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Claude: P2 Task 4 (#75) ToolExecutor and the five actions (new SET_ALARM permission: owner approves the merge), then Task 5 (#76) tools in chat.
+1. Owner: approve PR for Task 4 (#75, adds SET_ALARM). Claude: Task 5 (#76) tools in chat, with the router threshold re-check.
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).

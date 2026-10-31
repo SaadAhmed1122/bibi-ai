@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
+import io.github.saadahmed1122.bibi.debug.ActionsDebugRoute
 import io.github.saadahmed1122.bibi.debug.CrashLogRoute
 import io.github.saadahmed1122.bibi.debug.LlmDebugRoute
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
@@ -30,7 +31,7 @@ import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingScreen
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingViewModel
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
-private enum class Screen { Home, Chat, Model, Terms, CrashLog, LlmDebug }
+private enum class Screen { Home, Chat, Model, Terms, CrashLog, LlmDebug, ActionsDebug }
 
 class MainActivity : ComponentActivity() {
     /** Set by a tap on floating Bibi or the notification's Open chat ([OverlayService.EXTRA_OPEN_CHAT]). */
@@ -86,6 +87,7 @@ class MainActivity : ComponentActivity() {
                         onOpenTerms = { screen = Screen.Terms },
                         onOpenCrashLog = if (BuildConfig.DEBUG) ({ screen = Screen.CrashLog }) else null,
                         onOpenLlmDebug = if (BuildConfig.DEBUG) ({ screen = Screen.LlmDebug }) else null,
+                        onOpenActionsDebug = if (BuildConfig.DEBUG) ({ screen = Screen.ActionsDebug }) else null,
                         floating = floating,
                         onFloatingSwitch = container.floating::onSwitch,
                         onCalmSwitch = container.floating::onCalm,
@@ -128,6 +130,7 @@ class MainActivity : ComponentActivity() {
                     Screen.Terms -> TermsRoute(onBack = goHome)
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome)
+                    Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)
                 }
             }
         }

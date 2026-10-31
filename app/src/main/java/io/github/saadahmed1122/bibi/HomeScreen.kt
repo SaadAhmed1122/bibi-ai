@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import io.github.saadahmed1122.bibi.companion.overlay.FloatingState
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 
-/** [onOpenCrashLog] and [onOpenLlmDebug] are null in release builds, which hides the debug links. */
+/** [onOpenCrashLog], [onOpenLlmDebug] and [onOpenActionsDebug] are null in release builds, which hides the debug links. */
 @Composable
 fun HomeScreen(
     onOpenChat: () -> Unit,
@@ -40,6 +40,7 @@ fun HomeScreen(
     onExplainerContinue: () -> Unit,
     onExplainerDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenActionsDebug: (() -> Unit)? = null,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(Modifier.padding(padding).padding(24.dp).verticalScroll(rememberScrollState())) {
@@ -55,6 +56,9 @@ fun HomeScreen(
             }
             if (onOpenLlmDebug != null) {
                 TextButton(onClick = onOpenLlmDebug) { Text(stringResource(R.string.llm_debug_title)) }
+            }
+            if (onOpenActionsDebug != null) {
+                TextButton(onClick = onOpenActionsDebug) { Text(stringResource(R.string.actions_debug_title)) }
             }
         }
     }

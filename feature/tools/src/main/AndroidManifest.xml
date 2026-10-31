@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- AlarmClock.ACTION_SET_ALARM and ACTION_SET_TIMER need it (AlarmClock reference). A normal
+         permission: granted at install, no prompt. -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+
+    <!-- Flashlight via CameraManager.setTorchMode needs no CAMERA permission. Optional, so phones
+         without a flash can still install Bibi. -->
+    <uses-feature
+        android:name="android.hardware.camera.flash"
+        android:required="false" />
+
+    <!-- Package visibility (Android 11+): only the intents Bibi's actions resolve. No
+         QUERY_ALL_PACKAGES, CALL_PHONE, SMS, call log or contacts (PRD 0.9, §16.3). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SET_ALARM" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SET_TIMER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
+</manifest>
