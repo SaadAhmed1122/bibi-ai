@@ -40,7 +40,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: round-trip tests for every message; fake-client contract tests for Done, Stop and Error.
   - Verify: `./gradlew :ai:inference-api:test`.
   - Files: 4–5 in `ai/inference-api`. **M**
-- [ ] **Task 5 (#36): LiteRT-LM service.** `ai:inference-litert`:
+- [x] **Task 5 (#36): LiteRT-LM service.** `ai:inference-litert`:
   - `LiteRtLmEngine`, ported from S2, with the primer prefill and the token cap;
   - `InferenceService` in `:inference`;
   - the bound client (`MessengerInferenceClient`);
@@ -48,7 +48,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: on the vivo, the debug screen loads the model and streams a reply; the `:inference` pid differs from the app pid.
   - Verify: build; manual on the vivo, with the debug log showing TTFT.
   - Files: `ai/inference-litert/*` (engine, service, manifest), the client. **M**
-- [ ] **Task 6 (#37): Chat slice.** `SendMessage` (in-memory history for now), `ChatViewModel` (MVI), and `ChatScreen` with streaming, Send→Stop, the model banner, and the 2,000-character cap.
+- [x] **Task 6 (#37): Chat slice.** `SendMessage` (in `feature:chat`; saves to Room, so Task 9 is folded in), `ChatViewModel` (MVI), and `ChatScreen` with streaming, Send→Stop, the model banner, and the 2,000-character cap.
   - Acceptance: use-case and ViewModel tests with the fake client (SPEC-chat.md criteria 1–2); previews; on the vivo, type → streamed answer → Stop keeps the partial text.
   - Verify: `./gradlew :feature:chat:test :domain:usecase:test`; manual.
   - Files: `domain/usecase/SendMessage.kt`, `feature/chat/*`. **M**
@@ -64,11 +64,11 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: JVM tests for the reset rule and rebuild; on the vivo, killing `:inference` mid-answer leaves the UI alive and the next message works; a 30-turn chat crosses a reset without an error.
   - Verify: tests; `adb shell kill <pid>`.
   - Files: the service, the client, `ContextBudget.kt`. **M**
-- [ ] **Task 8 (#39): Room history.** `core:database` with `BibiDatabase`, `MessageEntity`, `MessageDao` and the exported schema, plus `ChatHistoryRepository`.
+- [x] **Task 8 (#39): Room history.** `core:database` with `BibiDatabase`, `MessageEntity`, `MessageDao` and the exported schema, plus `ChatHistoryRepository`.
   - Acceptance: Robolectric DAO tests and mapping tests; the schema JSON is committed.
   - Verify: `./gradlew :core:database:test`.
   - Files: 4–5 in `core/database`. **M**
-- [ ] **Task 9 (#40): Persist the chat.** `SendMessage` saves the user message and the final DONE/STOPPED/ERROR answer; Clear deletes history and resets the conversation.
+- [x] **Task 9 (#40): Persist the chat.** `SendMessage` saves the user message and the final DONE/STOPPED/ERROR answer; Clear deletes history and resets the conversation.
   - Acceptance: updated use-case and ViewModel tests; on the vivo, the history survives a force-stop.
   - Verify: tests; manual.
   - Files: `SendMessage.kt`, `ChatViewModel.kt`, `AppContainer.kt`. **S**

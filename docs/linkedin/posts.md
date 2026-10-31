@@ -29,6 +29,19 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: The real chat screen: 10 messages, every first word in about 1.3 s
+- **Test:** the new chat screen on the vivo. 10 everyday messages in a row ("What should I cook tonight?", "Give me one tip to sleep better", …), then Stop in the middle of a long story, then Clear chat. Everything offline.
+- **Numbers:**
+  - **First word in 1.26–1.31 s on all 10 messages.** The limit is 3 s. The slowest message was only 0.06 s slower than the fastest.
+  - Full short answers took **2.5–5.3 s** (7–23 pieces of text).
+  - Stop keeps what Bibi already wrote, marked "Stopped".
+  - After Stop or Clear, Bibi needs **about 7 s** to get ready again (6.8–7.1 s measured).
+  - The chat is saved on the phone: it was still there after force-closing and reinstalling the app.
+- **A bug the phone test found:** during those 7 s the Send button looked ready, but a message sent then would have failed. Unit tests with a fake model couldn't see it, because the fake model has no 7-second pause. Now the screen says "Bibi is getting ready again…" and Send waits.
+- **Lesson:** test on the real phone with the real model. Fake models are fast, and the bugs hide in the slow parts.
+- Images: `media/p1-chat-10-turns.png`, `media/p1-chat-stop-restart.png`. Videos: `media/p1-chat-10-turns.mp4` (60 s, 10 messages), `media/p1-chat-stop.mp4` (30 s, Stop and restart).
+- Source: issue #37; service log `BibiInference turn ttft_ms`.
+
 ### 2026-10-31: First chat inside the real app: first word in 1.3 s
 - **Test:** Gemma 3 1B running in its own background process inside the new app. A few chat turns on the vivo, plus Stop in the middle of an answer.
 - **Numbers:**
