@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -55,7 +56,8 @@ fun ChatScreen(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
-        Column(Modifier.padding(padding).imePadding().padding(horizontal = 16.dp)) {
+        // Consume the Scaffold's insets so imePadding doesn't add the navigation bar a second time.
+        Column(Modifier.padding(padding).consumeWindowInsets(padding).imePadding().padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onBack) { Text(stringResource(R.string.chat_back)) }
                 Text(

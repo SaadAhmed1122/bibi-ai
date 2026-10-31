@@ -101,6 +101,21 @@ class ChatActionsTest {
     }
 
     @Test
+    fun aQuestionThatDoesNotNameTheToolIsChatNotAQuestionBack() = runTest {
+        // On the vivo, "how do I get better sleep" went to set_alarm and got "What time should the alarm ring?".
+        for (text in listOf("How do I get better sleep", "What is a good way to start the morning")) {
+            val client = FakeInferenceClient().apply { routeResult = RouteResult.Label("set_alarm", 0.83f); enqueueReply("Some tips.") }
+            val vm = viewModel(client)
+            send(vm, text)
+            advanceUntilIdle()
+            assertEquals(listOf(text), client.sentTexts)
+            assertEquals(BIBI to "Some tips.", vm.texts().last())
+            history.deleteAll()
+        }
+        assertTrue(executed.isEmpty())
+    }
+
+    @Test
     fun noneALowScoreOrNoRouterMeanChat() = runTest {
         for (route in listOf(RouteResult.Label("none", 0.9f), RouteResult.Label("flashlight", 0.1f), RouteResult.Unavailable("router not loaded"))) {
             val client = FakeInferenceClient().apply { routeResult = route; enqueueReply("Hi!") }

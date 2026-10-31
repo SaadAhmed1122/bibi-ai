@@ -8,6 +8,7 @@ import io.github.saadahmed1122.bibi.core.tools.LlmRoute
 import io.github.saadahmed1122.bibi.core.tools.ShortcutParser
 import io.github.saadahmed1122.bibi.core.tools.SlotToolRouter
 import io.github.saadahmed1122.bibi.core.tools.ToolCall
+import io.github.saadahmed1122.bibi.core.tools.ToolName
 import io.github.saadahmed1122.bibi.core.tools.ToolRouting
 import io.github.saadahmed1122.bibi.core.tools.ToolSelection
 
@@ -34,11 +35,24 @@ class PlanTurn(private val client: InferenceClient, private val apps: () -> AppR
         val selection = ToolRouting.select(routed.label, routed.confidence) as? ToolSelection.Expose ?: return TurnPlan.Chat
         return when (val route = SlotToolRouter.route(selection, text, apps()).route) {
             is LlmRoute.Call -> TurnPlan.Act(route.call)
-            is LlmRoute.AskUser -> TurnPlan.Ask(route.question)
+            // Ask for a missing value only when the user named the action ("set an alarm"); otherwise
+            // the router guessed from a chat message ("how do I get better sleep") and it is chat.
+            is LlmRoute.AskUser -> if (namesTool(selection.tool, text)) TurnPlan.Ask(route.question) else TurnPlan.Chat
             is LlmRoute.NoToolCall, is LlmRoute.Rejected -> TurnPlan.Chat
         }
     }
 }
+
+/** Whether [text] contains a word for [tool] itself, as opposed to a topic near it. */
+internal fun namesTool(tool: ToolName, text: String): Boolean = TOOL_WORDS.getValue(tool).containsMatchIn(text)
+
+private val TOOL_WORDS = mapOf(
+    ToolName.OPEN_APP to Regex("\\b(open|launch)\\b", RegexOption.IGNORE_CASE),
+    ToolName.SET_ALARM to Regex("\\b(alarms?|wake me)\\b", RegexOption.IGNORE_CASE),
+    ToolName.START_TIMER to Regex("\\b(timers?|countdown|count down)\\b", RegexOption.IGNORE_CASE),
+    ToolName.FLASHLIGHT to Regex("\\b(flash\\s?light|torch|lights?)\\b", RegexOption.IGNORE_CASE),
+    ToolName.DIAL to Regex("\\b(call|dial|phone|ring)\\b", RegexOption.IGNORE_CASE),
+)
 
 /** Bibi's words for action outcomes; the app supplies them from string resources. */
 interface ActionTexts {

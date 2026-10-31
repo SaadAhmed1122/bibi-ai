@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Fixed
+- A chat question the router mistook for an action ("how do I get better sleep" → alarm) no longer gets "What time should the alarm ring?": Bibi asks for a missing value only when the message names the action, and otherwise chats.
+- In-app chat with the keyboard open: the message box sat a whole keyboard height above the keyboard (keyboard space counted twice). The activity now uses `adjustResize` and the chat consumes the Scaffold insets.
 - "open the light", "turn on the light" and "lights off" now control the flashlight; "open the light" used to look for an app called "light" (found in the owner's Checkpoint E1 try).
 - The floating chat card no longer hides its message box under the keyboard in portrait: it moves above the keyboard and shrinks to fit (#71).
 - After Stop or Clear chat, the inference service reports Loading while it reopens the conversation (~7 s), so Send is blocked and the chat shows "Bibi is getting ready again…" (#37).
