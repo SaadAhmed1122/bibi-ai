@@ -34,6 +34,12 @@ fun shortcutParserTests() {
         "turn off torch" to ToolCall.Flashlight(false),
         "torch on please" to ToolCall.Flashlight(true),
         "switch the flashlight off" to ToolCall.Flashlight(false),
+        // "light" means the flashlight (owner's try on the vivo, 2026-11-01: "open the light" looked for an app)
+        "open the light" to ToolCall.Flashlight(true),
+        "turn on the light" to ToolCall.Flashlight(true),
+        "lights off" to ToolCall.Flashlight(false),
+        "switch off the lights" to ToolCall.Flashlight(false),
+        "open the flashlight" to ToolCall.Flashlight(true),
         // open app
         "open maps" to ToolCall.OpenApp("maps"),
         "Open Google Maps" to ToolCall.OpenApp("Google Maps"), // case kept: package names are case-sensitive
