@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":ai:inference-litert"))
     implementation(project(":core:database"))
     implementation(project(":feature:chat"))
+    implementation(project(":companion:overlay"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
