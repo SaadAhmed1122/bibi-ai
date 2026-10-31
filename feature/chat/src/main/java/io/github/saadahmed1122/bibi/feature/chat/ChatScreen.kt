@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,7 +75,7 @@ fun ChatScreen(
 }
 
 @Composable
-private fun MessageList(state: ChatUiState, modifier: Modifier = Modifier) {
+internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier) {
     if (state.messages.isEmpty() && !state.generating) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.chat_empty), style = MaterialTheme.typography.bodyLarge)
@@ -133,7 +136,7 @@ private fun Bubble(role: Message.Role, text: String, status: Message.Status, mod
 }
 
 @Composable
-private fun Banner(banner: ChatBanner, onOpenModel: () -> Unit) {
+internal fun Banner(banner: ChatBanner, onOpenModel: () -> Unit) {
     val text = when (banner) {
         ChatBanner.ImportModel -> R.string.chat_banner_import
         ChatBanner.Loading -> R.string.chat_banner_loading
@@ -155,7 +158,7 @@ private fun Banner(banner: ChatBanner, onOpenModel: () -> Unit) {
 }
 
 @Composable
-private fun InputRow(state: ChatUiState, onIntent: (ChatIntent) -> Unit) {
+internal fun InputRow(state: ChatUiState, onIntent: (ChatIntent) -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -171,6 +174,9 @@ private fun InputRow(state: ChatUiState, onIntent: (ChatIntent) -> Unit) {
                 null
             },
             maxLines = 5,
+            // The keyboard's own Send key: in landscape the vivo's floating keyboard covers the Send button.
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = { onIntent(ChatIntent.Send) }),
             modifier = Modifier.weight(1f),
         )
         if (state.generating) {
@@ -183,7 +189,7 @@ private fun InputRow(state: ChatUiState, onIntent: (ChatIntent) -> Unit) {
     }
 }
 
-private fun previewMessages(lastStatus: Message.Status = Message.Status.DONE) = listOf(
+internal fun previewMessages(lastStatus: Message.Status = Message.Status.DONE) = listOf(
     Message(1, Message.Role.USER, "Hi Bibi! How are you?", 0, Message.Status.DONE),
     Message(2, Message.Role.BIBI, "Hi! I'm doing well. What's on your mind today?", 0, Message.Status.DONE),
     Message(3, Message.Role.USER, "Tell me a long story about a cat.", 0, Message.Status.DONE),

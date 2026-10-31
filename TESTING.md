@@ -200,9 +200,10 @@ Claude's run on the vivo passed: wrong file refused, real file imported in ~7 s,
 Claude's run on the vivo passed: drag and snap, saved position, Hide/Show/Turn off from the notification, tap → chat, rotation keeps Bibi on an edge. To try it:
 1. [ ] Home → **Floating Bibi (debug)**. The first time, Android opens "Display over other apps": allow Bibi, go back, tap it again.
 2. [ ] Go to the home screen or another app. Drag Bibi around and let go: it slides to the nearer side.
-3. [ ] Tap Bibi: the chat opens.
-4. [ ] Pull down the notifications, expand "Bibi is here": **Hide**, then **Show Bibi**, then **Turn off**.
-5. [ ] Note anything odd (size, position, animation) on issue #44.
+3. [ ] Tap Bibi: the chat card opens over the current app. Send a message (the keyboard's arrow key sends too), then close it with Back, a tap outside, or Close.
+4. [ ] Try steps 2–3 with the phone in landscape as well.
+5. [ ] Pull down the notifications, expand "Bibi is here": **Hide**, then **Show Bibi**, then **Turn off**.
+6. [ ] Note anything odd (size, position, animation) on issue #44.
 
 ## How to send results
 1. In the spike app, tap **Share log** (S1: **Share log (CSV)**, plus **Share exit reasons** at the end) and send the file to yourself or straight to the browser.

@@ -29,6 +29,19 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Chatting with Bibi on top of any app, in portrait and landscape
+- **Test:** tap floating Bibi and a small chat card opens over whatever app you're in. Type, read the answer as it streams in, close the card. On the vivo, in both portrait and landscape.
+- **Numbers:**
+  - First word in **1.3–1.7 s** from the card, the same as the full chat screen.
+  - **10 open/close cycles in each orientation** left **0 leftover windows** (each one would have kept memory busy).
+  - The card closes 3 ways: Back, a tap outside it, or its Close button.
+- **Two things only the phone showed:**
+  - **Tap outside didn't close the card at first.** A focusable window takes every touch on the screen unless you tell Android otherwise (`FLAG_NOT_TOUCH_MODAL`), so it never hears about taps outside it.
+  - **In landscape, the vivo's floating keyboard covers the Send button.** Fix: the keyboard's own Enter key became a Send arrow, so the message can be sent in any layout.
+- **Lesson:** rotate the phone during testing. Half of this task's bugs only showed up in landscape or on the real keyboard.
+- Images: `media/p1-chat-card-portrait.png`, `media/p1-chat-card-landscape.png`.
+- Source: issue #45.
+
 ### 2026-10-31: Bibi floats over the phone
 - **Test:** the floating character from the S1 battery spike, now inside the real app, on the vivo. Bibi sits over any app; you can drag it, and tapping it opens the chat.
 - **What works (checked on the phone):**

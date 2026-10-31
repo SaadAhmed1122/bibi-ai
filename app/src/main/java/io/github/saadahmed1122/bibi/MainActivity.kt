@@ -21,7 +21,6 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.debug.CrashLogRoute
 import io.github.saadahmed1122.bibi.debug.LlmDebugRoute
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
-import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
 
@@ -60,16 +59,7 @@ class MainActivity : ComponentActivity() {
                     )
                     Screen.Chat -> ChatRoute(
                         // Activity-scoped: survives rotation, so the model stays loaded.
-                        viewModel = viewModel {
-                            val inference = container.inference
-                            ChatViewModel(
-                                inference,
-                                container.chatHistory,
-                                container.models.state,
-                                // Load when the model is there; unbind (and unload) when it is removed.
-                                onModelReady = { ready -> if (ready) inference.connect() else inference.disconnect() },
-                            ).apply { addCloseable { inference.disconnect() } }
-                        },
+                        viewModel = viewModel { container.chatViewModel() },
                         onOpenModel = { screen = Screen.Model },
                         onBack = goHome,
                     )

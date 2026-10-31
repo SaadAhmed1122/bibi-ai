@@ -18,7 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,13 +42,15 @@ import java.util.Locale
 private const val TIMING_TAG = "BibiTTFT"
 
 /**
- * Debug-only LLM check (Task 5, #36): binds `:inference`, streams one reply at a
+ * Debug-only LLM check (Task 5, #36): binds `:inference` while shown, streams one reply at a
  * time, and logs S2-style timing per turn to logcat tag `BibiTTFT`.
  */
 @Composable
 fun LlmDebugRoute(client: MessengerInferenceClient, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    // Connect only: the chat ViewModel shares this client and owns the disconnect.
-    LaunchedEffect(client) { client.connect() }
+    DisposableEffect(client) {
+        client.connect()
+        onDispose { client.disconnect() }
+    }
     val state by client.state.collectAsStateWithLifecycle()
     var input by rememberSaveable { mutableStateOf("") }
     var reply by remember { mutableStateOf("") }

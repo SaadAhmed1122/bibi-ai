@@ -93,7 +93,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: a Show/Hide/Stop state test with a fake window wrapper; on the vivo, drag and snap work and Hide/Show from the notification work.
   - Verify: tests; manual.
   - Files: `OverlayService.kt`, `BibiView.kt`, `OverlayNotification.kt`, the manifest, the frames. **M**
-- [ ] **Task 14 (#45): Chat card window.** A tap opens a focusable second overlay window hosting `ChatCard`, with `OverlayLifecycleOwner` (lifecycle, ViewModel store, saved state). It closes on back, an outside tap, or the close button.
+- [x] **Task 14 (#45): Chat card window.** A tap opens a focusable second overlay window hosting `ChatCard`, with `OverlayLifecycleOwner` (lifecycle, ViewModel store, saved state). It closes on back, an outside tap, or the close button.
   - Acceptance: on the vivo, a message streams in the card; the keyboard works; it closes cleanly; no leaked windows after 10 open/close cycles.
   - Verify: manual, plus a leak check with `dumpsys window`.
   - Files: `ChatCardWindow.kt`, `OverlayLifecycleOwner.kt`, `feature/chat/ChatCard.kt`. **M**
