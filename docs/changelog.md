@@ -10,6 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P1 Task 7: after Stop, an error or a full context, the conversation is rebuilt with the recent turns (up to 6, at most ~400 tokens), so Bibi remembers them; the app survives a crash of the `:inference` process and reloads the model by itself (#38).
 - P1 Task 6 + 9: the chat screen (`feature:chat`): streaming answers, Send turns into Stop, a model status banner, 2,000-character input cap, Clear chat; every message is saved in Room and survives restarts. The service logs first-word time per turn (`BibiInference`). On the vivo: 10 turns, first word in 1.26–1.31 s (#37, #40).
 - P1 Task 5: Gemma 3 1B on LiteRT-LM in the `:inference` process with a debug LLM screen (#36).
 - P1 Task 8: Room message history (`core:database`) (#39).

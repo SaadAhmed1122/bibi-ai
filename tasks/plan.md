@@ -54,13 +54,13 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Files: `domain/usecase/SendMessage.kt`, `feature/chat/*`. **M**
 
 ### Checkpoint B: the core loop works
-- [ ] On the vivo:
+- [x] On the vivo (2026-10-31: TTFT 1,255–1,312 ms over 10 turns; the owner tried it and it works):
   - 10 turns, TTFT p95 ≤ 3,000 ms with turn 1 included;
   - Stop works;
   - the owner tries it.
 
 ### Phase 3: Robustness, history, model import
-- [ ] **Task 7 (#38): Context reset and recovery.** `needsContextReset`, ported from S2, with the conversation reopened from the system prompt plus the last 6 turns. Binder death → `Failed` → rebind once → reload, and the UI shows "Bibi is restarting".
+- [x] **Task 7 (#38): Context reset and recovery.** `needsContextReset`, ported from S2, with the conversation reopened from the system prompt plus the last 6 turns. Binder death → `Failed` → rebind once → reload, and the UI shows "Bibi is restarting".
   - Acceptance: JVM tests for the reset rule and rebuild; on the vivo, killing `:inference` mid-answer leaves the UI alive and the next message works; a 30-turn chat crosses a reset without an error.
   - Verify: tests; `adb shell kill <pid>`.
   - Files: the service, the client, `ContextBudget.kt`. **M**

@@ -22,7 +22,7 @@ Run Gemma 3 1B int4 in the separate `:inference` process and give the UI process
 - **One conversation, prefix reused:**
   - On load, the service opens a conversation with the Bibi system prompt (`assets/system_bibi.txt`, from S2) and the scripted primer exchange. Gemma 3 has no system turn, so the primer is needed for the prefill (S2 finding).
   - Each `send` prefills only the new user text.
-  - Before a turn could overflow the context (the `needsContextReset` rule from S2), the service reopens the conversation with the system prompt plus the last N turns from history. N is [OPEN], set in the plan from the token budget.
+  - Before a turn could overflow the context (the `needsContextReset` rule from S2), the service reopens the conversation with the system prompt plus the last N turns from history. N is 6 (tasks/plan.md). The same rebuild is used after Stop or a failed turn, because a cancelled turn leaves 0.16.1's conversation unusable.
 - **Short answers by default:** a sentence in the system prompt plus a max-new-token cap of 256 [VERIFY that the cap is supported on 0.16.1; otherwise stop at the token count in the stream].
 - **Stop:** calls `Conversation.cancelProcess()`. The partial text so far is kept and reported as `Stopped`.
 - **Recovery:** if the binder dies (`DeathRecipient` / `onServiceDisconnected`), the client goes to `Failed`, rebinds once, and reloads. The UI shows "Bibi is restarting".
@@ -40,5 +40,4 @@ Run Gemma 3 1B int4 in the separate `:inference` process and give the UI process
 STT, TTS, embedding, the model scheduler, GPU backend, tool calling.
 
 ## Open questions
-- N turns carried over on a context reset [OPEN, set in the plan].
-- Whether 0.16.1 supports a max-new-token setting [VERIFY with Context7 / sources].
+- None. N = 6 turns, and fewer when long turns would not leave room for the next message (`ContextBudget`). The 256-token cap works on 0.16.1 through `ConversationConfig.maxOutputToken` (vivo, 2026-10-31).
