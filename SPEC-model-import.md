@@ -20,7 +20,7 @@ Get `gemma3-1b-it-int4.litertlm` from phone storage into the app's private stora
    - cancel mid-copy → `Missing`, and the `.part` file is deleted;
    - progress values go up and end at 1.0.
 2. Restart test: with a valid file present, the repository starts in `Ready` without hashing.
-3. On the vivo: importing the owner's file from Downloads reaches `Ready` in under 30 s [VERIFY the timing], and importing a copy of a different file (for example a `.task` file) gives an error message.
+3. On the vivo: importing the owner's file from Downloads reaches `Ready` in under 30 s (measured ~7 s on the vivo, 2026-10-31), and importing a copy of a different file (for example a `.task` file) gives an error message.
 
 ## Out of scope
 Download, resume, mirrors, more than one model, and update handling (P2, Core Pack row in PRD 0.8).
