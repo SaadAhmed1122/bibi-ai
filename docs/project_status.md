@@ -115,7 +115,7 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
-2026-10-31 ~16:30: P2 planned: SPEC-P2.md approved by the owner with four answers (side-load, plain Room, voice in app and card, dial Sensitive); seven module specs; tasks/plan-p2.md; issues #72–#90. Bug #71 (chat card under the keyboard in portrait) fixed on `bugfix/71-card-keyboard`, not yet checked on the phone (it was locked). Next: P2 Task 1 (#72) memory check on the vivo (needs the phone unlocked), then Task 2 (#73) `core:tools`.
+2026-10-31 ~16:30: P2 planned: SPEC-P2.md approved by the owner with four answers (side-load, plain Room, voice in app and card, dial Sensitive); seven module specs; tasks/plan-p2.md; issues #72–#90. Bug #71 fixed (PR on `bugfix/71-card-keyboard`): the card lifts above the keyboard itself, since Android pushed it up without shrinking it and then reported 0 px covered; checked on the vivo in portrait (whole card above the keyboard, back to rest when it hides) and landscape (floating keyboard, unchanged; send works, TTFT 1,320 ms). Next: P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools`.
 
 2026-10-31 ~15:55: PR #67 merged by the owner: **P1 is code-complete on main** (Tasks 1–18; the 1-hour exit gate and the Play upload are the owner's). Re-ran the S4 slot benchmark on the vivo: 95/100 (RESULTS.md §8). Next: owner's internal-track upload and exit gate; Claude records the gate in docs/p1-gate.md.
 
@@ -145,6 +145,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Claude: check #71 on the vivo when it's unlocked, then P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools` (tasks/plan-p2.md).
+1. Claude: P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools` (tasks/plan-p2.md).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).
