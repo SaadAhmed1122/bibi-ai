@@ -47,6 +47,7 @@ docs/
   design/bibi-character-gemini.md  character brief + Gemini image prompts
   design/codex-design-prompts.md   prompts to turn the art into vector assets + UI
   tooling.md                setup and when-to-use for agent tools
+  linkedin/posts.md         LinkedIn log of test findings (+ media/ charts)
   local-setup.md            same setup on your laptop; resuming from phone/cloud
   features/overlay.md       floating character, foreground service (S1)
   features/model-runtime.md LLM runtime, gates, decision rule (S2)
