@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — P2 memory check on the vivo (#72): any two of Gemma (writing, 1.1 GB), Parakeet (0.94 GB), Piper (0.38 GB) and the router (0.6 GB) fit (lowest MemAvailable 1,604 MB, no kills), but all four would leave ~0.6 GB, and sharing the CPU slows everything (Parakeet RTF 0.32 → 0.74, over its gate; router 489 → 815 ms; Gemma answers 33–50 % longer; Piper 0.30 → 0.45, still real time). Voice loads on demand: Parakeet on mic press, Piper while the speaker is on; transcription never overlaps Gemma writing. A23 [VERIFY] — Measured — docs/measurements/2026-10-31-p2-memory-check/RESULTS.md, SPEC-voice.md
 - 2026-10-31 — P2 gains a `design` module: design system, navigation and a screen-by-screen restyle (modern, not AI-looking), using the UI/UX plugins and tools; tasks T20 (#93) and T21 (#94) run after privacy and before the closed-test paperwork; the owner picks a direction from mock-ups first — Owner request — SPEC-design.md
 - 2026-10-31 — P2 plan approved: modules tools → personality → memory → avatar-states → voice → privacy → closed-test (SPEC-P2.md), tasks #72–#90; P2 starts alongside the owner's P1 exit gate and internal-track upload — Owner decision ("approve") — SPEC-P2.md, tasks/plan-p2.md
 - 2026-10-31 — P2 keeps the side-loaded model import for the closed test; no `INTERNET` permission and no model download in P2. Overrides PRD 0.8 "Model: download with resume" until a host is chosen (open item 6) — Owner decision — SPEC-P2.md
@@ -116,6 +117,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-31 ~22:50: P2 Task 1 (#72) memory check done on the vivo: voice on demand (Decisions). #71 merged (PR #92); design module added (PR #95, tasks #93–#94). Next: Task 2 (#73) `core:tools` from S4 (security-sensitive: owner approves the merge).
+
 2026-10-31 ~16:30: P2 planned: SPEC-P2.md approved by the owner with four answers (side-load, plain Room, voice in app and card, dial Sensitive); seven module specs; tasks/plan-p2.md; issues #72–#90. Bug #71 fixed (PR on `bugfix/71-card-keyboard`): the card lifts above the keyboard itself, since Android pushed it up without shrinking it and then reported 0 px covered; checked on the vivo in portrait (whole card above the keyboard, back to rest when it hides) and landscape (floating keyboard, unchanged; send works, TTFT 1,320 ms). Next: P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools`.
 
 2026-10-31 ~15:55: PR #67 merged by the owner: **P1 is code-complete on main** (Tasks 1–18; the 1-hour exit gate and the Play upload are the owner's). Re-ran the S4 slot benchmark on the vivo: 95/100 (RESULTS.md §8). Next: owner's internal-track upload and exit gate; Claude records the gate in docs/p1-gate.md.
@@ -146,6 +149,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Claude: P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools` (tasks/plan-p2.md).
+1. Claude: P2 Task 2 (#73) `core:tools` from S4, then Tasks 3–5 (tasks/plan-p2.md).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).
