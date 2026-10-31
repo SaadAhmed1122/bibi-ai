@@ -47,7 +47,7 @@ docs/
   design/bibi-character-gemini.md  character brief + Gemini image prompts
   design/codex-design-prompts.md   prompts to turn the art into vector assets + UI
   tooling.md                setup and when-to-use for agent tools
-  linkedin/posts.md         LinkedIn log of test findings (+ media/ charts)
+  linkedin/posts.md         LinkedIn log of test findings (+ media/ charts); first-post.md = first post + answer guide
   local-setup.md            same setup on your laptop; resuming from phone/cloud
   release.md                owner checklist: upload key, bundleRelease, Play internal track
   p1-gate.md                P1 exit gate: 1-hour session results
