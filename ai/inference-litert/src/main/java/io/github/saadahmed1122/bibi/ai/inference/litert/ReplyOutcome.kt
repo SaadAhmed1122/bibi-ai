@@ -17,13 +17,13 @@ internal object ReplyOutcome {
 
     fun reachedCap(chunks: Int): Boolean = chunks >= MAX_REPLY_TOKENS + BACKSTOP_MARGIN
 
+    /** True when the turn was cancelled or failed, which leaves 0.16.1's conversation unusable. */
+    fun needsNewConversation(terminal: ReplyEvent, capped: Boolean): Boolean = capped || terminal !is ReplyEvent.Done
+
     /**
      * A requested stop wins: `cancelProcess()` ends the turn through the error callback, and that
      * error is the stop itself. A reply cut by the backstop cap counts as finished.
      */
-    /** True when the turn was cancelled or failed, which leaves 0.16.1's conversation unusable. */
-    fun needsNewConversation(terminal: ReplyEvent, capped: Boolean): Boolean = capped || terminal !is ReplyEvent.Done
-
     fun terminal(text: String, stopRequested: Boolean, capped: Boolean, failure: String?): ReplyEvent = when {
         stopRequested -> ReplyEvent.Stopped(text)
         capped || failure == null -> ReplyEvent.Done(text)

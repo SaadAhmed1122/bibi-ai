@@ -29,6 +29,19 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Remembering costs time: 1 minute vs 9 seconds
+- **Test:** making Bibi keep the conversation after Stop, after a crash, and when the chat gets too long for the model's memory (4,096 tokens). On the vivo, offline.
+- **Numbers:**
+  - **Before:** after Stop, Bibi forgot everything said earlier.
+  - **Now:** I told Bibi "my cat is called Mango", stopped a story halfway, then asked "What is my cat called?". The answer: **"Mango!"**
+  - **The catch:** to remember, the model has to re-read the old messages, at about **50 tokens per second** (roughly 35 words). Carrying 6 long answers made Bibi wait **46–66 s** before the first word. **28 long messages in a row, 0 errors**, but a minute of silence is not OK.
+  - **The fix:** carry at most ~400 tokens (6 short messages, or 1 long answer). After a long answer plus Stop: back in **9.4 s**.
+  - **Crash test:** I killed the AI process in the middle of an answer. The app stayed open, said "Bibi is getting ready again…", reloaded the model by itself in **about 13 s**, and the next answer came in 1.3 s.
+- **Honest limit:** a 1B model sometimes invents memories. Asked "What did we talk about first?" after an old message had been dropped, it said "your love for collecting colorful pebbles" (we never talked about pebbles).
+- **Lesson:** on a phone, memory isn't free. Every remembered word is time the user waits, so pick how much to remember by measuring, not by guessing.
+- Images: `media/p1-remembers-after-stop.png` (Mango), `media/p1-crash-recovery.png` (the crash recovery screen).
+- Source: issue #38; service log `BibiInference conversation reopened … prefill_ms`.
+
 ### 2026-10-31: The real chat screen: 10 messages, every first word in about 1.3 s
 - **Test:** the new chat screen on the vivo. 10 everyday messages in a row ("What should I cook tonight?", "Give me one tip to sleep better", …), then Stop in the middle of a long story, then Clear chat. Everything offline.
 - **Numbers:**

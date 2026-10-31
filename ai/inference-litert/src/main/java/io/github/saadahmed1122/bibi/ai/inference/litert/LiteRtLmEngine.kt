@@ -57,14 +57,18 @@ internal class LiteRtLmEngine(private val cacheDir: String) {
         e.createConversation(ConversationConfig(maxOutputToken = 1)).use { it.sendMessage(PRIMER_USER) }
     }
 
-    /** Opens a fresh conversation with the preface prefilled; closes the old one. Blocks. */
-    fun openChat(systemPrompt: String) {
+    /**
+     * Opens a fresh conversation with the preface and [carried] turns prefilled; closes the old
+     * one. Blocks: about 7 s for the preface alone on the vivo (2026-10-31).
+     */
+    fun openChat(systemPrompt: String, carried: List<Turn> = emptyList()) {
         val e = checkNotNull(engine) { "load() first" }
         closeChat()
         conversation = e.createConversation(
             ConversationConfig(
                 systemInstruction = Contents.of(systemPrompt),
-                initialMessages = listOf(Message.user(PRIMER_USER), Message.model(PRIMER_REPLY)),
+                initialMessages = listOf(Message.user(PRIMER_USER), Message.model(PRIMER_REPLY)) +
+                    carried.flatMap { listOf(Message.user(it.user), Message.model(it.reply)) },
                 // Greedy decoding, as in S2, so turns are repeatable [OPEN: tune for chat].
                 samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 1.0),
                 maxOutputToken = ReplyOutcome.MAX_REPLY_TOKENS,
