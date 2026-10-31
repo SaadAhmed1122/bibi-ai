@@ -3,7 +3,7 @@
 Updated at the end of every session (see CLAUDE.md §6).
 
 ## Current phase
-**P1 — Walking skeleton** (started 2026-10-31). P0 gate met on the vivo Y17s; the Galaxy A23 is still untested (open item 10).
+**P2 — Companion MVP** (planned 2026-10-31; specs and plan approved). P1 is code-complete; its 1-hour exit gate and the Play internal-track upload are the owner's and run alongside P2. The Galaxy A23 is still untested (open item 10).
 
 ## Milestones
 
@@ -11,7 +11,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
 | P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–5, 8, 10, 12 (PRs #50–#54, #56, #57, #59); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Tasks 6 and 9 merged (PR #60); checkpoint B passed (10 turns, TTFT 1,255–1,312 ms; owner tried it). Task 7 merged (PR #61). Tasks 11 merged (PR #62); checkpoint C passed. Task 13 merged (PR #63). Task 14 merged (PR #64). Task 15 merged (PR #65). Task 16 merged (PR #66). Tasks 17–18 merged (PRs #67, #68): **code-complete**. Left: the owner's Play internal-track upload and the 1-hour exit gate |
-| P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
+| P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | **Planned 2026-10-31** (owner approved the map): [SPEC-P2.md](../SPEC-P2.md), seven module specs, [tasks/plan-p2.md](../tasks/plan-p2.md); tasks are issues #72–#90 |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
 
@@ -48,9 +48,9 @@ Notes on the vivo Y17s:
 | 4 | Second test phone (6–8 GB) | vivo Y17s available (6 GB, Helio G85, Android 15). It covers the 6 GB RAM case, but not a recent chip. | Partly resolved |
 | 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
 | 5 | Final app name | **Bibi AI** chosen (2026-10-28). Web check done; similar "Bibi" products exist (see brainstorm.md). Formal trademark, Play listing, and domain checks still needed. | Partly resolved [VERIFY] |
-| 6 | Model pack hosting | Decide in P1 after checking Play Asset Delivery limits | Open [VERIFY] |
+| 6 | Model pack hosting | Side-load for the closed test (owner, 2026-10-31); download built once a host is chosen | Deferred past P2 |
 | 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged. The file is still not in `reference/` (checked 2026-10-30); S1–S4 numbers live in the spikes' `results/RESULTS.md` files instead. | Open |
-| 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Open — owner to confirm |
+| 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Resolved 2026-10-31: Sensitive (owner) |
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
 | 11 | S2 model files (SPEC [VERIFY]) | **Gemma 3 1B:** `gemma3-1b-it-int4.litertlm` obtained by the owner and soaked (S2 row above). **Qwen 0.5B-class:** proposed file `litert-community/Qwen3-0.6B` `qwen3_0_6b_mixed_int4.litertlm` (497,516,544 bytes); its smoke runs on the vivo (LiteRT-LM 0.16.1) gave decode 7.2–8.1 tok/s but engine TTFT 4.4–6.0 s, slower than Gemma, PSS ~2.1 GB (smoke, not gate). `Qwen3-0.6B_dynamic_wi4b32_afp32.litertlm`: ~2.2 tok/s, TTFT 7.6–8.6 s, not recommended; its Soak 50 hung on prompt 4 (`TimeoutException: no onDone within 300 s`) with `:inference` left resident (~1.48 GiB) [VERIFY whether intended]. Qwen soak not run. gemma-4-E2B-it removed from the phone at the owner's request (2026-10-30); the earlier Qwen2.5-1.5B q8 soak is invalid (25/50 prompts). See #5. | Resolved 2026-10-31: Qwen dropped by the owner; Gemma 3 1B int4 is the only model (#5) |
 | 12 | S3b default recognizer | Parakeet TDT 0.6B v2 int8, by owner override of the 600 MB limit (Decisions, 2026-10-29). vivo check with a Qwen3 LLM resident (idle): no kills, min MemAvailable 2,023 MB. Still to check: LLM generating, Gemma 3 1B, Galaxy A23. See #7. | Resolved (override) [VERIFY on A23] |
@@ -65,6 +65,12 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — P2 plan approved: modules tools → personality → memory → avatar-states → voice → privacy → closed-test (SPEC-P2.md), tasks #72–#90; P2 starts alongside the owner's P1 exit gate and internal-track upload — Owner decision ("approve") — SPEC-P2.md, tasks/plan-p2.md
+- 2026-10-31 — P2 keeps the side-loaded model import for the closed test; no `INTERNET` permission and no model download in P2. Overrides PRD 0.8 "Model: download with resume" until a host is chosen (open item 6) — Owner decision — SPEC-P2.md
+- 2026-10-31 — Memory uses plain Room (Android file-based encryption only), not the encrypted database of PRD §18; revisit before production — Owner decision — SPEC-P2.md, SPEC-memory.md
+- 2026-10-31 — Voice ships in the in-app chat and the floating card; the overlay service gains the `microphone` foreground-service type while recording (Play declaration needed). A Gemma + router + Parakeet + Piper memory check comes first (#72) — Owner decision — SPEC-voice.md
+- 2026-10-31 — Dial is Sensitive: a confirmation card with the exact number before the dialer opens (open item 8) — Owner decision — SPEC-tools.md
+- 2026-10-31 — Memory keyword search uses Room `@Fts4`, not FTS5 (PRD §18.3.3): Room only generates FTS3/4. The tool audit log is a capped file, not a Room table — Spec choice (simplicity) — SPEC-memory.md, SPEC-tools.md
 - 2026-10-31 — S4 slot extraction after tuning (threshold 0.25, alarm→timer re-route, vendor-name check): 95/100 right call and values on the vivo (was 87), no wrong call reached the Permission Engine, 0 calls on the 10 "none" prompts, p95 ≤ 548 ms, PSS ≤ 601 MB. Info only (the S4 gate was already PASS); tuned on the same prompts, so a fresh prompt set is [VERIFY] before P2 — Measured — spikes/s4-tools/results/RESULTS.md §8, #8
 - 2026-10-31 — Routine P1 task PRs are merged by Claude after tests, lint, device checks (portrait and landscape) and docs, without waiting; big or major merges (release/signing, schema migrations, permission/security code, toolchain upgrades) still need the owner — Owner instruction — PRs #64+
 - 2026-10-31 — The overlay service is `START_NOT_STICKY`: if the system kills the process, floating Bibi returns the next time the app starts it. S1's restart path (overlay first, then `startForeground` after the first frame, for Android 15's background-start rules) is not ported; S1 saw no kills in 4 one-hour runs — Simplicity (ponytail); revisit if the exit gate shows kills — SPEC-overlay.md, #44
@@ -109,6 +115,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-10-31 ~16:30: P2 planned: SPEC-P2.md approved by the owner with four answers (side-load, plain Room, voice in app and card, dial Sensitive); seven module specs; tasks/plan-p2.md; issues #72–#90. Bug #71 (chat card under the keyboard in portrait) fixed on `bugfix/71-card-keyboard`, not yet checked on the phone (it was locked). Next: P2 Task 1 (#72) memory check on the vivo (needs the phone unlocked), then Task 2 (#73) `core:tools`.
+
 2026-10-31 ~15:55: PR #67 merged by the owner: **P1 is code-complete on main** (Tasks 1–18; the 1-hour exit gate and the Play upload are the owner's). Re-ran the S4 slot benchmark on the vivo: 95/100 (RESULTS.md §8). Next: owner's internal-track upload and exit gate; Claude records the gate in docs/p1-gate.md.
 
 2026-10-31 ~15:50: Task 18 (#49) exit-gate script written (TESTING.md "P1 exit gate", `docs/p1-gate.md`). The gate itself needs the owner: 1 hour unplugged, release build. P1 is code-complete once PR #67 (release build) is merged.
@@ -137,7 +145,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Owner: set up the upload key and the Play internal track (docs/release.md); uninstall the debug-key-signed build first.
-2. Owner: Checkpoint D (TESTING.md, floating Bibi and the chat card), then the 1-hour P1 exit gate (TESTING.md → "P1 exit gate"); Claude records the result in docs/p1-gate.md.
-3. After the gate passes: Checkpoint E (P1 done) and the P2 plan (voice, tools, memory; PRD 0.8).
-4. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY]; Galaxy A23 (open item 10).
+1. Claude: check #71 on the vivo when it's unlocked, then P2 Task 1 (#72) memory check, then Task 2 (#73) `core:tools` (tasks/plan-p2.md).
+2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
+3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).
