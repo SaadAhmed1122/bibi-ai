@@ -29,6 +29,20 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: First chat inside the real app: first word in 1.3 s
+- **Test:** Gemma 3 1B running in its own background process inside the new app. A few chat turns on the vivo, plus Stop in the middle of an answer.
+- **Numbers:**
+  - **First word in 1.3–1.4 s** (turns 1–4); 1.7 s on one fresh start. The S2 prototype took 2.4 s.
+  - **5.2–5.9 tokens per second.**
+  - Loading the model takes 3–4 s, or 11 s right after the phone starts.
+  - Answers are capped at 256 tokens: a "write 1000 words" request stopped at exactly 256.
+- **Two surprises:**
+  - **Warm-up:** a one-token warm-up at load cut the first answer from **3.4 s to 1.3 s**. The runtime sets up its "write the answer" step the first time it's used, so do that before the user is waiting.
+  - **Stop:** pressing Stop in LiteRT-LM 0.16.1 breaks the conversation (the library's own docs call the session "poisoned"). Reopening it costs **about 7 s**, and the earlier turns are lost. The fix (rebuild with the last turns) is the next task.
+- **Lesson:** warm up the model before the user's first message, and test Stop, not only Send.
+- Image: `media/p1-first-chat.png`. Video: `media/p1-first-chat.mp4` (debug screen, 25 s).
+- Source: PR #59, issue #36.
+
 ### 2026-10-31: Tooling: newest libraries don't always fit together
 - **What happened:** the newest Android libraries needed a newer build tool (AGP 9.1) and Android SDK 37. The AI runtime (LiteRT-LM 0.16.1) needs Kotlin 2.2.21. Room's code generator for Kotlin 2.2.21 (KSP 2.2.21-x) refused the new built-in Kotlin, and the newer KSP 2.3.12 worked.
 - **Number:** 3 version conflicts before the first screen showed up.
