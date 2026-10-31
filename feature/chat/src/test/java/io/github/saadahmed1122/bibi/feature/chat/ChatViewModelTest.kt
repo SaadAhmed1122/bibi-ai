@@ -140,7 +140,7 @@ class ChatViewModelTest {
         val calls = mutableListOf<Boolean>()
         ChatViewModel(
             FakeInferenceClient(), history, model, { calls += it },
-            CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+            scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
         )
         runCurrent()
         model.value = ModelState.Missing // Remove

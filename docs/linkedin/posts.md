@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: "It's dark in here" turns the torch on
+- **Test:** typing requests into Bibi's chat on the vivo, in the app and in the floating card, in portrait and landscape.
+- **Numbers:**
+  - "turn on the flashlight" matches a simple phrase rule and acts in **under 0.1 s** with no AI model.
+  - "it is dark in here, give me some light" goes through the router, which picked the flashlight in **0.5 s**.
+  - "set an alarm" gets a question back ("What time should the alarm ring?") instead of a guess.
+  - "what is a good name for a cat" goes to the chat model: **0.5 s** to rule out an action, then the first word in **1.3 s**.
+  - "call 0123 456 789" shows a card with the exact number. Nothing happens until Confirm, and after **30 s** of silence it cancels itself.
+- **Lesson:** an assistant that acts needs three answers besides "done": "I need a value", "I need your OK", and "you didn't answer, so I didn't".
+- Images: `media/chat-confirm-portrait.png`, `media/card-confirm-landscape.png`. Source: #76.
+
 ### 2026-11-01: Bibi can now do things: 5 actions, 1 gate
 - **Test:** each of the five actions on the vivo, through the same gate chat will use: Permission Engine first, then the action, then a line in a local log.
 - **Numbers:** **5 of 5 actions worked**: the torch went on and off, a 10 s timer rang, Settings opened, an alarm was set, and dial asked first, then opened the dialer with the number filled in. **0 calls were placed.** Cancel ran nothing.

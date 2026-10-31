@@ -51,6 +51,7 @@ fun ChatCard(
             }
             MessageList(state, Modifier.weight(1f))
             state.banner?.let { Banner(it, onOpenModel) }
+            state.pendingAction?.let { ConfirmAction(it, onIntent) }
             InputRow(state, onIntent)
         }
     }

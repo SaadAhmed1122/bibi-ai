@@ -25,7 +25,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 - [x] **Task 2 (#73): `core:tools` from S4.** Acceptance: SPEC-tools criterion 1. Verify: `./gradlew :core:tools:test`. **M**
 - [x] **Task 3 (#74): Router in `:inference` + router model import.** Acceptance: ROUTE round-trip test; on the vivo, "set a timer for 5 minutes" → `start_timer` with a score in the debug log. **M**
 - [x] **Task 4 (#75): `ToolExecutor` + the five actions + audit log.** Acceptance: each action fires from a debug button on the vivo; merged-manifest check (SPEC-tools criterion 4). **M**
-- [ ] **Task 5 (#76): Tools in chat + confirmation card.** Acceptance: SPEC-tools criteria 2–3. **M**
+- [x] **Task 5 (#76): Tools in chat + confirmation card.** Acceptance: SPEC-tools criteria 2–3. **M**
 
 ### Checkpoint E1: actions
 - [ ] All five actions from the app and the card, both orientations; shortcut p95 < 300 ms; chat TTFT with the router recorded. Owner tries it.

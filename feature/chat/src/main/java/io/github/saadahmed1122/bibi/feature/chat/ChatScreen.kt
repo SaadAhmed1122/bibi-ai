@@ -69,7 +69,26 @@ fun ChatScreen(
             }
             MessageList(state, Modifier.weight(1f))
             state.banner?.let { Banner(it, onOpenModel) }
+            state.pendingAction?.let { ConfirmAction(it, onIntent) }
             InputRow(state, onIntent)
+        }
+    }
+}
+
+/** The confirmation card of a Sensitive action (SPEC-tools.md): the exact target, then Confirm or Cancel. */
+@Composable
+internal fun ConfirmAction(summary: String, onIntent: (ChatIntent) -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics { liveRegion = LiveRegionMode.Polite },
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(summary, style = MaterialTheme.typography.bodyMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { onIntent(ChatIntent.ConfirmAction) }) { Text(stringResource(R.string.chat_action_confirm)) }
+                OutlinedButton(onClick = { onIntent(ChatIntent.CancelAction) }) { Text(stringResource(R.string.chat_action_cancel)) }
+            }
         }
     }
 }
@@ -226,6 +245,16 @@ private fun ChatErrorPreview() = ChatPreview(ChatUiState(messages = previewMessa
 @Preview
 @Composable
 private fun ChatModelMissingPreview() = ChatPreview(ChatUiState(banner = ChatBanner.ImportModel))
+
+@Preview
+@Composable
+private fun ChatConfirmActionPreview() = ChatPreview(
+    ChatUiState(
+        messages = previewMessages(),
+        banner = null,
+        pendingAction = "Open the dialer with 0123456789 prefilled? Nothing is called until you press Call in the dialer.",
+    ),
+)
 
 @Preview
 @Composable

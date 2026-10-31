@@ -17,6 +17,7 @@ android {
 dependencies {
     api(project(":ai:inference-api"))
     api(project(":domain:usecase"))
+    api(project(":core:tools"))
     implementation(project(":core:designsystem"))
     api(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.runtime.compose)
