@@ -19,11 +19,16 @@ const val MAX_INPUT_CHARS = 2_000
  * (SPEC-chat-history.md).
  *
  * Lives here rather than in `domain:usecase` because [InferenceClient] is in an Android module.
+ *
+ * [handleAction] sees each message first (SPEC-tools.md). When it returns Bibi's reply (an action
+ * done, a question, a confirmation), that reply is saved and emitted as [ReplyEvent.Done] and the
+ * model is not asked; null means normal chat.
  */
 class SendMessage(
     private val client: InferenceClient,
     private val history: ChatHistoryRepository,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val handleAction: (suspend (String) -> String?)? = null,
 ) {
     private val running = AtomicBoolean(false)
 
@@ -39,6 +44,13 @@ class SendMessage(
         var saved = false
         try {
             history.insert(Message(0, Message.Role.USER, message, clock(), Message.Status.DONE))
+            val actionReply = handleAction?.invoke(message)
+            if (actionReply != null) {
+                saveReply(actionReply, Message.Status.DONE)
+                saved = true
+                emit(ReplyEvent.Done(actionReply))
+                return@flow
+            }
             client.send(message).collect { event ->
                 when (event) {
                     is ReplyEvent.Token -> partial.append(event.text)
