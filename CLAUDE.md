@@ -5,7 +5,7 @@ An offline, on-device AI companion for Android: a small animated character float
 It's a portfolio piece and technical experiment by Saad (solo) plus Claude Code. Funding only if results justify it.
 Product name **Bibi AI**; the character is **Bibi**. The PRD in `reference/` uses the old working name "Pip"; treat it as Bibi.
 
-**Current phase: P1 — Walking skeleton** (P0 gate met on the vivo Y17s, 2026-10-31). Status: [docs/project_status.md](docs/project_status.md).
+**Current phase: P2 — Companion MVP** (planned 2026-10-31; P1 code-complete, its exit gate pending with the owner). Status: [docs/project_status.md](docs/project_status.md).
 
 ## 2. Stack and constraints
 - **Platform:** Android only, minSdk = Android 14 (API 34).
@@ -23,8 +23,8 @@ Product name **Bibi AI**; the character is **Bibi**. The PRD in `reference/` use
 ```
 brainstorm.md               raw ideas, flows, name candidates, voice-note inbox
 project_spec.md             unified MVP spec (product + engineering)
-SPEC.md, SPEC-<module>.md   P1 capability map and per-module specs
-tasks/plan.md               P1 task plan (tasks = issues #32–#49)
+SPEC.md, SPEC-P2.md         P1 and P2 capability maps; SPEC-<module>.md per module
+tasks/plan.md, plan-p2.md   P1 / P2 task plans (issues #32–#49 / #72–#90)
 app/, core/, …              P1 app (Gradle root: settings.gradle.kts)
 CLAUDE.md                   this file
 .env.example                required variable names (no values)
