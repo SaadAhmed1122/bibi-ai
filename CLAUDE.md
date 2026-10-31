@@ -24,6 +24,8 @@ Product name **Bibi AI**; the character is **Bibi**. The PRD in `reference/` use
 brainstorm.md               raw ideas, flows, name candidates, voice-note inbox
 project_spec.md             unified MVP spec (product + engineering)
 SPEC.md, SPEC-<module>.md   P1 capability map and per-module specs
+tasks/plan.md               P1 task plan (tasks = issues #32–#49)
+app/, core/, …              P1 app (Gradle root: settings.gradle.kts)
 CLAUDE.md                   this file
 .env.example                required variable names (no values)
 .env                        local values; git-ignored

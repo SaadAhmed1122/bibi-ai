@@ -10,7 +10,7 @@ Updated at the end of every session (see CLAUDE.md §6).
 | Phase | Name | Exit gate (PRD 0.6) | Status |
 |---|---|---|---|
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
-| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan in `tasks/plan.md` (18 tasks, 5 checkpoints) awaiting approval |
+| P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Task 1 (root Gradle project) done, PR open |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | Not started |
 | P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
 | P4 | Decision | Write-up published; funding or no-funding decision | Not started |
@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-10-31 — P1 toolchain: AGP 9.0.1 with built-in Kotlin, Kotlin 2.2.21 (the version LiteRT-LM 0.16.1 is built with; set through the Compose compiler plugin), compileSdk/targetSdk 36, Compose BOM 2026.06.01, core-ktx 1.18.0, lifecycle 2.10.0, activity-compose 1.13.0. Newer AndroidX releases need AGP 9.1+ and compileSdk 37; moving the toolchain is deferred — keeps the setup proven by the spikes — gradle/libs.versions.toml, #32
 - 2026-10-31 — P1 scope and approach (owner approved the capability map and assumptions): overlay with drag/snap/hide and notification, in-app chat fallback, streaming chat with Stop on Gemma 3 1B int4, Room history, side-loaded model with SHA-256 check, local crash/ANR log, Gemma terms notice; code at the repo root in the architecture.md §3 modules; manual DI; plain (unencrypted) Room in P1; S1 sprite frames; exit gate on the vivo Y17s; **the owner builds and uploads the signed AAB**. Voice, tools, memory, licenses screen, privacy policy, safe mode deferred to P2 — Owner decision — SPEC.md, PRD 0.6/0.8/0.9
 - 2026-10-31 — P1 (walking skeleton) starts: the P0 gate (PRD 0.6) is met on the vivo Y17s (S1 PASS, S2 PASS in chat mode; S3 done; S4 PASS). The vivo is not the floor device, so the Galaxy A23 run stays open [VERIFY]; P1 uses Gemma 3 1B int4 on LiteRT-LM 0.16.1, Piper TTS, Parakeet STT, slot extraction for tools — Owner decision — PRD 0.6, #4, #5, #8
 - 2026-10-31 — Qwen is dropped from the project: the SPEC's second S2 model (0.5B Qwen-class) is not soaked; Gemma 3 1B int4 (LiteRT-LM 0.16.1, chat mode) is the only LLM. Its smoke runs were slower to first token than Gemma. Note: the S3 co-residence check (Parakeet + LLM) was done with an idle Qwen3, so Parakeet + Gemma is unmeasured [VERIFY]. Overrides SPEC §2 / PRD S2 two-model test — Owner decision — #5
@@ -111,7 +112,7 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Owner approves `tasks/plan.md`; then create one GitHub issue per task in milestone P1 and start Task 1 (root Gradle project).
+1. P1 Task 2 (#33, crash/ANR log) and Task 3 (#34, Gemma notice), then Task 4 (#35, inference contract). Install the Task 1 build on the vivo when it is connected.
 2. Re-run the S4 slot benchmark on the vivo with the PR #26 tuning (#8).
 3. Optional: S1 kill/restart check (#4); Parakeet + Gemma co-residence check [VERIFY].
 4. Run the spikes on the Galaxy A23 if it is available (open item 10).

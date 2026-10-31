@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
+- P1 app project at the repo root (`app`, `core:common`, `core:designsystem`): empty Home screen, Bibi theme, and a build check that fails if any merged manifest requests INTERNET (#32).
 - P1 implementation plan `tasks/plan.md`: 18 tasks in 6 phases with checkpoints, riskiest path (model streaming in `:inference`) first.
 - P1 specs: `SPEC.md` (capability map, shared stack and rules) and eight module specs (`SPEC-<module>.md`).
 - Decision: P1 (walking skeleton) starts; the P0 gate is met on the vivo Y17s.
