@@ -10,7 +10,7 @@ class RoomChatHistoryRepository(private val dao: MessageDao) : ChatHistoryReposi
     companion object {
         /** The app's history, stored in `bibi.db`. Keeps Room types out of the callers' classpath. */
         fun create(context: Context): ChatHistoryRepository =
-            RoomChatHistoryRepository(BibiDatabase.create(context).messageDao())
+            RoomChatHistoryRepository(BibiDatabase.get(context).messageDao())
     }
 
     override fun observeAll(): Flow<List<Message>> = dao.observeAll().map { rows -> rows.map { it.toMessage() } }
