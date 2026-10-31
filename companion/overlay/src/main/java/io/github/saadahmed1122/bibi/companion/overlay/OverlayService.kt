@@ -23,8 +23,8 @@ import android.view.WindowManager
  * Foreground service (type `specialUse`) that shows Bibi over other apps (SPEC-overlay.md), ported
  * from spike S1 without its measurement code.
  *
- * The notification offers Hide/Show, Open chat and Stop. Hide removes the window but keeps the
- * service. `START_NOT_STICKY`: if the system kills the process, Bibi comes back the next time the
+ * Tapping Bibi opens or closes the chat card ([ChatCardWindow]). The notification offers
+ * Hide/Show, Open chat (the app) and Turn off. Hide removes the windows but keeps the service. `START_NOT_STICKY`: if the system kills the process, Bibi comes back the next time the
  * app starts the service, instead of S1's restart dance around Android 15's background-start rules.
  */
 class OverlayService : Service() {
@@ -33,6 +33,8 @@ class OverlayService : Service() {
     private val prefs by lazy { getSharedPreferences(PREFS, MODE_PRIVATE) }
     private var view: BibiView? = null
     private var screenOn = true
+    private val cardOwner = OverlayLifecycleOwner()
+    private val card by lazy { ChatCardWindow(this, windowManager, cardOwner, application as ChatCardHost) }
 
     private val controller = OverlayController(
         object : OverlayWindow {
@@ -73,6 +75,7 @@ class OverlayService : Service() {
                 if (!Settings.canDrawOverlays(this) || !controller.show()) stopEverything() else refreshNotification()
             }
             ACTION_HIDE -> {
+                card.close()
                 controller.hide()
                 refreshNotification()
             }
@@ -84,7 +87,12 @@ class OverlayService : Service() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Rotation: the saved spot may be off-screen now. Post so the new metrics are in place.
-        view?.let { v -> v.post { v.clampToScreen() } }
+        view?.let { v ->
+            v.post {
+                v.clampToScreen()
+                card.relayout()
+            }
+        }
     }
 
     private fun addWindow(): Boolean {
@@ -108,7 +116,7 @@ class OverlayService : Service() {
             windowManager = windowManager,
             params = params,
             onMoved = { x, y -> prefs.edit().putInt(KEY_X, x).putInt(KEY_Y, y).apply() },
-            onTap = ::openChat,
+            onTap = ::toggleCard,
         )
         v.calm = prefs.getBoolean(KEY_CALM, false)
         try {
@@ -132,15 +140,12 @@ class OverlayService : Service() {
         }
     }
 
-    /**
-     * Opens the app's chat. A tap on an overlay is a user action, and apps holding the overlay
-     * permission may start activities from the background. TODO(#45): open the chat card instead.
-     */
-    private fun openChat() {
-        startActivity(openChatIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    private fun toggleCard() {
+        if (card.isShown) card.close() else card.show()
     }
 
     private fun stopEverything() {
+        card.close()
         controller.stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -148,6 +153,8 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         unregisterReceiver(screenReceiver)
+        card.close()
+        cardOwner.destroy()
         controller.stop()
         super.onDestroy()
     }

@@ -29,4 +29,5 @@
     <string name="model_invalid_size">This isn\'t Bibi\'s model file (the size is wrong). Choose %1$s.</string>
     <string name="model_invalid_checksum">This file is damaged or a different version. Copy %1$s again and choose it.</string>
     <string name="model_invalid_read">The file couldn\'t be read. Try again, or copy it to the phone first.</string>
+    <string name="chat_close">Close</string>
 </resources>

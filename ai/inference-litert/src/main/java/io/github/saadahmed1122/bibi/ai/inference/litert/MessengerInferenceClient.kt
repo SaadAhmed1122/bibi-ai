@@ -57,6 +57,9 @@ class MessengerInferenceClient(
     /** Main thread only. True from a death of `:inference` until the reloaded model is Ready. */
     private var recovering = false
 
+    /** Main thread only. Screens using the client (app chat, chat card); unbinds when it drops to 0. */
+    private var users = 0
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             val s = Messenger(binder)
@@ -85,7 +88,7 @@ class MessengerInferenceClient(
             if (!bound) return
             context.unbindService(this)
             bound = false
-            connect()
+            bind()
         }
     }
 
@@ -95,16 +98,26 @@ class MessengerInferenceClient(
         bound = false
     }
 
-    /** Binds the service, which then loads the model. Main thread; no-op when already bound. */
+    /**
+     * Adds a user and binds the service if needed; the service then loads the model. Main thread.
+     * Every [connect] needs one [disconnect].
+     */
     fun connect() {
+        users++
+        bind()
+    }
+
+    private fun bind() {
         if (bound) return
         bound = context.bindService(Intent(context, InferenceService::class.java), connection, Context.BIND_AUTO_CREATE)
         _state.value = if (bound) EngineState.Loading else EngineState.Failed("bind failed")
     }
 
-    /** Unbinds; the service unloads the model once no reply is running. Main thread. */
+    /** Removes a user; the last one unbinds, and the service unloads the model once no reply is running. Main thread. */
     fun disconnect() {
-        if (!bound) return
+        if (users == 0) return
+        users--
+        if (users > 0 || !bound) return
         context.unbindService(connection)
         bound = false
         recovering = false
