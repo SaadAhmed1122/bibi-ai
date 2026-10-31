@@ -16,6 +16,7 @@ import io.github.saadahmed1122.bibi.core.tools.PermissionEngine
 import io.github.saadahmed1122.bibi.core.tools.ToolAuditLog
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
+import io.github.saadahmed1122.bibi.domain.usecase.ApplyRetention
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ImportModel
 import io.github.saadahmed1122.bibi.domain.usecase.MemoryPrompt
@@ -145,6 +146,16 @@ class AppContainer(context: Context) {
     /** Bibi's memory (SPEC-memory.md), in the same database as the chat. */
     val memory: MemoryRepository by lazy { RoomMemoryRepository.create(appContext) }
 
+    /** How long unpinned memories are kept (SPEC-memory.md); a shorter choice applies at once. */
+    val retention: RetentionSetting by lazy {
+        val prefs = appContext.getSharedPreferences("app", Context.MODE_PRIVATE)
+        RetentionSetting(
+            read = { prefs.getString(KEY_RETENTION, null) },
+            write = { prefs.edit().putString(KEY_RETENTION, it).apply() },
+            apply = { r -> MainScope().launch { ApplyRetention(memory)(r) } },
+        )
+    }
+
     /** Automatic memory summaries while idle (SPEC-memory.md); one for the app chat and the floating card. */
     val summaries: SummaryScheduler by lazy {
         val prefs = appContext.getSharedPreferences("app", Context.MODE_PRIVATE)
@@ -174,5 +185,6 @@ class AppContainer(context: Context) {
     private companion object {
         const val KEY_PERSONA = "persona"
         const val KEY_LAST_SUMMARIZED = "last_summarized_message_id"
+        const val KEY_RETENTION = "memory_retention"
     }
 }

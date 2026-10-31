@@ -5,6 +5,7 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Plain (unencrypted) storage: P1 chat history and P2 memory (owner decision 2026-10-31,
@@ -27,9 +28,22 @@ abstract class BibiDatabase : RoomDatabase() {
 
         /** One instance per process, so every repository sees the others' changes. */
         fun get(context: Context): BibiDatabase = instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(context.applicationContext, BibiDatabase::class.java, NAME).build().also { instance = it }
+            instance ?: Room.databaseBuilder(context.applicationContext, BibiDatabase::class.java, NAME)
+                .addCallback(SecureDelete)
+                .build()
+                .also { instance = it }
         }
 
         const val NAME = "bibi.db"
+    }
+
+    /**
+     * Deleted rows are overwritten with zeros (PRD §18, SPEC-memory.md). Best effort on flash storage:
+     * the old pages may survive in the controller, so the UI doesn't promise more than "deleted".
+     */
+    private object SecureDelete : Callback() {
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            db.query("PRAGMA secure_delete = ON").close()
+        }
     }
 }

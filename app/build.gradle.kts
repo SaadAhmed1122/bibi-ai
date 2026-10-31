@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:tools"))
     implementation(project(":feature:memory"))
+    implementation(libs.androidx.work.runtime)
     implementation(project(":companion:overlay"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

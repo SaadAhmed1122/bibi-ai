@@ -1,6 +1,7 @@
 package io.github.saadahmed1122.bibi.feature.memory
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -12,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -31,16 +34,33 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.domain.model.MemoryItem
 import io.github.saadahmed1122.bibi.domain.usecase.NeverStore
+import io.github.saadahmed1122.bibi.domain.usecase.Retention
 
+/** [onExport] opens the system "save as" picker for `bibimem.json`; the caller writes the file. */
 @Composable
-fun MemoryRoute(viewModel: MemoryViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun MemoryRoute(
+    viewModel: MemoryViewModel,
+    retention: Retention,
+    onRetention: (Retention) -> Unit,
+    onExport: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    MemoryScreen(state, viewModel::onIntent, onBack, modifier)
+    MemoryScreen(state, viewModel::onIntent, onBack, modifier, retention, onRetention, onExport)
 }
 
-/** What Bibi remembers (SPEC-memory.md). Retention and export join this screen in Task 11. */
+/** What Bibi remembers (SPEC-memory.md): search, pin, edit, delete, how long to keep, export. */
 @Composable
-fun MemoryScreen(state: MemoryUiState, onIntent: (MemoryIntent) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun MemoryScreen(
+    state: MemoryUiState,
+    onIntent: (MemoryIntent) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    retention: Retention = Retention.DEFAULT,
+    onRetention: (Retention) -> Unit = {},
+    onExport: () -> Unit = {},
+) {
     var confirmDelete by remember { mutableStateOf<MemoryItem?>(null) }
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
@@ -50,6 +70,11 @@ fun MemoryScreen(state: MemoryUiState, onIntent: (MemoryIntent) -> Unit, onBack:
             TextButton(onClick = onBack) { Text(stringResource(R.string.memory_back)) }
             Text(stringResource(R.string.memory_title), style = MaterialTheme.typography.headlineSmall)
             Text(stringResource(R.string.memory_intro), style = MaterialTheme.typography.bodyMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RetentionPicker(retention, onRetention, Modifier.weight(1f))
+                TextButton(onClick = onExport) { Text(stringResource(R.string.memory_export)) }
+            }
+            Text(stringResource(R.string.memory_keep_note), style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
                 value = state.query,
                 onValueChange = { onIntent(MemoryIntent.Query(it)) },
@@ -85,6 +110,29 @@ fun MemoryScreen(state: MemoryUiState, onIntent: (MemoryIntent) -> Unit, onBack:
             dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.memory_cancel)) } },
         )
     }
+}
+
+@Composable
+private fun RetentionPicker(retention: Retention, onRetention: (Retention) -> Unit, modifier: Modifier = Modifier) {
+    var open by remember { mutableStateOf(false) }
+    Box(modifier) {
+        TextButton(onClick = { open = true }) {
+            Text(stringResource(R.string.memory_keep_for, stringResource(retentionLabel(retention))))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            Retention.entries.forEach { r ->
+                DropdownMenuItem(text = { Text(stringResource(retentionLabel(r))) }, onClick = { open = false; onRetention(r) })
+            }
+        }
+    }
+}
+
+private fun retentionLabel(r: Retention): Int = when (r) {
+    Retention.WEEK -> R.string.memory_keep_week
+    Retention.MONTH -> R.string.memory_keep_month
+    Retention.THREE_MONTHS -> R.string.memory_keep_three_months
+    Retention.YEAR -> R.string.memory_keep_year
+    Retention.FOREVER -> R.string.memory_keep_forever
 }
 
 @Composable
