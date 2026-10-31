@@ -1,6 +1,8 @@
 package io.github.saadahmed1122.bibi.core.database
 
+import android.content.Context
 import androidx.room.Database
+import androidx.room.Room
 import androidx.room.RoomDatabase
 
 /**
@@ -10,4 +12,9 @@ import androidx.room.RoomDatabase
 @Database(entities = [MessageEntity::class], version = 1, exportSchema = true)
 abstract class BibiDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
+
+    companion object {
+        fun create(context: Context): BibiDatabase =
+            Room.databaseBuilder(context.applicationContext, BibiDatabase::class.java, "bibi.db").build()
+    }
 }

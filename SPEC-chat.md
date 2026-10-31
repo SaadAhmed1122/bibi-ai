@@ -6,12 +6,12 @@ Shared rules: [SPEC.md](SPEC.md). Owner decision 2026-10-31: the in-app chat scr
 The core loop: type a message, see Bibi's answer stream in, stop it if needed, and find it again later. It works as a normal app screen, with no overlay permission needed, and the same state powers the overlay chat card. Success: the success criteria 1, 2 and 4 in SPEC.md.
 
 ## Scope
-- **`domain:usecase.SendMessage`:**
+- **`SendMessage`** (in `feature:chat`, because `InferenceClient` is in an Android module; Decision 2026-10-31):
   1. saves the user message;
   2. streams `InferenceClient.send`;
   3. on `Done`, `Stopped` or `Error`, saves Bibi's message with that status.
 
-  Only one generation at a time: Send is disabled while generating. Empty or blank input is ignored, and input is capped at 2,000 characters [OPEN: confirm the cap].
+  Only one generation at a time: Send is disabled while generating. Empty or blank input is ignored, and input is capped at 2,000 characters.
 - **`feature:chat`:**
   - `ChatViewModel` (MVI, `StateFlow<ChatUiState>`, intents Edit / Send / Stop / Clear).
   - `ChatScreen`: message list, input field, Send button that turns into Stop while generating, and the model state banner (Missing → "Import the model", Loading, Restarting, Error).
@@ -34,4 +34,4 @@ The core loop: type a message, see Bibi's answer stream in, stop it if needed, a
 Voice input or output, markdown rendering beyond plain text, message editing, multiple conversations.
 
 ## Open questions
-- Input length cap: 2,000 characters [OPEN].
+- None. The input cap is 2,000 characters (tasks/plan.md).

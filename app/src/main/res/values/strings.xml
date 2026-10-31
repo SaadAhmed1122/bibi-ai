@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Bibi</string>
     <string name="home_title">Bibi</string>
-    <string name="home_body">Your offline companion. Chat arrives in the next steps.</string>
+    <string name="home_body">Your offline companion. Everything stays on this phone.</string>
+    <string name="home_chat">Chat with Bibi</string>
     <string name="back">Back</string>
     <string name="loading">Loading…</string>
     <!-- Gemma terms notice -->
