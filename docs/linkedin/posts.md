@@ -29,6 +29,21 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Phone actions: from 87 to 95 out of 100, and 0 wrong actions
+- **Test:** the same 100 requests as before ("wake me at 6:45", "open Maps", "flashlight off", …) plus 10 chat messages that should do nothing, on the vivo, after 3 small fixes. Dry run: nothing really opens.
+- **Numbers:**
+  - **95 of 100 right**, up from 87, in about **0.5 s**, using about **600 MB**.
+  - **0 wrong actions.** Last time one request ("get me into google drive") opened the wrong app. Now, when unsure, Bibi asks or does nothing.
+  - **0 of 10** chat messages triggered an action.
+- **The 3 fixes:**
+  - The router may answer with lower confidence (0.5 → 0.25), because the next step checks the details anyway.
+  - "Let me know when 3 minutes are up" sounded like an alarm to the router. A duration without a clock time now becomes a timer.
+  - "Google Drive" when only "Google" is installed: ask instead of guessing.
+- **The 5 misses were all safe:** 2 apps that aren't installed (Spotify, Instagram), 1 not installed (Drive), 1 the router wasn't sure about ("calculator"), and "WhatsApp", which it mistook for a phone call, so it asked for a number.
+- **Honest caveat:** I tuned on the same 100 requests, so new phrasings will score lower. That's the next test.
+- **Lesson:** for actions on a phone, "ask when unsure" beats "always do something". A wrong action costs more than a question.
+- Source: `spikes/s4-tools/results/RESULTS.md` §8, issue #8.
+
 ### 2026-10-31: Shrinking the release app: the AI library needs a rule
 - **Test:** the release build (the one that goes to Google Play) with R8 turned on. R8 shrinks the app by removing and renaming code it thinks is unused. Tested on the vivo in portrait and landscape.
 - **Numbers:**

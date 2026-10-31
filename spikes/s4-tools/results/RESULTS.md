@@ -80,7 +80,7 @@ Misses (13), all but one ended with no action or a question to the user:
 
 The 100/100 offline score in the JVM tests is an upper bound (extractor written with the prompts in view; assumed app list).
 
-## 7. Tuning after §6 (#8), JVM tests only, not yet run on a phone
+## 7. Tuning after §6 (#8), JVM tests (run on the vivo in §8)
 
 Three changes, each with tests written first (`tools/core-test`, 559 checks pass):
 1. **Router threshold 0.5 → 0.25** (`ToolRouting.MIN_CONFIDENCE`). Of the §6 threshold misses, this lets through photos 0.40, spotify 0.27, gallery 0.35, weather 0.38, dark 0.47, light 0.43 and "tea" 0.27; calculator 0.11 stays out. "what time is it in Tokyo" (set_alarm 0.15) stays out. A wrong label that gets through still meets slot extraction, which asks when a value is missing. The value was picked on the same 110 prompts [VERIFY on a fresh prompt set].
@@ -88,3 +88,30 @@ Three changes, each with tests written first (`tools/core-test`, 559 checks pass
 3. **Vendor word + unknown app asks:** "google drive" with no Drive app now asks "Which app should I open?" instead of opening Google. With Drive installed it still opens Drive. Whether Drive is on this vivo is [VERIFY]; the §6 result (Google opened) fits it being absent, because with Drive installed the extractor picks Drive.
 
 Expected on the vivo, if the router labels come out the same: about 95 of 100 [VERIFY by re-running the slot benchmark]. Strix not run (CLI not installed); these files are tool-router code (CLAUDE.md §9).
+
+## 8. Tuned slot extraction on the vivo Y17s, 2026-10-31 15:44
+
+The §7 tuning, built from `main` (PR #26), same 110 prompts, dry run, charging, Gemma not loaded. Decision Maker load 11.6 s, **PSS 595 MB**. Raw: `raw/2026-10-31-vivo-y17s/s4_20261031-154401_V2310.csv`. App summary:
+
+| expected | n | DM acc | tool ok | slot ok | args = | p50 ms | p95 ms | max PSS |
+|---|---|---|---|---|---|---|---|---|
+| open_app | 20 | 90 % | 75 % | 75 % | 75 % | 493 | 548 | 597 MB |
+| set_alarm | 20 | 100 % | 100 % | 100 % | 100 % | 491 | 497 | 599 MB |
+| start_timer | 20 | 85 % | 100 % | 100 % | 100 % | 487 | 535 | 601 MB |
+| flashlight | 20 | 100 % | 100 % | 100 % | 100 % | 485 | 502 | 601 MB |
+| dial | 20 | 100 % | 100 % | 100 % | 100 % | 488 | 497 | 592 MB |
+| none | 10 | 80 % | 100 % (no call) | n/a | n/a | 487 | 503 | 593 MB |
+
+**95 of 100 action prompts produced the right call with the right values** (§6: 87), about 0.5 s end to end, as §7 expected. **No wrong call reached the Permission Engine** (§6: 1, "google drive" → Google). None of the 10 "none" prompts produced a call.
+
+- **Timer re-route works:** the 3 timer prompts the router labelled set_alarm all started the right timer (start_timer 85 % → 100 %).
+- **Threshold 0.25 works:** flashlight 90 % → 100 %; open_app 60 % → 75 %.
+- **The 5 misses, all open_app, all safe** (no action or a question):
+  - "let me see the calculator": router confidence 0.11 < 0.25, no action;
+  - "jump into whatsapp": labelled dial 0.44, no number, so it asks;
+  - "switch over to spotify", "I want to browse instagram": not installed on this phone, so it asks (the right behaviour);
+  - "get me into google drive": Drive not installed, so it now asks instead of opening Google (§7 fix 3, confirmed).
+- **Two "none" prompts led to a question, not an action:** "don't set an alarm tonight" (labelled set_alarm 0.97, asks for a time) and "how long should I boil an egg" (labelled start_timer, asks for a length). The negation in the first is not understood [OPEN for P2 tools work].
+
+Caveat: the threshold and the re-route were tuned on these same 110 prompts, so 95/100 is likely optimistic for new phrasings [VERIFY on a fresh prompt set before P2].
+

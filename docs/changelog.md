@@ -10,6 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- S4 tuned slot extraction measured on the vivo: 95/100 right calls (was 87), no wrong call, 0 calls on "none" (#8).
 - P1 Task 18: the 1-hour exit-gate script (TESTING.md) and the results file `docs/p1-gate.md` (#49).
 - P1 Task 17: release build with R8 and resource shrinking (LiteRT-LM keep rule), upload signing from `~/.gradle/gradle.properties` (unsigned without it), and the owner's upload checklist `docs/release.md` (#48).
 - P1 Task 16: Floating Bibi and Calm mode switches on Home. The overlay permission is asked only when the switch is turned on, after an explainer; without it the switch stays off. The notification's Turn off turns the switch off; Bibi comes back when the app opens if the switch is on (#47).
