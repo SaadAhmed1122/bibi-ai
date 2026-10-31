@@ -16,6 +16,7 @@ import io.github.saadahmed1122.bibi.ai.inference.api.InferenceClient
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceProtocol
 import io.github.saadahmed1122.bibi.ai.inference.api.ProtocolMessage
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
+import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
 import io.github.saadahmed1122.bibi.ai.inference.api.toEnvelope
 import io.github.saadahmed1122.bibi.ai.inference.api.toMessage
 import java.io.File
@@ -29,10 +30,14 @@ import java.util.concurrent.Executors
  * on one thread, [engineThread] (PRD §12.7); cancel has to come from outside because the engine
  * thread is blocked in the turn. While a reply is generating the service is also *started*, so a
  * client that unbinds or rebinds mid-answer doesn't destroy it; it stops itself after the reply.
+ *
+ * The action router ([DecisionRouter], SPEC-tools.md) is a second engine with its own thread,
+ * [routerThread], so routing a message never waits behind a reply.
  */
 class InferenceService : Service() {
 
     private val engineThread = Executors.newSingleThreadExecutor { Thread(it, "llm-engine") }
+    private val routerThread = Executors.newSingleThreadExecutor { Thread(it, "router") }
     private val main = Handler(Looper.getMainLooper())
     private val messenger = Messenger(Handler(Looper.getMainLooper()) { handle(it); true })
 
@@ -52,6 +57,12 @@ class InferenceService : Service() {
     /** Written on the engine thread; read on main for [LiteRtLmEngine.cancel]. */
     @Volatile private var engine: LiteRtLmEngine? = null
 
+    /** Main thread only. Set while the router is loading or loaded; cleared when its load fails. */
+    private var routerPath: String? = null
+
+    /** Router thread only. */
+    private var router: DecisionRouter? = null
+
     /** Engine thread only. Set once the system prompt is read in [load]. */
     private var budget: ContextBudget? = null
 
@@ -70,6 +81,11 @@ class InferenceService : Service() {
             engine = null
         }
         engineThread.shutdown()
+        routerThread.execute {
+            router?.close()
+            router = null
+        }
+        routerThread.shutdown()
         super.onDestroy()
     }
 
@@ -112,8 +128,13 @@ class InferenceService : Service() {
                     reset()
                 }
             }
+            is ProtocolMessage.LoadRouter -> if (routerPath == null) {
+                routerPath = m.modelPath
+                routerThread.execute { loadRouter(m.modelPath) }
+            }
+            is ProtocolMessage.Route -> routerThread.execute { route(m.requestId, m.text) }
             // Service -> client messages and unknown codes are ignored.
-            is ProtocolMessage.State, is ProtocolMessage.Reply, null -> Unit
+            is ProtocolMessage.State, is ProtocolMessage.Reply, is ProtocolMessage.Routed, null -> Unit
         }
     }
 
@@ -140,6 +161,39 @@ class InferenceService : Service() {
             setState(EngineState.Failed("${e.javaClass.simpleName}: ${e.message}"))
             main.post { loadedPath = null }
         }
+    }
+
+    /** Router thread. Loads the Decision Maker and precomputes its choices (about 13 s on the vivo, S4). */
+    private fun loadRouter(path: String) {
+        try {
+            require(File(path).isFile) { "router model not found: $path" }
+            val t0 = SystemClock.elapsedRealtime()
+            router = DecisionRouter(this).also { it.load(path) }
+            Log.i(TAG, "router load_ms=${SystemClock.elapsedRealtime() - t0}")
+        } catch (e: Exception) {
+            Log.w(TAG, "router load failed", e)
+            router = null
+            main.post { routerPath = null }
+        }
+    }
+
+    /** Router thread. A request that arrives while the router loads waits for it on this thread. */
+    private fun route(requestId: Long, text: String) {
+        val r = router
+        val result = if (r == null) {
+            RouteResult.Unavailable(REASON_NO_ROUTER)
+        } else {
+            try {
+                val t0 = SystemClock.elapsedRealtime()
+                val answer = r.evaluate(text)
+                Log.i(TAG, "route label=${answer.label} confidence=${answer.confidence} ms=${SystemClock.elapsedRealtime() - t0}")
+                RouteResult.Label(answer.label, answer.confidence)
+            } catch (e: Exception) {
+                Log.w(TAG, "route failed", e)
+                RouteResult.Unavailable("${e.javaClass.simpleName}: ${e.message}")
+            }
+        }
+        post(ProtocolMessage.Routed(requestId, result))
     }
 
     /** Engine thread. One turn; tokens are forwarded as they stream. */
@@ -255,5 +309,6 @@ class InferenceService : Service() {
     private companion object {
         const val TAG = "BibiInference"
         const val SYSTEM_PROMPT_ASSET = "system_bibi.txt"
+        const val REASON_NO_ROUTER = "router not loaded"
     }
 }

@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.saadahmed1122.bibi.R
 import io.github.saadahmed1122.bibi.ai.inference.api.EngineState
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
+import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
 import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import kotlinx.coroutines.launch
@@ -43,7 +44,8 @@ private const val TIMING_TAG = "BibiTTFT"
 
 /**
  * Debug-only LLM check (Task 5, #36): binds `:inference` while shown, streams one reply at a
- * time, and logs S2-style timing per turn to logcat tag `BibiTTFT`.
+ * time, and logs S2-style timing per turn to logcat tag `BibiTTFT`. Route asks the action router
+ * (Task 3, #74) which tool the message is for; the service logs it under `BibiInference`.
  */
 @Composable
 fun LlmDebugRoute(client: MessengerInferenceClient, onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -100,6 +102,20 @@ fun LlmDebugRoute(client: MessengerInferenceClient, onBack: () -> Unit, modifier
             }
         },
         onStop = client::stop,
+        onRoute = {
+            val text = input.trim()
+            if (text.isNotEmpty()) {
+                scope.launch {
+                    val t0 = SystemClock.elapsedRealtime()
+                    val result = client.route(text)
+                    val ms = SystemClock.elapsedRealtime() - t0
+                    outcome = when (result) {
+                        is RouteResult.Label -> "route: ${result.label} (confidence ${fmt(result.confidence.toDouble(), 2)}), $ms ms"
+                        is RouteResult.Unavailable -> "route unavailable: ${result.reason}"
+                    }
+                }
+            }
+        },
         onBack = onBack,
         modifier = modifier,
     )
@@ -121,6 +137,7 @@ fun LlmDebugScreen(
     onStop: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onRoute: () -> Unit = {},
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
@@ -140,6 +157,7 @@ fun LlmDebugScreen(
                     Text(stringResource(R.string.llm_debug_send))
                 }
                 OutlinedButton(onClick = onStop, enabled = generating) { Text(stringResource(R.string.llm_debug_stop)) }
+                OutlinedButton(onClick = onRoute) { Text(stringResource(R.string.llm_debug_route)) }
                 TextButton(onClick = onBack) { Text(stringResource(R.string.back)) }
             }
             if (outcome.isNotEmpty()) Text(outcome, style = MaterialTheme.typography.labelLarge)

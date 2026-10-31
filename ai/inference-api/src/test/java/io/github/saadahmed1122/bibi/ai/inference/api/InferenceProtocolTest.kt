@@ -16,6 +16,28 @@ class InferenceProtocolTest {
         roundTrip(ProtocolMessage.Send(requestId = 7, text = "Hi Bibi\nhow are you?"))
         roundTrip(ProtocolMessage.Stop(requestId = 7))
         roundTrip(ProtocolMessage.Reset)
+        roundTrip(ProtocolMessage.LoadRouter("/data/user/0/app/files/models/router.litertlm"))
+        roundTrip(ProtocolMessage.Route(requestId = 9, text = "set a timer for 5 minutes"))
+    }
+
+    @Test
+    fun routerAnswersRoundTrip() {
+        roundTrip(ProtocolMessage.Routed(9, RouteResult.Label("start_timer", 0.4123f)))
+        roundTrip(ProtocolMessage.Routed(9, RouteResult.Label("none", 0f)))
+        roundTrip(ProtocolMessage.Routed(9, RouteResult.Unavailable("router not loaded")))
+    }
+
+    @Test
+    fun aRoutedAnswerWithoutAConfidenceOrReasonDecodesToNull() {
+        assertNull(
+            InferenceProtocol.decode(
+                Envelope(
+                    InferenceProtocol.MSG_ROUTED,
+                    mapOf(InferenceProtocol.KEY_REQUEST_ID to "9", InferenceProtocol.KEY_LABEL to "start_timer"),
+                ),
+            ),
+        )
+        assertNull(InferenceProtocol.decode(Envelope(InferenceProtocol.MSG_ROUTED, mapOf(InferenceProtocol.KEY_REQUEST_ID to "9"))))
     }
 
     @Test
@@ -48,11 +70,14 @@ class InferenceProtocolTest {
             ProtocolMessage.Send(1, "t"),
             ProtocolMessage.Stop(1),
             ProtocolMessage.Reset,
+            ProtocolMessage.LoadRouter("p"),
+            ProtocolMessage.Route(1, "t"),
             ProtocolMessage.State(EngineState.Ready),
             ProtocolMessage.Reply(1, ReplyEvent.Token("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Done("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Stopped("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Error("a", "a")),
+            ProtocolMessage.Routed(1, RouteResult.Label("none", 0f)),
         ).map { InferenceProtocol.encode(it).what }
         assertEquals(
             listOf(
@@ -61,11 +86,14 @@ class InferenceProtocolTest {
                 InferenceProtocol.MSG_SEND,
                 InferenceProtocol.MSG_STOP,
                 InferenceProtocol.MSG_RESET,
+                InferenceProtocol.MSG_LOAD_ROUTER,
+                InferenceProtocol.MSG_ROUTE,
                 InferenceProtocol.MSG_STATE,
                 InferenceProtocol.MSG_TOKEN,
                 InferenceProtocol.MSG_DONE,
                 InferenceProtocol.MSG_STOPPED,
                 InferenceProtocol.MSG_ERROR,
+                InferenceProtocol.MSG_ROUTED,
             ),
             codes,
         )

@@ -27,4 +27,5 @@ More than five actions, contacts lookup ("call mum"), chained actions, actions r
 
 ## Open questions
 - App name matching ("open maps"): S4's whole-word match on the launcher list, ask when ambiguous [OPEN].
+- Router confidence threshold: S4 tuned 0.25 on confidences of 0.27–0.47, but in the app (Task 3, same model and code) right labels came in at 0.76–1.00 and a chat message at 0.64 for "none". Re-measure on the 110 prompts in Task 5 before trusting 0.25 [VERIFY].
 - A bare hour ("alarm at 6") is read as 24-hour; a light request without on/off turns it on (S4 defaults) [OPEN].

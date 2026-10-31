@@ -26,6 +26,12 @@ interface InferenceClient {
     /** Starts a fresh conversation (system prompt and primer only). */
     fun resetConversation()
 
+    /**
+     * Asks the action router which tool [text] is for. Never throws; [RouteResult.Unavailable] when
+     * the router isn't loaded or `:inference` isn't connected. It never runs an action (SPEC-tools.md).
+     */
+    suspend fun route(text: String): RouteResult
+
     companion object {
         const val ERROR_BUSY = "busy"
         const val ERROR_NOT_READY = "not ready"
@@ -38,6 +44,12 @@ sealed interface EngineState {
     data object Ready : EngineState
     data object Generating : EngineState
     data class Failed(val reason: String) : EngineState
+}
+
+sealed interface RouteResult {
+    /** [label] is a tool wire name or "none"; [confidence] as the Decision Maker reports it. */
+    data class Label(val label: String, val confidence: Float) : RouteResult
+    data class Unavailable(val reason: String) : RouteResult
 }
 
 sealed interface ReplyEvent {

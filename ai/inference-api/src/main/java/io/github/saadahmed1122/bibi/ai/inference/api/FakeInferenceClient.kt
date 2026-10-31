@@ -32,6 +32,10 @@ class FakeInferenceClient(
     var resetCount = 0
         private set
 
+    /** What [route] answers; the texts it was asked about go to [routedTexts]. */
+    var routeResult: RouteResult = RouteResult.Unavailable("no router in the fake")
+    val routedTexts = mutableListOf<String>()
+
     fun enqueueReply(vararg tokens: String) {
         scripts.addLast(Script(tokens.toList(), errorReason = null))
     }
@@ -84,5 +88,10 @@ class FakeInferenceClient(
 
     override fun resetConversation() {
         resetCount++
+    }
+
+    override suspend fun route(text: String): RouteResult {
+        routedTexts += text
+        return routeResult
     }
 }

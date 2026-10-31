@@ -29,6 +29,12 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: The action router moves into the app
+- **Test:** the small router model (165 MB) that decides "is this a timer, an alarm, an app, the torch, a call, or just chat?" now runs inside Bibi's AI process, next to Gemma, on its own thread.
+- **Numbers:** it imports in seconds with a checksum check and loads in **12.5 s**. **6 out of 6** test requests went to the right action, each in **about 0.55 s**: "set a timer for 5 minutes" → timer, "wake me up at seven" → alarm, "tell me a joke" → none. The app still has **no internet permission**.
+- **Lesson:** keep each model on its own thread, so asking "which action?" never waits behind a long chat answer.
+- Image: `media/router-model-section.png`. Source: #74.
+
 ### 2026-10-31: Four AI models on one phone: memory fits, the CPU doesn't
 - **Test:** Gemma (chat) kept writing long answers while, one at a time, speech-to-text (Parakeet), the voice (Piper) and the action router ran in other apps, on the 6 GB vivo.
 - **Numbers:**

@@ -19,6 +19,10 @@ sealed interface ProtocolMessage {
     data class Stop(val requestId: Long) : ProtocolMessage
     data object Reset : ProtocolMessage
 
+    /** Loads the action router (Decision Maker) next to the LLM; it has its own thread. */
+    data class LoadRouter(val modelPath: String) : ProtocolMessage
+    data class Route(val requestId: Long, val text: String) : ProtocolMessage
+
     // Service -> client.
     data class State(val state: EngineState) : ProtocolMessage
 
@@ -27,6 +31,9 @@ sealed interface ProtocolMessage {
      * current request, e.g. tokens still in flight from a stopped one.
      */
     data class Reply(val requestId: Long, val event: ReplyEvent) : ProtocolMessage
+
+    /** The router's answer to the [Route] with [requestId]. */
+    data class Routed(val requestId: Long, val result: RouteResult) : ProtocolMessage
 }
 
 /** The Messenger protocol: `what` codes, bundle keys, and the codec (SPEC-inference.md). */
@@ -37,6 +44,8 @@ object InferenceProtocol {
     const val MSG_SEND = 3
     const val MSG_STOP = 4
     const val MSG_RESET = 5
+    const val MSG_LOAD_ROUTER = 6
+    const val MSG_ROUTE = 7
 
     // Service -> client.
     const val MSG_STATE = 101
@@ -44,12 +53,15 @@ object InferenceProtocol {
     const val MSG_DONE = 103
     const val MSG_STOPPED = 104
     const val MSG_ERROR = 105
+    const val MSG_ROUTED = 106
 
     const val KEY_REQUEST_ID = "request_id"
     const val KEY_TEXT = "text"
     const val KEY_MODEL_PATH = "model_path"
     const val KEY_STATE = "state"
     const val KEY_REASON = "reason"
+    const val KEY_LABEL = "label"
+    const val KEY_CONFIDENCE = "confidence"
 
     fun encode(message: ProtocolMessage): Envelope = when (message) {
         ProtocolMessage.Register -> Envelope(MSG_REGISTER, emptyMap())
@@ -57,6 +69,15 @@ object InferenceProtocol {
         is ProtocolMessage.Send -> Envelope(MSG_SEND, mapOf(id(message.requestId), KEY_TEXT to message.text))
         is ProtocolMessage.Stop -> Envelope(MSG_STOP, mapOf(id(message.requestId)))
         ProtocolMessage.Reset -> Envelope(MSG_RESET, emptyMap())
+        is ProtocolMessage.LoadRouter -> Envelope(MSG_LOAD_ROUTER, mapOf(KEY_MODEL_PATH to message.modelPath))
+        is ProtocolMessage.Route -> Envelope(MSG_ROUTE, mapOf(id(message.requestId), KEY_TEXT to message.text))
+        is ProtocolMessage.Routed -> Envelope(
+            MSG_ROUTED,
+            when (val r = message.result) {
+                is RouteResult.Label -> mapOf(id(message.requestId), KEY_LABEL to r.label, KEY_CONFIDENCE to r.confidence.toString())
+                is RouteResult.Unavailable -> mapOf(id(message.requestId), KEY_REASON to r.reason)
+            },
+        )
         is ProtocolMessage.State -> Envelope(MSG_STATE, encodeState(message.state))
         is ProtocolMessage.Reply -> when (val e = message.event) {
             is ReplyEvent.Token -> Envelope(MSG_TOKEN, mapOf(id(message.requestId), KEY_TEXT to e.text))
@@ -82,6 +103,9 @@ object InferenceProtocol {
             MSG_SEND -> if (requestId != null && text != null) ProtocolMessage.Send(requestId, text) else null
             MSG_STOP -> requestId?.let { ProtocolMessage.Stop(it) }
             MSG_RESET -> ProtocolMessage.Reset
+            MSG_LOAD_ROUTER -> f[KEY_MODEL_PATH]?.let { ProtocolMessage.LoadRouter(it) }
+            MSG_ROUTE -> if (requestId != null && text != null) ProtocolMessage.Route(requestId, text) else null
+            MSG_ROUTED -> requestId?.let { decodeRouted(it, f) }
             MSG_STATE -> decodeState(f)?.let { ProtocolMessage.State(it) }
             MSG_TOKEN -> reply { ReplyEvent.Token(it) }
             MSG_DONE -> reply { ReplyEvent.Done(it) }
@@ -92,6 +116,15 @@ object InferenceProtocol {
     }
 
     private fun id(requestId: Long) = KEY_REQUEST_ID to requestId.toString()
+
+    private fun decodeRouted(requestId: Long, f: Map<String, String>): ProtocolMessage? {
+        val label = f[KEY_LABEL]
+        val result = when {
+            label != null -> f[KEY_CONFIDENCE]?.toFloatOrNull()?.let { RouteResult.Label(label, it) }
+            else -> f[KEY_REASON]?.let { RouteResult.Unavailable(it) }
+        }
+        return result?.let { ProtocolMessage.Routed(requestId, it) }
+    }
 
     private fun encodeState(state: EngineState): Map<String, String> = when (state) {
         EngineState.Unbound -> mapOf(KEY_STATE to "unbound")
