@@ -38,15 +38,16 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.domain.model.Message
 
 @Composable
-fun ChatRoute(viewModel: ChatViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun ChatRoute(viewModel: ChatViewModel, onOpenModel: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ChatScreen(state = state, onIntent = viewModel::onIntent, onBack = onBack, modifier = modifier)
+    ChatScreen(state = state, onIntent = viewModel::onIntent, onOpenModel = onOpenModel, onBack = onBack, modifier = modifier)
 }
 
 @Composable
 fun ChatScreen(
     state: ChatUiState,
     onIntent: (ChatIntent) -> Unit,
+    onOpenModel: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -64,7 +65,7 @@ fun ChatScreen(
                 }
             }
             MessageList(state, Modifier.weight(1f))
-            state.banner?.let { Banner(it) }
+            state.banner?.let { Banner(it, onOpenModel) }
             InputRow(state, onIntent)
         }
     }
@@ -132,7 +133,7 @@ private fun Bubble(role: Message.Role, text: String, status: Message.Status, mod
 }
 
 @Composable
-private fun Banner(banner: ChatBanner) {
+private fun Banner(banner: ChatBanner, onOpenModel: () -> Unit) {
     val text = when (banner) {
         ChatBanner.ImportModel -> R.string.chat_banner_import
         ChatBanner.Loading -> R.string.chat_banner_loading
@@ -144,7 +145,12 @@ private fun Banner(banner: ChatBanner) {
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics { liveRegion = LiveRegionMode.Polite },
     ) {
-        Text(stringResource(text), Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium)
+        Column(Modifier.padding(12.dp)) {
+            Text(stringResource(text), style = MaterialTheme.typography.bodyMedium)
+            if (banner == ChatBanner.ImportModel) {
+                TextButton(onClick = onOpenModel) { Text(stringResource(R.string.model_choose)) }
+            }
+        }
     }
 }
 
@@ -186,7 +192,7 @@ private fun previewMessages(lastStatus: Message.Status = Message.Status.DONE) = 
 
 @Composable
 private fun ChatPreview(state: ChatUiState) {
-    BibiTheme { ChatScreen(state = state, onIntent = {}, onBack = {}) }
+    BibiTheme { ChatScreen(state = state, onIntent = {}, onOpenModel = {}, onBack = {}) }
 }
 
 @Preview

@@ -31,7 +31,7 @@ class ChatViewModelTest {
      * scheduler keeps runTest from waiting on the ViewModel's endless flows.
      */
     private fun TestScope.viewModel(client: FakeInferenceClient) =
-        ChatViewModel(client, history, model, CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()))
+        ChatViewModel(client, history, model, scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()))
             .also { runCurrent() }
 
     @Test
@@ -133,6 +133,23 @@ class ChatViewModelTest {
         client.setState(EngineState.Failed("boom"))
         runCurrent()
         assertEquals(ChatBanner.Error, vm.state.value.banner)
+    }
+
+    @Test
+    fun theCallerIsToldWhenTheModelComesAndGoes() = runTest {
+        val calls = mutableListOf<Boolean>()
+        ChatViewModel(
+            FakeInferenceClient(), history, model, { calls += it },
+            CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+        )
+        runCurrent()
+        model.value = ModelState.Missing // Remove
+        runCurrent()
+        model.value = ModelState.Importing(0.5f)
+        runCurrent()
+        model.value = ModelState.Ready("/model")
+        runCurrent()
+        assertEquals(listOf(true, false, true), calls)
     }
 
     @Test

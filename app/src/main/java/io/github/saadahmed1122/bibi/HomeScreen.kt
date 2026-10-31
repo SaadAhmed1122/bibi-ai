@@ -19,6 +19,7 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 @Composable
 fun HomeScreen(
     onOpenChat: () -> Unit,
+    onOpenModel: () -> Unit,
     onOpenTerms: () -> Unit,
     onOpenCrashLog: (() -> Unit)?,
     onOpenLlmDebug: (() -> Unit)?,
@@ -29,6 +30,7 @@ fun HomeScreen(
             Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
             Text(stringResource(R.string.home_body), style = MaterialTheme.typography.bodyLarge)
             Button(onClick = onOpenChat) { Text(stringResource(R.string.home_chat)) }
+            TextButton(onClick = onOpenModel) { Text(stringResource(R.string.home_model)) }
             TextButton(onClick = onOpenTerms) { Text(stringResource(R.string.terms_link)) }
             if (onOpenCrashLog != null) {
                 TextButton(onClick = onOpenCrashLog) { Text(stringResource(R.string.crash_log_title)) }
@@ -43,11 +45,11 @@ fun HomeScreen(
 @Preview
 @Composable
 private fun HomeScreenDebugPreview() {
-    BibiTheme { HomeScreen(onOpenChat = {}, onOpenTerms = {}, onOpenCrashLog = {}, onOpenLlmDebug = {}) }
+    BibiTheme { HomeScreen(onOpenChat = {}, onOpenModel = {}, onOpenTerms = {}, onOpenCrashLog = {}, onOpenLlmDebug = {}) }
 }
 
 @Preview
 @Composable
 private fun HomeScreenReleasePreview() {
-    BibiTheme { HomeScreen(onOpenChat = {}, onOpenTerms = {}, onOpenCrashLog = null, onOpenLlmDebug = null) }
+    BibiTheme { HomeScreen(onOpenChat = {}, onOpenModel = {}, onOpenTerms = {}, onOpenCrashLog = null, onOpenLlmDebug = null) }
 }

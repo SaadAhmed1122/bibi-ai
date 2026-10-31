@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -42,11 +44,16 @@ sealed interface ChatIntent {
     data object Clear : ChatIntent
 }
 
-/** MVI state holder for the chat screen (SPEC-chat.md). */
+/**
+ * MVI state holder for the chat screen (SPEC-chat.md). [onModelReady] is called with true when the
+ * model becomes Ready and false when it goes away (e.g. Remove), so the caller can bind or unbind
+ * the inference service.
+ */
 class ChatViewModel(
     private val client: InferenceClient,
     private val history: ChatHistoryRepository,
     modelState: Flow<ModelState>,
+    onModelReady: (Boolean) -> Unit = {},
     scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob()),
 ) : ViewModel(scope) {
 
@@ -72,6 +79,12 @@ class ChatViewModel(
         combine(history.observeAll(), input, streaming, banner) { messages, text, streamingText, banner ->
             ChatUiState(messages, text, streamingText, banner)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
+
+    init {
+        viewModelScope.launch {
+            modelState.map { it is ModelState.Ready }.distinctUntilChanged().collect(onModelReady)
+        }
+    }
 
     fun onIntent(intent: ChatIntent) {
         when (intent) {
