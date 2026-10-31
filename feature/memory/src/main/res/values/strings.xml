@@ -17,4 +17,14 @@
     <string name="memory_save">Save</string>
     <string name="memory_cancel">Cancel</string>
     <string name="memory_blocked">Bibi never stores card numbers, passwords, PINs or ID numbers.</string>
+    <string name="memory_export">Export</string>
+    <string name="memory_keep_for">Keep for: %1$s</string>
+    <string name="memory_keep_week">1 week</string>
+    <string name="memory_keep_month">1 month</string>
+    <string name="memory_keep_three_months">3 months</string>
+    <string name="memory_keep_year">1 year</string>
+    <string name="memory_keep_forever">Forever</string>
+    <string name="memory_keep_note">Pinned memories are always kept.</string>
+    <string name="memory_exported">Saved %1$d memories to %2$s.</string>
+    <string name="memory_export_failed">The file couldn\'t be written.</string>
 </resources>

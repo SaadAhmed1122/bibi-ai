@@ -18,4 +18,6 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // The strict JSON parser from the S4 tool code checks the memory export round-trip.
+    testImplementation(project(":core:tools"))
 }

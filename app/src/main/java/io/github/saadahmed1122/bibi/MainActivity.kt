@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,20 +18,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.debug.ActionsDebugRoute
 import io.github.saadahmed1122.bibi.debug.CrashLogRoute
 import io.github.saadahmed1122.bibi.debug.LlmDebugRoute
-import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
 import io.github.saadahmed1122.bibi.domain.model.ModelState
+import io.github.saadahmed1122.bibi.domain.usecase.MemoryExport
+import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
 import io.github.saadahmed1122.bibi.feature.memory.MemoryRoute
 import io.github.saadahmed1122.bibi.feature.memory.MemoryViewModel
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingScreen
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
 private enum class Screen { Home, Chat, Model, Memory, Settings, Terms, CrashLog, LlmDebug, ActionsDebug }
@@ -132,13 +139,43 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     Screen.Settings -> SettingsRoute(container.persona, onBack = goHome)
-                    Screen.Memory -> MemoryRoute(viewModel { MemoryViewModel(container.memory) }, onBack = goHome)
+                    Screen.Memory -> {
+                        val retention by container.retention.current.collectAsStateWithLifecycle()
+                        val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+                            if (uri != null) exportMemory(uri)
+                        }
+                        MemoryRoute(
+                            viewModel = viewModel { MemoryViewModel(container.memory) },
+                            retention = retention,
+                            onRetention = container.retention::choose,
+                            onExport = { exporter.launch("bibimem.json") },
+                            onBack = goHome,
+                        )
+                    }
                     Screen.Terms -> TermsRoute(onBack = goHome)
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome, summaries = container.summaries)
                     Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)
                 }
             }
+        }
+    }
+
+    /** Writes `bibimem.json` to the place the user picked (no storage permission needed). */
+    private fun exportMemory(uri: Uri) {
+        val memory = (application as BibiApplication).container.memory
+        lifecycleScope.launch {
+            val message = try {
+                val items = memory.observeAll().first()
+                withContext(Dispatchers.IO) {
+                    contentResolver.openOutputStream(uri, "wt")?.use { it.write(MemoryExport.toJson(items, System.currentTimeMillis()).toByteArray()) }
+                        ?: error("no output stream")
+                }
+                getString(io.github.saadahmed1122.bibi.feature.memory.R.string.memory_exported, items.size, "bibimem.json")
+            } catch (e: Exception) {
+                getString(io.github.saadahmed1122.bibi.feature.memory.R.string.memory_export_failed)
+            }
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
         }
     }
 

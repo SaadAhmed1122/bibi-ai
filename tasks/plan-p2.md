@@ -36,7 +36,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 - [x] **Task 8 (#79): Remember this, never-store filter, Memory screen.** **M**
 - [x] **Task 9 (#80): Memories in answers.** **M**
 - [x] **Task 10 (#81): Automatic summaries while idle.** **M**
-- [ ] **Task 11 (#82): Retention job + JSON export.** **M**
+- [x] **Task 11 (#82): Retention job + JSON export.** **M**
 
 ### Checkpoint E2: memory
 - [ ] SPEC-memory criterion 3 on the vivo (Sara test, summary after idle, no delayed reply). Owner tries it.
