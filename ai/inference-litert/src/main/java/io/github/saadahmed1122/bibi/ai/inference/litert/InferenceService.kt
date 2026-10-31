@@ -176,7 +176,7 @@ class InferenceService : Service() {
         }
         val terminal = ReplyOutcome.terminal(reply.toString(), stopRequested, capped, failure)
         // Service-side timing for the chat checks (Checkpoint B); excludes the IPC hop to the UI.
-        Log.i(TAG, "turn ttft_ms=$firstTokenMs chunks=$chunks total_ms=${SystemClock.elapsedRealtime() - t0} end=${terminal.javaClass.simpleName}")
+        Log.i(TAG, "turn ttft_ms=$firstTokenMs chunks=$chunks total_ms=${SystemClock.elapsedRealtime() - t0} end=${endLabel(terminal)}")
         if (terminal is ReplyEvent.Error) Log.w(TAG, "turn failed: ${terminal.reason}")
         // A stopped or failed turn is carried over with the text the user saw.
         budget?.record(text, reply.toString())
@@ -221,6 +221,14 @@ class InferenceService : Service() {
             "conversation reopened, carried_turns=${carried.size} used_est=${budget?.usedTokens} " +
                 "prefill_ms=${SystemClock.elapsedRealtime() - t0}",
         )
+    }
+
+    /** Fixed words, because R8 renames the event classes in release builds. */
+    private fun endLabel(event: ReplyEvent): String = when (event) {
+        is ReplyEvent.Done -> "Done"
+        is ReplyEvent.Stopped -> "Stopped"
+        is ReplyEvent.Error -> "Error"
+        is ReplyEvent.Token -> "Token"
     }
 
     /** Any thread. */

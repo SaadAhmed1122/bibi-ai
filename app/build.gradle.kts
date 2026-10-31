@@ -17,6 +17,32 @@ android {
         versionName = "0.1.0-p1"
     }
 
+    // Upload key from ~/.gradle/gradle.properties (docs/release.md); never in the repo. Without
+    // all four properties the release build is unsigned, and the owner signs it.
+    val uploadKey = listOf(
+        "BIBI_UPLOAD_STORE_FILE", "BIBI_UPLOAD_STORE_PASSWORD", "BIBI_UPLOAD_KEY_ALIAS", "BIBI_UPLOAD_KEY_PASSWORD",
+    ).associateWith { providers.gradleProperty(it).orNull }
+    val hasUploadKey = uploadKey.values.all { !it.isNullOrBlank() }
+    if (hasUploadKey) {
+        signingConfigs.create("upload") {
+            storeFile = file(uploadKey.getValue("BIBI_UPLOAD_STORE_FILE")!!)
+            storePassword = uploadKey.getValue("BIBI_UPLOAD_STORE_PASSWORD")
+            keyAlias = uploadKey.getValue("BIBI_UPLOAD_KEY_ALIAS")
+            keyPassword = uploadKey.getValue("BIBI_UPLOAD_KEY_PASSWORD")
+        }
+    } else {
+        logger.warn("Bibi: BIBI_UPLOAD_* properties not set; the release build will be unsigned (docs/release.md).")
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasUploadKey) signingConfig = signingConfigs.getByName("upload")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
