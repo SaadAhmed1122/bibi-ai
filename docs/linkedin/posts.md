@@ -29,6 +29,18 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Installing a 585 MB AI model by hand takes 7 seconds
+- **Test:** the new "Bibi's model" screen on the vivo. You copy the model file to the phone, pick it in Android's own file picker, and the app copies it to its private storage and checks it. Offline, with no storage permission.
+- **Numbers:**
+  - **585 MB copied and checked in about 7 s.** The target was under 30 s.
+  - The check is a SHA-256 "fingerprint" of the file, so even one wrong byte is refused.
+  - A wrong file (a random 100 KB file renamed to look like the model) is refused at once with "This isn't Bibi's model file".
+  - After a restart, the app opens in **1.4 s**. It only checks the file size at startup; the full fingerprint runs once, at import.
+  - First answer from the imported model: first word in **1.28 s**, the same as before.
+- **Lesson:** check a big file thoroughly once, when it arrives, then do a cheap check on every start. Users shouldn't wait for a 585 MB hash every time they open the app.
+- Images: `media/p1-model-import.png` (progress at 78 %), `media/p1-model-wrong-file.png` (the wrong-file message). The system file picker isn't shown, because it lists personal files.
+- Source: issue #42.
+
 ### 2026-10-31: Remembering costs time: 1 minute vs 9 seconds
 - **Test:** making Bibi keep the conversation after Stop, after a crash, and when the chat gets too long for the model's memory (4,096 tokens). On the vivo, offline.
 - **Numbers:**

@@ -189,6 +189,13 @@ Claude's scripted run on the vivo passed: 10 turns, first word in 1.26–1.31 s,
 4. [ ] Rotate the phone, swipe the app away, reopen: the chat is still there.
 5. [ ] Note anything odd (wording, slow moments, answers that look wrong) on issue #37. Known: after Stop or Clear, Bibi forgets earlier turns until Task 7 (#38).
 
+## P1 — model import (issue #42)
+Claude's run on the vivo passed: wrong file refused, real file imported in ~7 s, chat works, Remove works, restart shows Ready. To try it yourself:
+1. [ ] Copy `gemma3-1b-it-int4.litertlm` to the phone's Downloads (USB or Files app).
+2. [ ] Home → **Bibi's model** → Remove model, then **Choose model file** and pick it. Watch the percentage; it should reach "The model is ready." in well under a minute.
+3. [ ] **Open chat** and send a message.
+4. [ ] Optional: pick any other file and check the error message. Delete the copy in Downloads afterwards (the app keeps its own).
+
 ## How to send results
 1. In the spike app, tap **Share log** (S1: **Share log (CSV)**, plus **Share exit reasons** at the end) and send the file to yourself or straight to the browser.
 2. On the spike's GitHub issue, add a comment: attach the file (or paste its contents) and add the notes asked for above (start %, device, battery setting, anything odd).

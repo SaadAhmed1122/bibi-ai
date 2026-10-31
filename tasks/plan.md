@@ -76,7 +76,7 @@ Build the P1 app described in [SPEC.md](../SPEC.md) and the eight module specs: 
   - Acceptance: the five JVM tests in SPEC-model-import.md criterion 1.
   - Verify: `./gradlew :domain:usecase:test`.
   - Files: `ImportModel.kt`, `ModelFile.kt`, the test. **S**
-- [ ] **Task 11 (#42): Model import UI.** `ModelRepository` (`StateFlow<ModelState>`, startup size check), the SAF picker, a progress screen, Remove model, and the chat banner wired to it. The debug model path is removed.
+- [x] **Task 11 (#42): Model import UI.** `ModelRepository` (`StateFlow<ModelState>`, startup size check), the SAF picker, a progress screen, Remove model, and the chat banner wired to it. The debug model path is removed.
   - Acceptance: the restart test (Ready without hashing); on the vivo, importing from Downloads reaches Ready, a wrong file is refused, and Remove works.
   - Verify: tests; manual.
   - Files: `ModelRepository.kt`, `feature/chat/ModelImportScreen.kt`, the inference service path. **M**
