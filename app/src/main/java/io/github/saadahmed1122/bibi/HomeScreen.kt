@@ -41,6 +41,7 @@ fun HomeScreen(
     onExplainerDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenActionsDebug: (() -> Unit)? = null,
+    onOpenSettings: (() -> Unit)? = null,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(Modifier.padding(padding).padding(24.dp).verticalScroll(rememberScrollState())) {
@@ -50,6 +51,7 @@ fun HomeScreen(
             SwitchRow(R.string.home_floating, R.string.home_floating_hint, floating.enabled, onFloatingSwitch)
             SwitchRow(R.string.home_calm, R.string.home_calm_hint, floating.calm, onCalmSwitch)
             TextButton(onClick = onOpenModel) { Text(stringResource(R.string.home_model)) }
+            if (onOpenSettings != null) TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.home_settings)) }
             TextButton(onClick = onOpenTerms) { Text(stringResource(R.string.terms_link)) }
             if (onOpenCrashLog != null) {
                 TextButton(onClick = onOpenCrashLog) { Text(stringResource(R.string.crash_log_title)) }

@@ -14,6 +14,7 @@ import io.github.saadahmed1122.bibi.ai.inference.api.EngineState
 import io.github.saadahmed1122.bibi.ai.inference.api.Envelope
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceClient
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceProtocol
+import io.github.saadahmed1122.bibi.ai.inference.api.Persona
 import io.github.saadahmed1122.bibi.ai.inference.api.ProtocolMessage
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
 import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
@@ -56,6 +57,9 @@ class InferenceService : Service() {
 
     /** Written on the engine thread; read on main for [LiteRtLmEngine.cancel]. */
     @Volatile private var engine: LiteRtLmEngine? = null
+
+    /** Main thread only. The personality preset; clients send it before Load. */
+    private var persona = Persona.FRIENDLY
 
     /** Main thread only. Set while the router is loading or loaded; cleared when its load fails. */
     private var routerPath: String? = null
@@ -102,7 +106,8 @@ class InferenceService : Service() {
                 }
                 loadedPath = m.modelPath
                 setState(EngineState.Loading)
-                engineThread.execute { load(m.modelPath) }
+                val p = persona
+                engineThread.execute { load(m.modelPath, p) }
             }
             is ProtocolMessage.Send -> {
                 val current = state
@@ -133,13 +138,20 @@ class InferenceService : Service() {
                 routerThread.execute { loadRouter(m.modelPath) }
             }
             is ProtocolMessage.Route -> routerThread.execute { route(m.requestId, m.text) }
+            is ProtocolMessage.SetPersona -> {
+                val next = PersonaPrompt.normalize(m.persona)
+                val reopen = PersonaPrompt.needsReopen(persona, next, modelLoaded = loadedPath != null)
+                persona = next
+                // Queued behind a running reply or load on the engine thread.
+                if (reopen) engineThread.execute { switchPersona(next) }
+            }
             // Service -> client messages and unknown codes are ignored.
             is ProtocolMessage.State, is ProtocolMessage.Reply, is ProtocolMessage.Routed, null -> Unit
         }
     }
 
-    /** Engine thread. Loads the model and prefills the system prompt and primer. */
-    private fun load(path: String) {
+    /** Engine thread. Loads the model and prefills the [persona]'s system prompt and primer. */
+    private fun load(path: String, persona: String) {
         try {
             require(File(path).isFile) { "model file not found: $path" }
             val e = LiteRtLmEngine(cacheDir.path)
@@ -147,9 +159,11 @@ class InferenceService : Service() {
             val t0 = SystemClock.elapsedRealtime()
             e.load(path)
             val t1 = SystemClock.elapsedRealtime()
-            systemPrompt = assets.open(SYSTEM_PROMPT_ASSET).bufferedReader().use { it.readText() }.trim()
+            systemPrompt = prompt(persona)
+            // Room for the longer of the two prompts, so switching presets keeps the budget and its turns.
+            val longest = maxOf(prompt(Persona.FRIENDLY).length, prompt(Persona.CONCISE).length)
             budget = ContextBudget(
-                prefaceChars = systemPrompt.length + LiteRtLmEngine.PRIMER_USER.length + LiteRtLmEngine.PRIMER_REPLY.length,
+                prefaceChars = longest + LiteRtLmEngine.PRIMER_USER.length + LiteRtLmEngine.PRIMER_REPLY.length,
             )
             e.openChat(systemPrompt)
             Log.i(TAG, "load_ms=${t1 - t0} preface_prefill_ms=${SystemClock.elapsedRealtime() - t1}")
@@ -161,6 +175,17 @@ class InferenceService : Service() {
             setState(EngineState.Failed("${e.javaClass.simpleName}: ${e.message}"))
             main.post { loadedPath = null }
         }
+    }
+
+    private fun prompt(persona: String): String =
+        assets.open(PersonaPrompt.asset(persona)).bufferedReader().use { it.readText() }.trim()
+
+    /** Engine thread. A new preset: the conversation reopens with its prompt and the carried turns. */
+    private fun switchPersona(persona: String) {
+        if (engine == null || state is EngineState.Failed) return // a later load reads the new preset
+        systemPrompt = prompt(persona)
+        Log.i(TAG, "persona=$persona")
+        reset()
     }
 
     /** Router thread. Loads the Decision Maker and precomputes its choices (about 13 s on the vivo, S4). */
@@ -308,7 +333,6 @@ class InferenceService : Service() {
 
     private companion object {
         const val TAG = "BibiInference"
-        const val SYSTEM_PROMPT_ASSET = "system_bibi.txt"
         const val REASON_NO_ROUTER = "router not loaded"
     }
 }

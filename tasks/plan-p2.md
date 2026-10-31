@@ -28,10 +28,10 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 - [x] **Task 5 (#76): Tools in chat + confirmation card.** Acceptance: SPEC-tools criteria 2–3. **M**
 
 ### Checkpoint E1: actions
-- [ ] All five actions from the app and the card, both orientations; shortcut p95 < 300 ms; chat TTFT with the router recorded. Owner tries it.
+- [x] All five actions from the app and the card, both orientations; shortcut p95 < 300 ms; chat TTFT with the router recorded. Owner tries it.
 
 ### Phase 3: Personality and memory
-- [ ] **Task 6 (#77): Personality presets.** Acceptance: SPEC-personality. **S**
+- [x] **Task 6 (#77): Personality presets.** Acceptance: SPEC-personality. **S**
 - [ ] **Task 7 (#78): Memory storage, migration 1 → 2.** Acceptance: SPEC-memory criterion 1. **M**
 - [ ] **Task 8 (#79): Remember this, never-store filter, Memory screen.** **M**
 - [ ] **Task 9 (#80): Memories in answers.** **M**

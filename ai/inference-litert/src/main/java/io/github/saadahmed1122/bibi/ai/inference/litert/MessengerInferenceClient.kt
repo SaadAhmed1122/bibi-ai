@@ -12,6 +12,7 @@ import android.os.RemoteException
 import io.github.saadahmed1122.bibi.ai.inference.api.EngineState
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceClient
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceProtocol
+import io.github.saadahmed1122.bibi.ai.inference.api.Persona
 import io.github.saadahmed1122.bibi.ai.inference.api.ProtocolMessage
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
 import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
@@ -48,6 +49,8 @@ class MessengerInferenceClient(
     private val context: Context,
     private val modelPath: () -> String,
     private val routerPath: () -> String? = { null },
+    /** The saved personality preset, sent before every Load so the first prompt is the right one. */
+    private val persona: () -> String = { Persona.FRIENDLY },
 ) : InferenceClient {
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Unbound)
@@ -76,6 +79,7 @@ class MessengerInferenceClient(
             val s = Messenger(binder)
             service = s
             sendTo(s, ProtocolMessage.Register, replyTo = replies)
+            sendTo(s, ProtocolMessage.SetPersona(persona()))
             sendTo(s, ProtocolMessage.Load(modelPath()))
             routerPath()?.let { sendTo(s, ProtocolMessage.LoadRouter(it)) }
         }
@@ -138,6 +142,11 @@ class MessengerInferenceClient(
         active.fail(REASON_DISCONNECTED)
         failRoutes()
         _state.value = EngineState.Unbound
+    }
+
+    /** Applies a new preset now; the service reopens the conversation (about 7 s). Main thread. */
+    fun setPersona(id: String) {
+        service?.let { sendTo(it, ProtocolMessage.SetPersona(id)) }
     }
 
     /** Loads the router into a running service, e.g. right after its import. Main thread. */

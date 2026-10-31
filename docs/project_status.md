@@ -117,6 +117,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-11-01 ~03:00: P2 Task 6 (#77) built on `feature/77-personality`: `SET_PERSONA` message, Friendly (the P1 prompt) and Concise prompts, `PersonaSetting` (saved in the "app" preferences, sent before every Load), Settings screen (Home → Settings); the budget reserves room for the longer prompt so a switch keeps the carried turns. On the vivo: a switch reopens the conversation in 10.6 s (3 turns carried); the choice survives a force-stop; Settings in both orientations. Same 3 questions from a cleared conversation: Friendly 35/19/16 chunks (70), Concise 18/7/18 (43, −39 %) after tightening the prompt to "one short sentence" (first version 18/12/21). A test inside one conversation was invalid: Concise copied the carried Friendly answers. The chat history cleared for the test was restored from a backup and the preset set back to Friendly. Next: Task 7 (#78) memory storage (schema migration: owner approves the merge).
+
 2026-11-01 ~02:45: While checking Task 6, two bugs fixed on `bugfix/ask-only-when-named`: (1) the router sent "what is a good way to start the morning" (set_alarm 0.83) and "how do I get better sleep" (0.25) to the alarm question; now a missing value is asked only when the message names the action, else chat (test first; on the vivo both now chat, "set an alarm" still asks); (2) in-app chat with the keyboard open had a keyboard-high gap (field at y 240 with the keyboard at 985): `adjustResize` on MainActivity plus `consumeWindowInsets(padding)`; now 14 px above the keyboard. Task 6 (#77) continues on `feature/77-personality`.
 
 2026-11-01 ~02:25: Checkpoint E1, the owner's try: "wake me up at 7" set an alarm, "open files" opened Files, "open the light" failed (looked for an app). Fixed on `bugfix/light-means-torch`: "light(s)" means the flashlight in the shortcut rules, and "open the light" turns it on (tests first; checked on the vivo). Open question for the owner: what "I don't see anything" was meant to do (it went to chat). Next: Task 6 (#77) personality.
@@ -161,6 +163,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Owner: Checkpoint E1, try the five actions from the chat and the floating card. Claude: Task 6 (#77) personality presets.
+1. Claude: Task 7 (#78) memory storage, Room migration 1 → 2 (owner approves the merge).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).

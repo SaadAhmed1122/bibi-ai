@@ -18,3 +18,6 @@ The user picks how Bibi talks: **Friendly** (warm, a little playful; the P1 prom
 
 ## Out of scope
 More than two presets, custom prompts, a voice per preset.
+
+## Result (2026-11-01, vivo)
+Same 3 questions from a cleared conversation: Friendly 35/19/16 chunks, Concise 18/7/18 (−39 % in total; one answer about the same length). The 1B model doesn't follow "no exclamation marks". Switching reopens the conversation in about 10.6 s with the recent turns.

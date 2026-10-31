@@ -59,6 +59,7 @@ class AppContainer(context: Context) {
             context = appContext,
             modelPath = { (models.state.value as? ModelState.Ready)?.path.orEmpty() },
             routerPath = { (routerModel.state.value as? ModelState.Ready)?.path },
+            persona = { persona.current.value },
         )
     }
 
@@ -78,6 +79,16 @@ class AppContainer(context: Context) {
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
         return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected, actions = chatActions)
             .apply { addCloseable { setConnected(false) } }
+    }
+
+    /** Bibi's personality preset (SPEC-personality.md), kept in the "app" preferences. */
+    val persona: PersonaSetting by lazy {
+        val prefs = appContext.getSharedPreferences("app", Context.MODE_PRIVATE)
+        PersonaSetting(
+            read = { prefs.getString(KEY_PERSONA, null) },
+            write = { prefs.edit().putString(KEY_PERSONA, it).apply() },
+            apply = { inference.setPersona(it) },
+        )
     }
 
     /** Main thread only (the Permission Engine is). The launcher list loads once, in the background. */
@@ -113,4 +124,8 @@ class AppContainer(context: Context) {
     }
 
     val chatHistory: ChatHistoryRepository by lazy { RoomChatHistoryRepository.create(appContext) }
+
+    private companion object {
+        const val KEY_PERSONA = "persona"
+    }
 }

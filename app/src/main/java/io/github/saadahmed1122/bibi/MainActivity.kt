@@ -31,7 +31,7 @@ import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingScreen
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingViewModel
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
-private enum class Screen { Home, Chat, Model, Terms, CrashLog, LlmDebug, ActionsDebug }
+private enum class Screen { Home, Chat, Model, Settings, Terms, CrashLog, LlmDebug, ActionsDebug }
 
 class MainActivity : ComponentActivity() {
     /** Set by a tap on floating Bibi or the notification's Open chat ([OverlayService.EXTRA_OPEN_CHAT]). */
@@ -88,6 +88,7 @@ class MainActivity : ComponentActivity() {
                         onOpenCrashLog = if (BuildConfig.DEBUG) ({ screen = Screen.CrashLog }) else null,
                         onOpenLlmDebug = if (BuildConfig.DEBUG) ({ screen = Screen.LlmDebug }) else null,
                         onOpenActionsDebug = if (BuildConfig.DEBUG) ({ screen = Screen.ActionsDebug }) else null,
+                        onOpenSettings = { screen = Screen.Settings },
                         floating = floating,
                         onFloatingSwitch = container.floating::onSwitch,
                         onCalmSwitch = container.floating::onCalm,
@@ -127,6 +128,7 @@ class MainActivity : ComponentActivity() {
                             onPickRouter = { routerPicker.launch(arrayOf("*/*")) },
                         )
                     }
+                    Screen.Settings -> SettingsRoute(container.persona, onBack = goHome)
                     Screen.Terms -> TermsRoute(onBack = goHome)
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome)
