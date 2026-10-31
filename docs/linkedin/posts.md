@@ -29,6 +29,21 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Ask for a permission only when it's needed
+- **Test:** the first run and the "Floating Bibi" switch on the vivo, in portrait and landscape.
+- **What happens now:**
+  - A new user sees 3 short screens (Welcome, Model, Notifications). **No permission pop-up appears until step 3**, and saying "no" is fine: chat still works.
+  - "Display over other apps" (needed for floating Bibi) is asked **only when you turn the switch on**, after a short explanation. If you come back without allowing it, the switch simply stays off.
+- **Numbers:**
+  - **0** permission pop-ups before the user asks for a feature that needs one.
+  - Calm mode measured on the phone: **123 frames in 10 s (12.3 per second) → 20 frames (2.0 per second)**. From the S1 battery test, that's about **0.5 % → 0.15 % battery per hour**.
+- **Small surprises:**
+  - On this vivo, "open the permission page for my app" opens the **full list of apps** instead, so the explanation says "find Bibi and turn it on".
+  - Android's own permission page warns the app "will be able to see where you tap", so our explanation now says what Bibi does: it "doesn't read or record what's on your screen".
+- **Lesson:** ask for a permission at the moment it makes sense, explain it in one sentence, and make "no" a normal answer.
+- Image: `media/p1-floating-permission-explainer.png`.
+- Source: issues #46, #47.
+
 ### 2026-10-31: Chatting with Bibi on top of any app, in portrait and landscape
 - **Test:** tap floating Bibi and a small chat card opens over whatever app you're in. Type, read the answer as it streams in, close the card. On the vivo, in both portrait and landscape.
 - **Numbers:**
