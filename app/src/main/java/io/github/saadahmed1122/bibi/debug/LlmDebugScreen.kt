@@ -4,7 +4,8 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
 import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
 import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
+import io.github.saadahmed1122.bibi.feature.chat.SummaryScheduler
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -48,7 +50,12 @@ private const val TIMING_TAG = "BibiTTFT"
  * (Task 3, #74) which tool the message is for; the service logs it under `BibiInference`.
  */
 @Composable
-fun LlmDebugRoute(client: MessengerInferenceClient, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun LlmDebugRoute(
+    client: MessengerInferenceClient,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    summaries: SummaryScheduler? = null,
+) {
     DisposableEffect(client) {
         client.connect()
         onDispose { client.disconnect() }
@@ -116,6 +123,15 @@ fun LlmDebugRoute(client: MessengerInferenceClient, onBack: () -> Unit, modifier
                 }
             }
         },
+        onSummarize = summaries?.let { s ->
+            {
+                scope.launch {
+                    val t0 = SystemClock.elapsedRealtime()
+                    val r = s.runNow(force = true)
+                    outcome = "summary: $r, ${SystemClock.elapsedRealtime() - t0} ms"
+                }
+            }
+        },
         onBack = onBack,
         modifier = modifier,
     )
@@ -124,6 +140,7 @@ fun LlmDebugRoute(client: MessengerInferenceClient, onBack: () -> Unit, modifier
 private fun fmt(value: Double?, digits: Int): String = value?.let { "%.${digits}f".format(Locale.US, it) } ?: "-"
 
 /** [outcome] and [stats] describe the last reply; empty before the first one. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LlmDebugScreen(
     state: EngineState,
@@ -138,6 +155,7 @@ fun LlmDebugScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onRoute: () -> Unit = {},
+    onSummarize: (() -> Unit)? = null,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
@@ -152,12 +170,13 @@ fun LlmDebugScreen(
                 label = { Text(stringResource(R.string.llm_debug_message)) },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onSend, enabled = state == EngineState.Ready && !generating) {
                     Text(stringResource(R.string.llm_debug_send))
                 }
                 OutlinedButton(onClick = onStop, enabled = generating) { Text(stringResource(R.string.llm_debug_stop)) }
                 OutlinedButton(onClick = onRoute) { Text(stringResource(R.string.llm_debug_route)) }
+                onSummarize?.let { OutlinedButton(onClick = it) { Text(stringResource(R.string.llm_debug_summarize)) } }
                 TextButton(onClick = onBack) { Text(stringResource(R.string.back)) }
             }
             if (outcome.isNotEmpty()) Text(outcome, style = MaterialTheme.typography.labelLarge)

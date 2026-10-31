@@ -29,6 +29,7 @@ import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
 import io.github.saadahmed1122.bibi.feature.chat.PlanTurn
 import io.github.saadahmed1122.bibi.feature.chat.ResourceActionTexts
 import io.github.saadahmed1122.bibi.feature.chat.ResourceMemoryTexts
+import io.github.saadahmed1122.bibi.feature.chat.SummaryScheduler
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
 import io.github.saadahmed1122.bibi.feature.tools.AppIndex
 import io.github.saadahmed1122.bibi.feature.tools.ToolExecutor
@@ -90,7 +91,10 @@ class AppContainer(context: Context) {
         }
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
         val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory))
-        return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected, actions = chatActions, memory = chatMemory)
+        return ChatViewModel(
+            inference, chatHistory, models.state,
+            onModelReady = setConnected, actions = chatActions, memory = chatMemory, summaries = summaries,
+        )
             .apply { addCloseable { setConnected(false) } }
     }
 
@@ -141,6 +145,19 @@ class AppContainer(context: Context) {
     /** Bibi's memory (SPEC-memory.md), in the same database as the chat. */
     val memory: MemoryRepository by lazy { RoomMemoryRepository.create(appContext) }
 
+    /** Automatic memory summaries while idle (SPEC-memory.md); one for the app chat and the floating card. */
+    val summaries: SummaryScheduler by lazy {
+        val prefs = appContext.getSharedPreferences("app", Context.MODE_PRIVATE)
+        SummaryScheduler(
+            scope = MainScope(),
+            client = inference,
+            history = chatHistory,
+            memory = memory,
+            lastSummarized = { prefs.getLong(KEY_LAST_SUMMARIZED, 0L) },
+            setLastSummarized = { prefs.edit().putLong(KEY_LAST_SUMMARIZED, it).apply() },
+        )
+    }
+
     /** Main process only. The pinned-notes block for the system prompt, kept current by [syncPinnedNotes]. */
     @Volatile private var pinnedNotes = ""
 
@@ -156,5 +173,6 @@ class AppContainer(context: Context) {
 
     private companion object {
         const val KEY_PERSONA = "persona"
+        const val KEY_LAST_SUMMARIZED = "last_summarized_message_id"
     }
 }

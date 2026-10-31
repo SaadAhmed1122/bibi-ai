@@ -26,6 +26,9 @@ sealed interface ProtocolMessage {
     /** Bibi's personality preset (SPEC-personality.md): [Persona.FRIENDLY] or [Persona.CONCISE]. */
     data class SetPersona(val persona: String) : ProtocolMessage
 
+    /** Asks for a short summary of [transcript] (SPEC-memory.md); answered by [Summary]. */
+    data class Summarize(val requestId: Long, val transcript: String) : ProtocolMessage
+
     /** Pinned memory notes for the system prompt (SPEC-memory.md); "" for none. Applies at the next conversation open. */
     data class SetMemory(val notes: String) : ProtocolMessage
 
@@ -37,6 +40,9 @@ sealed interface ProtocolMessage {
      * current request, e.g. tokens still in flight from a stopped one.
      */
     data class Reply(val requestId: Long, val event: ReplyEvent) : ProtocolMessage
+
+    /** The answer to [Summarize]: the summary, or null with [reason] when it couldn't run now. */
+    data class Summary(val requestId: Long, val text: String?, val reason: String = "") : ProtocolMessage
 
     /** The router's answer to the [Route] with [requestId]. */
     data class Routed(val requestId: Long, val result: RouteResult) : ProtocolMessage
@@ -54,6 +60,7 @@ object InferenceProtocol {
     const val MSG_ROUTE = 7
     const val MSG_SET_PERSONA = 8
     const val MSG_SET_MEMORY = 9
+    const val MSG_SUMMARIZE = 10
 
     // Service -> client.
     const val MSG_STATE = 101
@@ -62,6 +69,7 @@ object InferenceProtocol {
     const val MSG_STOPPED = 104
     const val MSG_ERROR = 105
     const val MSG_ROUTED = 106
+    const val MSG_SUMMARY = 107
 
     const val KEY_REQUEST_ID = "request_id"
     const val KEY_TEXT = "text"
@@ -83,6 +91,11 @@ object InferenceProtocol {
         is ProtocolMessage.Route -> Envelope(MSG_ROUTE, mapOf(id(message.requestId), KEY_TEXT to message.text))
         is ProtocolMessage.SetPersona -> Envelope(MSG_SET_PERSONA, mapOf(KEY_PERSONA to message.persona))
         is ProtocolMessage.SetMemory -> Envelope(MSG_SET_MEMORY, mapOf(KEY_NOTES to message.notes))
+        is ProtocolMessage.Summarize -> Envelope(MSG_SUMMARIZE, mapOf(id(message.requestId), KEY_TEXT to message.transcript))
+        is ProtocolMessage.Summary -> Envelope(
+            MSG_SUMMARY,
+            if (message.text != null) mapOf(id(message.requestId), KEY_TEXT to message.text) else mapOf(id(message.requestId), KEY_REASON to message.reason),
+        )
         is ProtocolMessage.Routed -> Envelope(
             MSG_ROUTED,
             when (val r = message.result) {
@@ -120,6 +133,14 @@ object InferenceProtocol {
             MSG_ROUTED -> requestId?.let { decodeRouted(it, f) }
             MSG_SET_PERSONA -> f[KEY_PERSONA]?.let { ProtocolMessage.SetPersona(it) }
             MSG_SET_MEMORY -> f[KEY_NOTES]?.let { ProtocolMessage.SetMemory(it) }
+            MSG_SUMMARIZE -> if (requestId != null && text != null) ProtocolMessage.Summarize(requestId, text) else null
+            MSG_SUMMARY -> requestId?.let { id ->
+                when {
+                    text != null -> ProtocolMessage.Summary(id, text)
+                    f[KEY_REASON] != null -> ProtocolMessage.Summary(id, null, f.getValue(KEY_REASON))
+                    else -> null
+                }
+            }
             MSG_STATE -> decodeState(f)?.let { ProtocolMessage.State(it) }
             MSG_TOKEN -> reply { ReplyEvent.Token(it) }
             MSG_DONE -> reply { ReplyEvent.Done(it) }

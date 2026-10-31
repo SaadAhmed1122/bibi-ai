@@ -35,7 +35,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 - [x] **Task 7 (#78): Memory storage, migration 1 → 2.** Acceptance: SPEC-memory criterion 1. **M**
 - [x] **Task 8 (#79): Remember this, never-store filter, Memory screen.** **M**
 - [x] **Task 9 (#80): Memories in answers.** **M**
-- [ ] **Task 10 (#81): Automatic summaries while idle.** **M**
+- [x] **Task 10 (#81): Automatic summaries while idle.** **M**
 - [ ] **Task 11 (#82): Retention job + JSON export.** **M**
 
 ### Checkpoint E2: memory
