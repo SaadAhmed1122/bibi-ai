@@ -9,6 +9,7 @@ import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
+import io.github.saadahmed1122.bibi.core.database.RoomMemoryRepository
 import io.github.saadahmed1122.bibi.core.tools.ActionRunner
 import io.github.saadahmed1122.bibi.core.tools.AppResolver
 import io.github.saadahmed1122.bibi.core.tools.PermissionEngine
@@ -17,11 +18,15 @@ import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ImportModel
+import io.github.saadahmed1122.bibi.domain.usecase.MemoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
+import io.github.saadahmed1122.bibi.domain.usecase.Remember
 import io.github.saadahmed1122.bibi.feature.chat.ChatActions
+import io.github.saadahmed1122.bibi.feature.chat.ChatMemory
 import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
 import io.github.saadahmed1122.bibi.feature.chat.PlanTurn
 import io.github.saadahmed1122.bibi.feature.chat.ResourceActionTexts
+import io.github.saadahmed1122.bibi.feature.chat.ResourceMemoryTexts
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingStore
 import io.github.saadahmed1122.bibi.feature.tools.AppIndex
 import io.github.saadahmed1122.bibi.feature.tools.ToolExecutor
@@ -77,7 +82,8 @@ class AppContainer(context: Context) {
             }
         }
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
-        return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected, actions = chatActions)
+        val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext))
+        return ChatViewModel(inference, chatHistory, models.state, onModelReady = setConnected, actions = chatActions, memory = chatMemory)
             .apply { addCloseable { setConnected(false) } }
     }
 
@@ -124,6 +130,9 @@ class AppContainer(context: Context) {
     }
 
     val chatHistory: ChatHistoryRepository by lazy { RoomChatHistoryRepository.create(appContext) }
+
+    /** Bibi's memory (SPEC-memory.md), in the same database as the chat. */
+    val memory: MemoryRepository by lazy { RoomMemoryRepository.create(appContext) }
 
     private companion object {
         const val KEY_PERSONA = "persona"

@@ -41,6 +41,12 @@
     <string name="action_cancelled">Okay, I didn\'t do it.</string>
     <string name="action_timed_out">I didn\'t hear back, so I didn\'t do it.</string>
     <string name="action_confirm">I need your OK first. Tap Confirm or Cancel.</string>
+    <string name="chat_remember">Remember this</string>
+    <string name="memory_saved">Got it, I\'ll remember that.</string>
+    <string name="memory_notice_saved">Saved to Bibi\'s memory.</string>
+    <string name="memory_blocked_card">I won\'t keep that: it looks like a card number. Card numbers are never stored.</string>
+    <string name="memory_blocked_password">I won\'t keep that: it looks like a password or PIN. Those are never stored.</string>
+    <string name="memory_blocked_id">I won\'t keep that: it looks like an ID number. Those are never stored.</string>
     <string name="router_title">Phone actions (optional)</string>
     <string name="router_missing">To understand requests like \"wake me up at seven\", Bibi uses a second, smaller model: the file %1$s (about 165 MB). Without it, Bibi still does actions for simple phrases such as \"set a timer for 5 minutes\".</string>
     <string name="router_choose">Choose action model</string>

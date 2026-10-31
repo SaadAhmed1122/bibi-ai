@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: "Remember that…" and the things Bibi refuses to remember
+- **Test:** saving memories on the vivo, typed and by long-press, then editing them in the new Memory screen.
+- **Numbers:**
+  - "remember that my sister is Sara" is saved with **0 AI models involved** (a phrase rule), and Bibi replies instantly.
+  - "remember that my password is hunter2" is **refused**.
+  - Card numbers are checked with the Luhn formula, so a 16-digit order number isn't mistaken for a card.
+  - An edit can't sneak a PIN in later.
+  - **13 new tests.**
+- **Lesson:** the safest memory is the one that never gets written. Filter before saving, not after.
+- Images: `media/remember-this.png`, `media/memory-edit-blocked.png`. Source: #79.
+
 ### 2026-11-01: Giving Bibi a memory without losing a single message
 - **Test:** the first database upgrade on a real phone. Bibi's chat database went from version 1 to version 2, adding memory tables and a keyword search index.
 - **Numbers:** **191 of 191** chat messages kept, the new tables and **4** sync triggers in place, chat still saving. **14** database tests, including the upgrade itself on a real version-1 file.

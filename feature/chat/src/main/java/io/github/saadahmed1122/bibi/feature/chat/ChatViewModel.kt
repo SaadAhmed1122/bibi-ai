@@ -12,6 +12,8 @@ import io.github.saadahmed1122.bibi.core.tools.UserResponse
 import io.github.saadahmed1122.bibi.domain.model.Message
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
+import io.github.saadahmed1122.bibi.domain.usecase.Remember
+import io.github.saadahmed1122.bibi.domain.usecase.RememberPhrase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,13 +33,17 @@ import kotlinx.coroutines.launch
 /** What blocks sending, shown above the input. */
 enum class ChatBanner { ImportModel, Loading, Restarting, Error }
 
-/** [streamingText] is non-null while Bibi is answering; [pendingAction] is the open confirmation card's text. */
+/**
+ * [streamingText] is non-null while Bibi is answering; [pendingAction] is the open confirmation
+ * card's text; [notice] is a short message that goes away by itself (e.g. "Saved to memory").
+ */
 data class ChatUiState(
     val messages: List<Message> = emptyList(),
     val input: String = "",
     val streamingText: String? = null,
     val banner: ChatBanner? = ChatBanner.Loading,
     val pendingAction: String? = null,
+    val notice: String? = null,
 ) {
     val generating: Boolean get() = streamingText != null
     val canSend: Boolean get() = banner == null && !generating && pendingAction == null && input.isNotBlank()
@@ -49,6 +55,9 @@ sealed interface ChatIntent {
     data object Send : ChatIntent
     data object Stop : ChatIntent
     data object Clear : ChatIntent
+
+    /** "Remember this" on a message: saves its text unless it is something Bibi never stores. */
+    data class RememberMessage(val text: String) : ChatIntent
 
     /** Answers to the confirmation card of a Sensitive action. */
     data object ConfirmAction : ChatIntent
@@ -67,10 +76,17 @@ class ChatViewModel(
     modelState: Flow<ModelState>,
     onModelReady: (Boolean) -> Unit = {},
     private val actions: ChatActions? = null,
+    private val memory: ChatMemory? = null,
     scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob()),
 ) : ViewModel(scope) {
 
-    private val sendMessage = SendMessage(client, history, handleAction = actions?.let { a -> { text -> planAndRun(a, text) } })
+    private val sendMessage = SendMessage(
+        client,
+        history,
+        handleAction = if (actions == null && memory == null) null else { text -> rememberPhrase(text) ?: actions?.let { planAndRun(it, text) } },
+    )
+    private val notice = MutableStateFlow<String?>(null)
+    private var noticeJob: Job? = null
     private val input = MutableStateFlow("")
     private val streaming = MutableStateFlow<String?>(null)
     private val pending = MutableStateFlow<ConfirmationRequest?>(null)
@@ -91,8 +107,13 @@ class ChatViewModel(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatBanner.Loading)
 
     val state: StateFlow<ChatUiState> =
-        combine(history.observeAll(), input, streaming, banner, pending) { messages, text, streamingText, banner, request ->
-            ChatUiState(messages, text, streamingText, banner, request?.summary)
+        combine(
+            combine(history.observeAll(), input, streaming, ::Triple),
+            banner,
+            pending,
+            notice,
+        ) { (messages, text, streamingText), banner, request, note ->
+            ChatUiState(messages, text, streamingText, banner, request?.summary, note)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
 
     init {
@@ -113,8 +134,37 @@ class ChatViewModel(
                     client.resetConversation()
                 }
             }
+            is ChatIntent.RememberMessage -> memory?.let { m ->
+                viewModelScope.launch {
+                    when (val r = m.remember(intent.text)) {
+                        is Remember.Result.Saved -> showNotice(m.texts.noticeSaved())
+                        is Remember.Result.Blocked -> showNotice(m.texts.blocked(r.reason))
+                        Remember.Result.Empty -> Unit
+                    }
+                }
+            }
             ChatIntent.ConfirmAction -> pending.value?.let { answer(it, UserResponse.CONFIRM) }
             ChatIntent.CancelAction -> pending.value?.let { answer(it, UserResponse.CANCEL) }
+        }
+    }
+
+    /** A typed "remember that …": Bibi's reply, or null when the message isn't one. */
+    private suspend fun rememberPhrase(text: String): String? {
+        val m = memory ?: return null
+        val fact = RememberPhrase.fact(text) ?: return null
+        return when (val r = m.remember(fact)) {
+            is Remember.Result.Saved -> m.texts.saved()
+            is Remember.Result.Blocked -> m.texts.blocked(r.reason)
+            Remember.Result.Empty -> null
+        }
+    }
+
+    private fun showNotice(text: String) {
+        notice.value = text
+        noticeJob?.cancel()
+        noticeJob = viewModelScope.launch {
+            delay(NOTICE_MS)
+            notice.value = null
         }
     }
 
@@ -174,5 +224,9 @@ class ChatViewModel(
                 streaming.value = null
             }
         }
+    }
+
+    private companion object {
+        const val NOTICE_MS = 3_000L
     }
 }
