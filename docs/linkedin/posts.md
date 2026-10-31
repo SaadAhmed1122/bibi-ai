@@ -29,6 +29,20 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-10-31: Four AI models on one phone: memory fits, the CPU doesn't
+- **Test:** Gemma (chat) kept writing long answers while, one at a time, speech-to-text (Parakeet), the voice (Piper) and the action router ran in other apps, on the 6 GB vivo.
+- **Numbers:**
+  - Memory: the worst pair still left **1.6 GB free**, and **no app was killed**.
+  - Speed: everything slowed down.
+    - Speech-to-text went from 0.32 to **0.74 s of compute per second of audio**, over its 0.7 limit.
+    - The router went from 489 to **815 ms**.
+    - Gemma's answers took **33–50 % longer**.
+    - The voice stayed faster than real time (0.30 → 0.45).
+  - All four loaded at once would take **about 3.25 GB**.
+- **Decision:** the voice models load only when they are needed, and listening never runs while Bibi is writing.
+- **Lesson:** on a phone, "does it fit in RAM?" is only half the question. Eight slow cores shared by four models is the other half.
+- Image: `media/p2-sharing-the-cpu.png`. Source: `docs/measurements/2026-10-31-p2-memory-check/RESULTS.md`, #72.
+
 ### 2026-10-31: The keyboard that hid the message box
 - **Test:** floating Bibi's chat card in portrait on the vivo, with the keyboard open.
 - **Numbers:** the card is 967 px tall; the space above the keyboard is 925 px. Android pushed the card up to the status bar but didn't shrink it, so **41 px of the message box stayed under the keyboard**, and the window was then told the keyboard covered **0 px**.

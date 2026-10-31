@@ -11,6 +11,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 memory check on the vivo: Gemma with Parakeet, Piper and the router, one pair at a time; voice models will load on demand (#72).
 - P2 design module: `SPEC-design.md`, tasks #93 (design system and navigation) and #94 (screen-by-screen restyle).
 - P2 plan: capability map `SPEC-P2.md` (owner-approved), module specs for tools, personality, memory, avatar states, voice, privacy and the closed test, and `tasks/plan-p2.md` (issues #72–#90).
 - S4 tuned slot extraction measured on the vivo: 95/100 right calls (was 87), no wrong call, 0 calls on "none" (#8).

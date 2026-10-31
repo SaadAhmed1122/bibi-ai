@@ -17,7 +17,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 ## Task list
 
 ### Phase 1: Risk check
-- [ ] **Task 1 (#72): Memory check.** Gemma generating + router + Parakeet + Piper on the vivo.
+- [x] **Task 1 (#72): Memory check.** Done 2026-10-31: voice on demand ([results](../docs/measurements/2026-10-31-p2-memory-check/RESULTS.md)). Gemma generating + router + Parakeet + Piper on the vivo.
   - Acceptance: PSS per process, MemAvailable minimum and exit reasons recorded; a Decision line says "all resident" or "voice on demand".
   - Verify: `dumpsys meminfo`, `dumpsys activity exit-info`. **S**
 
