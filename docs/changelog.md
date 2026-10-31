@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 8: "remember that …" in chat and "Remember this" on any message; Bibi refuses card numbers, passwords, PINs and ID numbers; new Memory screen with search, pin, edit and delete (#79).
 - P2 Task 7: memory storage: database version 2 with a memory table and a keyword index (FTS4), migrated automatically from version 1 with every chat message kept (#78).
 - P2 Task 6: two personalities, Friendly and Concise, chosen in the new Settings screen; the choice is saved and applies in about 10 s, keeping the recent messages (#77).
 - P2 Task 5: phone actions from chat, in the app and the floating card: shortcut phrases, then the router, then slot extraction; Bibi asks when a value is missing; dial shows a confirmation card (Confirm, Cancel, 30 s timeout) (#76).

@@ -1,0 +1,19 @@
+package io.github.saadahmed1122.bibi.feature.chat
+
+import io.github.saadahmed1122.bibi.domain.usecase.NeverStore
+import io.github.saadahmed1122.bibi.domain.usecase.Remember
+
+/** Bibi's words about memory; the app supplies them from string resources. */
+interface MemoryTexts {
+    /** Bibi's reply to a typed "remember that …". */
+    fun saved(): String
+
+    /** Bibi's reply when the text is something it never stores. */
+    fun blocked(reason: NeverStore.Reason): String
+
+    /** The short notice after "Remember this" on a message. */
+    fun noticeSaved(): String
+}
+
+/** What the chat needs for "remember this" (SPEC-memory.md). Null in [ChatViewModel] means no memory. */
+class ChatMemory(val remember: Remember, val texts: MemoryTexts)

@@ -1,6 +1,8 @@
 package io.github.saadahmed1122.bibi.feature.chat
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -28,8 +32,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -69,12 +77,24 @@ fun ChatScreen(
                     Text(stringResource(R.string.chat_clear))
                 }
             }
-            MessageList(state, Modifier.weight(1f))
+            MessageList(state, Modifier.weight(1f), onIntent)
             state.banner?.let { Banner(it, onOpenModel) }
             state.pendingAction?.let { ConfirmAction(it, onIntent) }
+            state.notice?.let { Notice(it) }
             InputRow(state, onIntent)
         }
     }
+}
+
+/** A short message that goes away by itself (ChatUiState.notice). */
+@Composable
+internal fun Notice(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 /** The confirmation card of a Sensitive action (SPEC-tools.md): the exact target, then Confirm or Cancel. */
@@ -95,8 +115,9 @@ internal fun ConfirmAction(summary: String, onIntent: (ChatIntent) -> Unit) {
     }
 }
 
+/** [onIntent], when given, adds "Remember this" on a long press of a message. */
 @Composable
-internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier) {
+internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier, onIntent: ((ChatIntent) -> Unit)? = null) {
     if (state.messages.isEmpty() && !state.generating) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.chat_empty), style = MaterialTheme.typography.bodyLarge)
@@ -112,7 +133,14 @@ internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier) {
         state = listState,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(state.messages, key = { it.id }) { Bubble(it.role, it.text, it.status) }
+        items(state.messages, key = { it.id }) { message ->
+            Bubble(
+                message.role,
+                message.text,
+                message.status,
+                onRemember = onIntent?.let { send -> { send(ChatIntent.RememberMessage(message.text)) } },
+            )
+        }
         if (state.streamingText != null) {
             item(key = "streaming") {
                 Bubble(
@@ -126,15 +154,32 @@ internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Bubble(role: Message.Role, text: String, status: Message.Status, modifier: Modifier = Modifier) {
+private fun Bubble(
+    role: Message.Role,
+    text: String,
+    status: Message.Status,
+    modifier: Modifier = Modifier,
+    onRemember: (() -> Unit)? = null,
+) {
     val mine = role == Message.Role.USER
     val colors = MaterialTheme.colorScheme
+    var menu by remember { mutableStateOf(false) }
+    val rememberLabel = stringResource(R.string.chat_remember)
     Box(modifier.fillMaxWidth(), contentAlignment = if (mine) Alignment.CenterEnd else Alignment.CenterStart) {
         Column(
             Modifier
                 .widthIn(max = 320.dp)
-                .background(if (mine) colors.primaryContainer else colors.surfaceVariant, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .then(
+                    if (onRemember != null && text.isNotBlank()) {
+                        Modifier.combinedClickable(onClick = {}, onLongClick = { menu = true }, onLongClickLabel = rememberLabel)
+                    } else {
+                        Modifier
+                    },
+                )
+                .background(if (mine) colors.primaryContainer else colors.surfaceVariant)
                 .padding(12.dp)
                 .semantics(mergeDescendants = true) {},
         ) {
@@ -151,6 +196,9 @@ private fun Bubble(role: Message.Role, text: String, status: Message.Status, mod
                     color = colors.error,
                 )
                 Message.Status.DONE -> Unit
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(text = { Text(rememberLabel) }, onClick = { menu = false; onRemember?.invoke() })
             }
         }
     }

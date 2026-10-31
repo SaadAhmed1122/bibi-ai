@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="memory_title">Bibi\'s memory</string>
+    <string name="memory_intro">What Bibi keeps about you, only on this phone. Say \"remember that …\" in chat, or long-press a message and choose Remember this.</string>
+    <string name="memory_back">Back</string>
+    <string name="memory_search">Search memory</string>
+    <string name="memory_empty">Nothing saved yet.</string>
+    <string name="memory_no_match">Nothing matches.</string>
+    <string name="memory_kind_fact">Fact</string>
+    <string name="memory_kind_summary">Summary</string>
+    <string name="memory_pinned_label">%1$s · pinned</string>
+    <string name="memory_pin">Pin</string>
+    <string name="memory_unpin">Unpin</string>
+    <string name="memory_edit">Edit</string>
+    <string name="memory_delete">Delete</string>
+    <string name="memory_delete_title">Delete this memory?</string>
+    <string name="memory_save">Save</string>
+    <string name="memory_cancel">Cancel</string>
+    <string name="memory_blocked">Bibi never stores card numbers, passwords, PINs or ID numbers.</string>
+</resources>

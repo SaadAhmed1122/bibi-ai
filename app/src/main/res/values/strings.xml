@@ -5,6 +5,7 @@
     <string name="home_chat">Chat with Bibi</string>
     <string name="home_model">Bibi\'s model</string>
     <string name="home_settings">Settings</string>
+    <string name="home_memory">Memory</string>
     <string name="settings_title">Settings</string>
     <string name="settings_personality">How Bibi talks</string>
     <string name="persona_friendly">Friendly</string>
