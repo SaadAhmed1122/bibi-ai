@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
                     Screen.Memory -> MemoryRoute(viewModel { MemoryViewModel(container.memory) }, onBack = goHome)
                     Screen.Terms -> TermsRoute(onBack = goHome)
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
-                    Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome)
+                    Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome, summaries = container.summaries)
                     Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)
                 }
             }

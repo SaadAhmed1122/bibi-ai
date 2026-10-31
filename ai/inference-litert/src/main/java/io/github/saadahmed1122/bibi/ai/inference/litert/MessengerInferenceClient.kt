@@ -76,6 +76,9 @@ class MessengerInferenceClient(
     /** Main thread only. Route requests waiting for their answer, by request id. */
     private val routes = HashMap<Long, CompletableDeferred<RouteResult>>()
 
+    /** Main thread only. Summary requests waiting for their answer, by request id. */
+    private val summaries = HashMap<Long, CompletableDeferred<String?>>()
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             val s = Messenger(binder)
@@ -203,9 +206,24 @@ class MessengerInferenceClient(
         }
     }
 
+    override suspend fun summarize(transcript: String): String? = withContext(Dispatchers.Main.immediate) {
+        val s = service ?: return@withContext null
+        val id = nextRequestId.getAndIncrement()
+        val answer = CompletableDeferred<String?>()
+        summaries[id] = answer
+        try {
+            if (!sendTo(s, ProtocolMessage.Summarize(id, transcript))) return@withContext null
+            answer.await()
+        } finally {
+            summaries.remove(id)
+        }
+    }
+
     private fun failRoutes() {
         routes.values.forEach { it.complete(RouteResult.Unavailable(REASON_DISCONNECTED)) }
         routes.clear()
+        summaries.values.forEach { it.complete(null) }
+        summaries.clear()
     }
 
     private fun onReply(msg: android.os.Message) {
@@ -216,6 +234,7 @@ class MessengerInferenceClient(
             }
             is ProtocolMessage.Reply -> active.deliver(m.requestId, m.event)
             is ProtocolMessage.Routed -> routes[m.requestId]?.complete(m.result)
+            is ProtocolMessage.Summary -> summaries[m.requestId]?.complete(m.text?.takeIf { it.isNotBlank() })
             else -> Unit
         }
     }

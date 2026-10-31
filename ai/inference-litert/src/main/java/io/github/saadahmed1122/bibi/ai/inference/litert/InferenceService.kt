@@ -55,6 +55,9 @@ class InferenceService : Service() {
 
     @Volatile private var stopRequested = false
 
+    /** True while a memory summary runs; a new message cancels it (SPEC-memory.md). */
+    @Volatile private var summarizing = false
+
     /** Written on the engine thread; read on main for [LiteRtLmEngine.cancel]. */
     @Volatile private var engine: LiteRtLmEngine? = null
 
@@ -113,6 +116,8 @@ class InferenceService : Service() {
                 engineThread.execute { load(m.modelPath, p) }
             }
             is ProtocolMessage.Send -> {
+                // The user comes first: a running summary is cancelled, and this turn queues behind it.
+                if (summarizing) engine?.cancel()
                 val current = state
                 if (current != EngineState.Ready || activeRequestId != null) {
                     val busy = current == EngineState.Generating || activeRequestId != null
@@ -141,6 +146,14 @@ class InferenceService : Service() {
                 routerThread.execute { loadRouter(m.modelPath) }
             }
             is ProtocolMessage.Route -> routerThread.execute { route(m.requestId, m.text) }
+            is ProtocolMessage.Summarize -> {
+                if (state != EngineState.Ready || activeRequestId != null || summarizing) {
+                    post(ProtocolMessage.Summary(m.requestId, null, REASON_BUSY))
+                } else {
+                    summarizing = true
+                    engineThread.execute { summarize(m.requestId, m.transcript) }
+                }
+            }
             // No reopen: the notes join the next conversation (after a reset, a preset change or a restart).
             is ProtocolMessage.SetMemory -> memoryNotes = m.notes
             is ProtocolMessage.SetPersona -> {
@@ -151,7 +164,7 @@ class InferenceService : Service() {
                 if (reopen) engineThread.execute { switchPersona(next) }
             }
             // Service -> client messages and unknown codes are ignored.
-            is ProtocolMessage.State, is ProtocolMessage.Reply, is ProtocolMessage.Routed, null -> Unit
+            is ProtocolMessage.State, is ProtocolMessage.Reply, is ProtocolMessage.Routed, is ProtocolMessage.Summary, null -> Unit
         }
     }
 
@@ -224,6 +237,22 @@ class InferenceService : Service() {
             }
         }
         post(ProtocolMessage.Routed(requestId, result))
+    }
+
+    /** Engine thread. A memory summary in a temporary conversation; the chat conversation is untouched. */
+    private fun summarize(requestId: Long, transcript: String) {
+        val t0 = SystemClock.elapsedRealtime()
+        val result = try {
+            val e = checkNotNull(engine) { "engine not loaded" }
+            val instruction = assets.open(SUMMARY_ASSET).bufferedReader().use { it.readText() }.trim()
+            ProtocolMessage.Summary(requestId, e.oneShot(instruction, transcript.take(MAX_TRANSCRIPT_CHARS), SUMMARY_MAX_TOKENS))
+        } catch (ex: Exception) {
+            ProtocolMessage.Summary(requestId, null, if (activeRequestId != null) REASON_CANCELLED else "${ex.javaClass.simpleName}: ${ex.message}")
+        } finally {
+            summarizing = false
+        }
+        Log.i(TAG, "summary ms=${SystemClock.elapsedRealtime() - t0} ok=${result.text != null} chars=${result.text?.length ?: 0}")
+        post(result)
     }
 
     /** Engine thread. One turn; tokens are forwarded as they stream. */
@@ -339,5 +368,12 @@ class InferenceService : Service() {
     private companion object {
         const val TAG = "BibiInference"
         const val REASON_NO_ROUTER = "router not loaded"
+        const val REASON_BUSY = "busy"
+        const val REASON_CANCELLED = "cancelled by a new message"
+        const val SUMMARY_ASSET = "summary_instruction.txt"
+
+        /** About 600 estimated tokens of chat (prefill ~12 s on the vivo, only while idle). */
+        const val MAX_TRANSCRIPT_CHARS = 1_800
+        const val SUMMARY_MAX_TOKENS = 96
     }
 }

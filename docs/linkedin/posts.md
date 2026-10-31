@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Bibi writes its own diary (and refuses to write down a password)
+- **Test:** after a quiet spell, Bibi summarizes the new chat into a one-line memory, using a second, temporary conversation next to the main one, on the vivo.
+- **Numbers:**
+  - First try: "**Okay...**". Gemma 3 has no "system" slot, so the instruction was silently dropped.
+  - With the instruction inside the message: "**Bibi's** sister was Sara". Labelling the chat lines "You:" swapped who's who.
+  - With "User:" / "Bibi:": "You asked about your trip planning… You want hiking experiences with your friend Ali." That took **14.8 s**, only while idle.
+  - A summary of an older chat mentioned a password and was **refused** by the same filter that guards "remember that…".
+  - Honest catch: if you write while a summary is running, it stops, but **about 8 s late**.
+- **Lesson:** small models are literal. Where the instruction sits and how the lines are labelled changes everything.
+- Source: `docs/measurements/2026-11-01-summaries/RESULTS.md`, #81.
+
 ### 2026-11-01: Teaching a 1B model who "my" is
 - **Test:** Bibi answering with a saved memory ("My sister is Sara"), each run from an empty chat, on the vivo.
 - **Numbers:**

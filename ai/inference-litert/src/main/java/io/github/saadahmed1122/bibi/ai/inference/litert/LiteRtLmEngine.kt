@@ -112,6 +112,30 @@ internal class LiteRtLmEngine(private val cacheDir: String) {
     }
 
     /**
+     * One-off text from a temporary conversation next to the chat one (memory summaries, SPEC-memory.md):
+     * greedy, at most [maxTokens]. [instruction] goes in the user message, not as a system instruction:
+     * Gemma 3's template has no system turn, and on the vivo a system-only instruction was dropped
+     * (the model answered the transcript with "Okay..."). The chat conversation and its cache are not
+     * touched. [cancel] stops it like a chat turn; only the temporary conversation is lost.
+     */
+    fun oneShot(instruction: String, text: String, maxTokens: Int): String {
+        val e = checkNotNull(engine) { "load() first" }
+        return e.createConversation(
+            ConversationConfig(
+                samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 1.0),
+                maxOutputToken = maxTokens,
+            ),
+        ).use { c ->
+            running = c
+            try {
+                c.sendMessage("$instruction\n\nThe chat:\n$text\n\nThe note:").toString().trim()
+            } finally {
+                running = null
+            }
+        }
+    }
+
+    /**
      * Thread-safe: cancels the running turn, which then ends through the error callback.
      *
      * After a cancel the conversation is unusable: 0.16.1's session_advanced.h says CancelProcess

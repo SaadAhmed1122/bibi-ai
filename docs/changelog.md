@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 10: automatic chat summaries: after 5 quiet minutes Bibi writes a one- or two-sentence summary of the new conversation into memory, never during a reply and never with a password or card number in it (#81).
 - P2 Task 9: Bibi uses saved memories in answers: pinned ones in its instructions, and matching ones next to your question (only the model sees them) (#80).
 - P2 Task 8: "remember that …" in chat and "Remember this" on any message; Bibi refuses card numbers, passwords, PINs and ID numbers; new Memory screen with search, pin, edit and delete (#79).
 - P2 Task 7: memory storage: database version 2 with a memory table and a keyword index (FTS4), migrated automatically from version 1 with every chat message kept (#78).

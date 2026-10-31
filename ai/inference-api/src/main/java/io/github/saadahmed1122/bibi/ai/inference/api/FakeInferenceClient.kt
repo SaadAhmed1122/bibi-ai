@@ -90,6 +90,15 @@ class FakeInferenceClient(
         resetCount++
     }
 
+    /** What [summarize] answers; the transcripts it got go to [summarized]. */
+    var summaryResult: String? = null
+    val summarized = mutableListOf<String>()
+
+    override suspend fun summarize(transcript: String): String? {
+        summarized += transcript
+        return summaryResult
+    }
+
     override suspend fun route(text: String): RouteResult {
         routedTexts += text
         return routeResult

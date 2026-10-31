@@ -32,6 +32,12 @@ interface InferenceClient {
      */
     suspend fun route(text: String): RouteResult
 
+    /**
+     * A short summary of [transcript] from a temporary conversation (SPEC-memory.md), or null when
+     * the engine isn't idle and ready or the summary was cancelled by a new message.
+     */
+    suspend fun summarize(transcript: String): String?
+
     companion object {
         const val ERROR_BUSY = "busy"
         const val ERROR_NOT_READY = "not ready"

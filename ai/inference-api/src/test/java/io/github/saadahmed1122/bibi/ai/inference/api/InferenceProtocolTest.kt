@@ -21,6 +21,13 @@ class InferenceProtocolTest {
         roundTrip(ProtocolMessage.SetPersona(Persona.CONCISE))
         roundTrip(ProtocolMessage.SetMemory("What you know about the user: My name is Saad."))
         roundTrip(ProtocolMessage.SetMemory(""))
+        roundTrip(ProtocolMessage.Summarize(3, "You: hi\nBibi: hello"))
+    }
+
+    @Test
+    fun summaryAnswersRoundTrip() {
+        roundTrip(ProtocolMessage.Summary(3, "You asked about sleep."))
+        roundTrip(ProtocolMessage.Summary(3, null, "busy"))
     }
 
     @Test
@@ -77,12 +84,14 @@ class InferenceProtocolTest {
             ProtocolMessage.Route(1, "t"),
             ProtocolMessage.SetPersona(Persona.FRIENDLY),
             ProtocolMessage.SetMemory(""),
+            ProtocolMessage.Summarize(1, "t"),
             ProtocolMessage.State(EngineState.Ready),
             ProtocolMessage.Reply(1, ReplyEvent.Token("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Done("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Stopped("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Error("a", "a")),
             ProtocolMessage.Routed(1, RouteResult.Label("none", 0f)),
+            ProtocolMessage.Summary(1, "s"),
         ).map { InferenceProtocol.encode(it).what }
         assertEquals(
             listOf(
@@ -95,12 +104,14 @@ class InferenceProtocolTest {
                 InferenceProtocol.MSG_ROUTE,
                 InferenceProtocol.MSG_SET_PERSONA,
                 InferenceProtocol.MSG_SET_MEMORY,
+                InferenceProtocol.MSG_SUMMARIZE,
                 InferenceProtocol.MSG_STATE,
                 InferenceProtocol.MSG_TOKEN,
                 InferenceProtocol.MSG_DONE,
                 InferenceProtocol.MSG_STOPPED,
                 InferenceProtocol.MSG_ERROR,
                 InferenceProtocol.MSG_ROUTED,
+                InferenceProtocol.MSG_SUMMARY,
             ),
             codes,
         )

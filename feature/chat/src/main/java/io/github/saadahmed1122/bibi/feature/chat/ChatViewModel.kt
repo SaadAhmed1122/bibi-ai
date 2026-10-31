@@ -77,6 +77,7 @@ class ChatViewModel(
     onModelReady: (Boolean) -> Unit = {},
     private val actions: ChatActions? = null,
     private val memory: ChatMemory? = null,
+    private val summaries: SummaryScheduler? = null,
     scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob()),
 ) : ViewModel(scope) {
 
@@ -216,6 +217,7 @@ class ChatViewModel(
         if (banner.value != null || streaming.value != null || text.isBlank()) return
         input.value = ""
         streaming.value = ""
+        summaries?.onUserActivity()
         viewModelScope.launch {
             try {
                 sendMessage(text).collect { event ->
@@ -223,6 +225,7 @@ class ChatViewModel(
                 }
             } finally {
                 streaming.value = null
+                summaries?.onTurnDone()
             }
         }
     }
