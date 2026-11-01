@@ -39,10 +39,10 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 - [x] **Task 11 (#82): Retention job + JSON export.** **M**
 
 ### Checkpoint E2: memory
-- [ ] SPEC-memory criterion 3 on the vivo (Sara test, summary after idle, no delayed reply). Owner tries it.
+- [x] SPEC-memory criterion 3 on the vivo (Sara test, summary after idle, no delayed reply). Owner tries it.
 
 ### Phase 4: Bibi's states and voice
-- [ ] **Task 12 (#83): Avatar states.** Acceptance: SPEC-avatar-states. **M**
+- [x] **Task 12 (#83): Avatar states.** Acceptance: SPEC-avatar-states. **M**
 - [ ] **Task 13 (#84): Voice pack import + sherpa-onnx engines.** **M**
 - [ ] **Task 14 (#85): Push-to-talk + spoken replies in the chat screen.** **M**
 - [ ] **Task 15 (#86): Voice in the floating card.** **M**

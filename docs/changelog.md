@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 12: Bibi shows what it is doing (thinking, speaking, confused for a moment after a problem, idle) on floating Bibi and in the chat headers; TalkBack names the state (#83).
 - P2 Task 11: choose how long memories are kept (1 week to forever, 3 months by default; pinned ones always stay), a daily clean-up while charging, deleted rows overwritten, and Export to `bibimem.json` (#82).
 - P2 Task 10: automatic chat summaries: after 5 quiet minutes Bibi writes a one- or two-sentence summary of the new conversation into memory, never during a reply and never with a password or card number in it (#81).
 - P2 Task 9: Bibi uses saved memories in answers: pinned ones in its instructions, and matching ones next to your question (only the model sees them) (#80).
