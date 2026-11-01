@@ -28,8 +28,8 @@ Bibi looks like one designed product, not Material defaults: warm, calm and pers
 5. The "not AI-looking" list above is checked in review.
 
 ## Known layout issues to fix in the restyle
-- Memory screen in landscape: the title, intro and search box leave little room for the list (found in Task 8).
-- Floating keyboard in landscape covers the chat card's Send button (the keyboard's own send key works).
+- Memory screen in landscape: fixed in Task 21 (one scrolling list; the header scrolls away).
+- Floating keyboard in landscape covers the chat card's Send button (the keyboard's own send key works). Not changed: the keyboard is the vivo's floating mode [OPEN].
 
 ## Out of scope
 A new character design or new art (the four states are fixed), animations beyond Material motion and Bibi's frames, tablet layouts, localisation.

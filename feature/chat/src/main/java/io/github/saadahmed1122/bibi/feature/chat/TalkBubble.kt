@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +47,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
+import io.github.saadahmed1122.bibi.core.designsystem.BubbleShapes
+import io.github.saadahmed1122.bibi.core.designsystem.Elevation
 import io.github.saadahmed1122.bibi.core.designsystem.Durations
 import io.github.saadahmed1122.bibi.core.designsystem.LocalBibiAccents
 import io.github.saadahmed1122.bibi.core.designsystem.Space
@@ -109,7 +110,7 @@ fun TalkBubble(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomStart = 22.dp, bottomEnd = 6.dp))
+                    .clip(BubbleShapes.mine)
                     .background(colors.secondary)
                     .padding(horizontal = Space.m + Space.xs, vertical = Space.s),
             )
@@ -117,8 +118,8 @@ fun TalkBubble(
         Surface(
             color = colors.surfaceContainerLowest,
             contentColor = colors.onSurface,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 24.dp, bottomEnd = 8.dp),
-            shadowElevation = 6.dp,
+            shape = BubbleShapes.floating,
+            shadowElevation = Elevation.floating,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(role = Role.Button, onClickLabel = stringResource(R.string.talk_open_chat), onClick = onOpenChat),
@@ -171,7 +172,7 @@ private fun Wave(lively: Boolean) {
     val transition = rememberInfiniteTransition(label = "wave")
     val period = if (lively) Durations.STANDARD * 2 else Durations.STANDARD * 5
     val color = LocalBibiAccents.current.listening
-    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(14.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Space.waveBar), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(Space.waveHeight)) {
         repeat(4) { i ->
             val h by transition.animateFloat(
                 initialValue = 0.25f,
@@ -179,7 +180,7 @@ private fun Wave(lively: Boolean) {
                 animationSpec = infiniteRepeatable(tween(period, delayMillis = i * period / 6), RepeatMode.Reverse),
                 label = "bar$i",
             )
-            Box(Modifier.width(3.dp).height(14.dp * h).clip(CircleShape).background(color))
+            Box(Modifier.width(Space.waveBar).height(Space.waveHeight * h).clip(CircleShape).background(color))
         }
     }
 }

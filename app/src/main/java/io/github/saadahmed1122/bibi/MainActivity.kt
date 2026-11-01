@@ -141,8 +141,6 @@ class MainActivity : ComponentActivity() {
                         onOpenCrashLog = if (BuildConfig.DEBUG) ({ screen = Screen.CrashLog }) else null,
                         onOpenLlmDebug = if (BuildConfig.DEBUG) ({ screen = Screen.LlmDebug }) else null,
                         onOpenActionsDebug = if (BuildConfig.DEBUG) ({ screen = Screen.ActionsDebug }) else null,
-                        onOpenSettings = { screen = Screen.Settings },
-                        onOpenMemory = { screen = Screen.Memory },
                         floating = floating,
                         onFloatingSwitch = container.floating::onSwitch,
                         onCalmSwitch = container.floating::onCalm,
@@ -199,7 +197,6 @@ class MainActivity : ComponentActivity() {
                         onOpenPrivacy = { screen = Screen.Privacy },
                         onOpenPolicy = { screen = Screen.Policy },
                         onOpenLicenses = { screen = Screen.Licenses },
-                        onBack = goHome,
                     )
                     Screen.Privacy -> {
                         var stored by remember { mutableStateOf<StoredData?>(null) }

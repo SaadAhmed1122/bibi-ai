@@ -29,12 +29,22 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: From Material defaults to a designed app
+- **Test:** the new design on the vivo, every screen in portrait and landscape.
+- **Numbers:**
+  - **3** design directions mocked up; the owner picked "Expressive Tabby": tangerine and violet taken from the character's fur and collar.
+  - Every text colour pair passes **WCAG AA**. The brand tangerine itself (**3.3:1** on white) failed for button text, so buttons use a darker shade (**5.3:1**); the bright one is only decoration.
+  - **0** hard-coded colours or sizes left outside the design module; **2** variable fonts (Bricolage Grotesque, Figtree) add about **470 KB**.
+  - In landscape the bottom tab bar took about **a quarter** of the screen height; it became a side rail.
+- **Lesson:** take the palette from the character, then measure it. The nicest orange was the one that failed contrast.
+- Image: `media/design-expressive-tabby.png`, `media/design-landscape-rail.png`. Source: #93, #94.
+
 ### 2026-11-01: One tap, then just talk
 - **Test:** tap-to-talk on floating Bibi over the phone's home screen, on the vivo. The questions came from the laptop's speaker, so the runs are repeatable.
 - **Numbers:**
   - The mic opens in **80–120 ms**. Speech peaked at **0.058** loudness against a room at **0.001–0.002**.
   - Per turn: transcription **1.1 s**, first word of the answer **1.5–1.7 s**. The first turn also waits for the speech model to load (**13–19 s**) and the voice (**9 s**).
-  - **8 runs to get two clean turns:** the chat opened instead while the model loaded, a sentence was cut short, the speech detector calibrated on the speaker's own voice, and the first words were sent before Bibi's AI process had connected, so they were lost. A one-line loudness log found both.
+  - **8 runs to get two clean turns:** the chat opened instead while the model loaded, a sentence was cut short, the speech detector calibrated on the speaker's own voice, and the first words were sent before Bibi's AI process had connected, so they were lost. A one-line loudness log found the last two.
   - Gemma 3 1B answered "what is 2 plus 2?" with **"That's six!"** A 1B model is a conversation partner, not a calculator.
 - **Lesson:** log the numbers (loudness, timings), never the words. That was enough to debug a voice feature without recording anyone.
 - Image: `media/tap-to-talk.png`. Source: #118.
