@@ -11,7 +11,7 @@ Hold to talk, let go, and Bibi hears you; Bibi's answer can be read aloud. Typed
 - **Voice pack import:** a folder picker (`OpenDocumentTree`) copies the Parakeet and Piper files into app storage with size and SHA-256 checks (values from S3). Without the pack, the mic button is hidden.
 - **Push-to-talk:** a mic button next to Send; hold to record, release to transcribe and send. `RECORD_AUDIO` is asked the first time with a one-line reason; denial keeps typed chat. No background listening.
 - **Spoken replies:** a speaker toggle (off by default). When on, each finished sentence is spoken while the rest streams; Stop stops both.
-- **Floating card:** the same buttons. While recording from the card, `OverlayService` runs with the `microphone` foreground-service type next to `specialUse` (a new Play declaration). Whether Android 14/15 lets the overlay start a microphone service while another app is in front is checked first [VERIFY]; if not, the card's mic opens the app's chat screen instead.
+- **Floating card:** the same buttons. While recording from the card, `OverlayService` runs with the `microphone` foreground-service type next to `specialUse` (a new Play declaration). Checked (Task 15): with only the specialUse service the card's recording was silent; the service now adds the microphone type when it is (re)started from the app while it is in front, and the card hears normally. Without the mic permission the card's mic opens the app's chat, where it is asked.
 
 ## Acceptance criteria
 1. Protocol tests for the new messages; recorder chunking test; sentence splitter tests.

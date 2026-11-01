@@ -1,5 +1,7 @@
 package io.github.saadahmed1122.bibi.feature.chat
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,18 +15,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 
+/** [onOpenApp] opens the app's chat: for the model import and for the first microphone permission. */
 @Composable
-fun ChatCardRoute(viewModel: ChatViewModel, onOpenModel: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun ChatCardRoute(viewModel: ChatViewModel, onOpenModel: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier, onOpenApp: () -> Unit = onOpenModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val mood by viewModel.mood.collectAsStateWithLifecycle()
-    ChatCard(state, viewModel::onIntent, onOpenModel, onClose, modifier, mood)
+    val context = LocalContext.current
+    // The card can't show the permission dialog (no activity): the first time, the app's chat asks.
+    val onIntent: (ChatIntent) -> Unit = { intent ->
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        if (intent == ChatIntent.MicDown && !granted) onOpenApp() else viewModel.onIntent(intent)
+    }
+    ChatCard(state, onIntent, onOpenModel, onClose, modifier, mood)
 }
 
 /** The compact chat shown over other apps when floating Bibi is tapped (SPEC-overlay.md). Same state as [ChatScreen]. */
@@ -57,6 +68,14 @@ fun ChatCard(
             state.banner?.let { Banner(it, onOpenModel) }
             state.pendingAction?.let { ConfirmAction(it, onIntent) }
             state.notice?.let { Notice(it) }
+            if (state.voiceReady) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TalkButton(state, onIntent, Modifier.weight(1f))
+                    TextButton(onClick = { onIntent(ChatIntent.ToggleSpeaker) }) {
+                        Text(stringResource(if (state.speakReplies) R.string.voice_read_aloud_on else R.string.voice_read_aloud_off))
+                    }
+                }
+            }
             InputRow(state, onIntent)
         }
     }

@@ -45,10 +45,10 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 - [x] **Task 12 (#83): Avatar states.** Acceptance: SPEC-avatar-states. **M**
 - [x] **Task 13 (#84): Voice pack import + sherpa-onnx engines.** **M**
 - [x] **Task 14 (#85): Push-to-talk + spoken replies in the chat screen.** **M**
-- [ ] **Task 15 (#86): Voice in the floating card.** **M**
+- [x] **Task 15 (#86): Voice in the floating card.** **M**
 
 ### Checkpoint E3: voice
-- [ ] SPEC-voice criterion 2 on the vivo; no kills. Owner tries it.
+- [x] SPEC-voice criterion 2 on the vivo; no kills. Owner tries it.
 
 ### Phase 5: Privacy and closed test
 - [ ] **Task 16 (#87): Privacy dashboard, Delete everything, Safe mode.** **M**

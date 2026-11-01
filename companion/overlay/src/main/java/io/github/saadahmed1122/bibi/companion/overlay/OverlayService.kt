@@ -1,6 +1,7 @@
 package io.github.saadahmed1122.bibi.companion.overlay
 
 import android.app.Notification
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -14,10 +15,12 @@ import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.drawable.Icon
 import android.os.IBinder
+import android.content.pm.PackageManager
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.Gravity
 import android.view.WindowManager
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -79,7 +82,7 @@ class OverlayService : Service() {
         when (intent?.action) {
             ACTION_START, ACTION_SHOW -> {
                 // Answer startForegroundService() first, even if the overlay can't be shown.
-                startForeground(NOTIFICATION_ID, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+                startForeground(NOTIFICATION_ID, notification(), serviceTypes())
                 // START comes on every app visit (FloatingToggle): it must not undo a Hide.
                 val hidden = controller.state == OverlayController.State.Hidden
                 if (intent.action == ACTION_START && hidden) {
@@ -182,6 +185,18 @@ class OverlayService : Service() {
         cardOwner.destroy()
         controller.stop()
         super.onDestroy()
+    }
+
+    /**
+     * specialUse for Bibi on screen, plus microphone once RECORD_AUDIO is granted, so push-to-talk in
+     * the floating card can hear (measured: without it the card's recording is pure silence). Only
+     * set from ACTION_START/SHOW, which the app sends while it is in front: Android refuses a
+     * microphone service started from the background. The mic itself records only while the talk
+     * button is held.
+     */
+    private fun serviceTypes(): Int {
+        val mic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        return ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE or (if (mic) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0)
     }
 
     private fun refreshNotification() {

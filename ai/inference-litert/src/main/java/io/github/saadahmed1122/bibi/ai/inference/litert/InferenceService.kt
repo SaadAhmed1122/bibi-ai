@@ -301,7 +301,9 @@ class InferenceService : Service() {
             val t0 = SystemClock.elapsedRealtime()
             val text = sttEngine(dir).transcribe(samples)
             val ms = SystemClock.elapsedRealtime() - t0
-            Log.i(TAG, "stt audio_ms=${samples.size * 1000L / ParakeetStt.SAMPLE_RATE} ms=$ms chars=${text.length}")
+            // Loudness only (no content): an all-zero signal means Android silenced the microphone.
+            val rms = kotlin.math.sqrt(samples.fold(0.0) { a, x -> a + x * x } / samples.size.coerceAtLeast(1))
+            Log.i(TAG, "stt audio_ms=${samples.size * 1000L / ParakeetStt.SAMPLE_RATE} ms=$ms chars=${text.length} rms=${"%.5f".format(rms)}")
             ProtocolMessage.Transcript(requestId, text)
         } catch (e: Exception) {
             Log.w(TAG, "stt failed", e)
