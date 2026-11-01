@@ -105,6 +105,7 @@ fun slotExtractorTests() {
     checkEq("torch off", false, filled(ToolName.FLASHLIGHT, "torch off")?.get("on"))
     checkEq("torch too bright → off", false, filled(ToolName.FLASHLIGHT, "the torch is too bright")?.get("on"))
     checkEq("torch 'still on, turn it off' → off", false, filled(ToolName.FLASHLIGHT, "the torch is still on, turn it off")?.get("on"))
+    checkEq("torch 'close' → off (owner's try on the vivo)", false, filled(ToolName.FLASHLIGHT, "can you close the flashlight for me")?.get("on"))
     checkEq("torch bare request → on", true, filled(ToolName.FLASHLIGHT, "torch")?.get("on"))
     check("torch: negated off → missing", missing(ToolName.FLASHLIGHT, "don't turn off the torch"))
     check("torch: negated on → missing", missing(ToolName.FLASHLIGHT, "do not turn on the flashlight"))

@@ -229,7 +229,7 @@ object SlotExtractor {
 
     private val NEGATED = Regex("\\b(?:don'?t|do not|never|no need to)\\s+(?:\\w+\\s+)?(?:turn|switch|put|shut|kill|stop|disable|enable|activate)\\b")
     private val OFF = Regex(
-        "\\boff\\b|\\bkill\\b|\\bstop\\b|\\bdisable\\b|\\bdeactivate\\b|\\bshut\\b|\\blights?\\s+out\\b|\\benough\\b|" +
+        "\\boff\\b|\\bclose\\b|\\bkill\\b|\\bstop\\b|\\bdisable\\b|\\bdeactivate\\b|\\bshut\\b|\\blights?\\s+out\\b|\\benough\\b|" +
             "\\bdon'?t need\\b|\\bno longer need\\b|\\banymore\\b|\\bi'?m done\\b|\\btoo bright\\b",
     )
     private val LIGHT = Regex("\\b(?:flash\\s?light|torch|light|lamp|dark|can'?t see)\\b|\\b(?:turn|switch|power|flip)\\s+(?:it\\s+)?on\\b")
