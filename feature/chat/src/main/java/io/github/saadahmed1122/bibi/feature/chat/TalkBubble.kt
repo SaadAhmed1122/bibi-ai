@@ -151,6 +151,7 @@ fun TalkBubble(
 private fun PhaseLabel(phase: TalkPhase?, modifier: Modifier = Modifier) {
     val label = stringResource(
         when (phase) {
+            TalkPhase.WAKING -> R.string.talk_waking
             TalkPhase.LISTENING -> R.string.talk_listening
             TalkPhase.HEARING -> R.string.talk_hearing
             TalkPhase.THINKING -> R.string.talk_thinking

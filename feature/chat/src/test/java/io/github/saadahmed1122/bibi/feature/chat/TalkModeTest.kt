@@ -117,10 +117,8 @@ class TalkModeTest {
     }
 
     @Test
-    fun whileTheModelLoadsBibiListensAndAnswersOnceReady() = runTest {
-        val client = FakeInferenceClient(initialState = EngineState.Loading).apply {
-            enqueueReply("Paris.")
-        }
+    fun whileTheModelLoadsBibiWaitsThenListens() = runTest {
+        val client = FakeInferenceClient(initialState = EngineState.Loading).apply { enqueueReply("Paris.") }
         val said = listOf("what is the capital of france", "bye")
         val audio = ScriptedAudio(listOf(utterance, utterance)) { client.transcriptResult = said[it] }
         val vm = viewModel(client, audio)
@@ -128,9 +126,8 @@ class TalkModeTest {
         backgroundScope.launch { vm.openChat.collect { opened++ } }
         vm.onIntent(ChatIntent.StartTalk)
         advanceUntilIdle()
-        // Heard, but waiting for the model: nothing sent yet, and the chat didn't open.
-        assertTrue(client.sentTexts.isEmpty())
-        assertEquals(TalkPhase.THINKING, vm.state.value.talk)
+        assertEquals(TalkPhase.WAKING, vm.state.value.talk)
+        assertEquals(0, audio.starts)
         client.setState(EngineState.Ready)
         advanceUntilIdle()
         runCurrent()
@@ -170,8 +167,12 @@ class TalkModeTest {
         vm.onIntent(ChatIntent.StartTalk)
         advanceUntilIdle()
         assertEquals(0, audio.starts)
-        assertEquals(TalkPhase.THINKING, vm.state.value.talk)
+        assertEquals(TalkPhase.WAKING, vm.state.value.talk)
+        // "Loading" is set when binding starts, before the connection: still not safe to record.
         client.setState(EngineState.Loading)
+        advanceUntilIdle()
+        assertEquals(0, audio.starts)
+        client.setState(EngineState.Ready)
         advanceUntilIdle()
         assertEquals(1, audio.starts)
     }

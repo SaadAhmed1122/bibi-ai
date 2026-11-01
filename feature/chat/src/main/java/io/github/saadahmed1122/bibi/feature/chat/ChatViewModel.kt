@@ -39,8 +39,11 @@ import kotlinx.coroutines.launch
 /** What blocks sending, shown above the input. */
 enum class ChatBanner { ImportModel, Loading, Restarting, Error }
 
-/** Where a tap-to-talk conversation is (#118): waiting for speech, hearing it, working out the answer, saying it. */
-enum class TalkPhase { LISTENING, HEARING, THINKING, SPEAKING }
+/**
+ * Where a tap-to-talk conversation is (#118): waiting for Bibi's AI process, waiting for speech,
+ * hearing it, working out the answer, saying it.
+ */
+enum class TalkPhase { WAKING, LISTENING, HEARING, THINKING, SPEAKING }
 
 /**
  * [streamingText] is non-null while Bibi is answering; [pendingAction] is the open confirmation
@@ -335,15 +338,19 @@ class ChatViewModel(
                 // Read the sources, not [state]: a chat created for this tap has no state out yet.
                 // A model still loading is fine: Bibi listens meanwhile and answers once it's ready.
                 val blocked = banner.value == ChatBanner.ImportModel || banner.value == ChatBanner.Error
-                talk.value = TalkPhase.THINKING
+                talk.value = TalkPhase.WAKING
                 if (!v.ready.first() || blocked) {
                     openChatRequests.trySend(Unit)
                     return@launch
                 }
-                // The recognizer lives in :inference: listening before it is bound loses the words.
-                val connected = combine(client.state, banner) { engine, b -> engine != EngineState.Unbound || b == ChatBanner.ImportModel || b == ChatBanner.Error }
+                // The recognizer lives in :inference, and audio sent before it is connected is lost.
+                // Only Ready (or Generating) comes from the connected process; Loading is set when
+                // binding starts (measured on the vivo: the words of the first turn were dropped).
+                val connected = combine(client.state, banner) { engine, b ->
+                    engine == EngineState.Ready || engine == EngineState.Generating || b == ChatBanner.ImportModel || b == ChatBanner.Error
+                }
                 connected.first { it }
-                if (client.state.value == EngineState.Unbound) {
+                if (banner.value == ChatBanner.ImportModel || banner.value == ChatBanner.Error) {
                     openChatRequests.trySend(Unit)
                     return@launch
                 }
