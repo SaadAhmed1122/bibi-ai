@@ -376,6 +376,8 @@ class InferenceService : Service() {
         // Written on the runtime's callback thread; read here after chat() returns.
         var chunks = 0
         var capped = false
+        // Set when the reply started looping (#107): the text to keep instead of the loop.
+        var unlooped: String? = null
         var failure: String? = null
         val t0 = SystemClock.elapsedRealtime()
         var firstTokenMs = -1L
@@ -395,18 +397,26 @@ class InferenceService : Service() {
                     if (ReplyOutcome.reachedCap(chunks)) {
                         capped = true
                         e.cancel()
+                    } else {
+                        RepetitionGuard.check(reply.toString())?.let {
+                            unlooped = it
+                            capped = true
+                            e.cancel()
+                        }
                     }
                 }
             }
         } catch (ex: Exception) {
             failure = "${ex.javaClass.simpleName}: ${ex.message}"
         }
-        val terminal = ReplyOutcome.terminal(reply.toString(), stopRequested, capped, failure)
+        val kept = unlooped ?: reply.toString()
+        if (unlooped != null) Log.i(TAG, "loop cut after chunks=$chunks kept_chars=${kept.length}")
+        val terminal = ReplyOutcome.terminal(kept, stopRequested, capped, failure)
         // Service-side timing for the chat checks (Checkpoint B); excludes the IPC hop to the UI.
         Log.i(TAG, "turn ttft_ms=$firstTokenMs chunks=$chunks total_ms=${SystemClock.elapsedRealtime() - t0} end=${endLabel(terminal)}")
         if (terminal is ReplyEvent.Error) Log.w(TAG, "turn failed: ${terminal.reason}")
         // A stopped or failed turn is carried over with the text the user saw.
-        budget?.record(text, reply.toString())
+        budget?.record(text, kept)
         if (ReplyOutcome.needsNewConversation(terminal, capped)) {
             // A cancelled or failed turn poisons the conversation (LiteRtLmEngine.cancel), so the
             // next turn needs a fresh one, rebuilt with the recent turns. The reply reaches the UI
