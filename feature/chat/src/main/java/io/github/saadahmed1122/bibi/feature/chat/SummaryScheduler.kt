@@ -29,6 +29,8 @@ class SummaryScheduler(
     private val clock: () -> Long = System::currentTimeMillis,
     private val idleMs: Long = IDLE_MS,
     private val minTurns: Int = MIN_TURNS,
+    /** False in Safe mode (FR-076): no summaries are written. */
+    private val enabled: () -> Boolean = { true },
 ) {
     sealed interface Result {
         data class Saved(val text: String) : Result
@@ -55,6 +57,7 @@ class SummaryScheduler(
 
     /** Summarizes the new turns now; [force] ignores [minTurns] (debug screen). */
     suspend fun runNow(force: Boolean = false): Result {
+        if (!enabled()) return Result.Unavailable
         val since = lastSummarized()
         val fresh = history.observeAll().first().filter { it.id > since && it.text.isNotBlank() }
         val answers = fresh.count { it.role == Message.Role.BIBI }

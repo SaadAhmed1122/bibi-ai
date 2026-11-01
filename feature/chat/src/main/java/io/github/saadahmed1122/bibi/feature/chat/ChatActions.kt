@@ -68,6 +68,9 @@ interface ActionTexts {
 
     /** Bibi's message above the confirmation card, which itself shows the exact target. */
     fun confirm(): String
+
+    /** Bibi's reply to a clear action request while Safe mode is on. */
+    fun safeMode(): String = "Safe mode is on, so I can't do phone actions. You can turn it off in Settings."
 }
 
 /** Everything the chat needs for phone actions. Null in [ChatViewModel] means chat only. */
@@ -75,4 +78,6 @@ class ChatActions(
     val plan: suspend (String) -> TurnPlan,
     val runner: ActionRunner,
     val texts: ActionTexts,
+    /** False in Safe mode (FR-076): no shortcut, no router, no action; messages are chat. */
+    val enabled: () -> Boolean = { true },
 )

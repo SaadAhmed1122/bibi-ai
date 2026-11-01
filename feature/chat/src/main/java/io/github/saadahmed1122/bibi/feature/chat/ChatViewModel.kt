@@ -9,6 +9,7 @@ import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.tools.ConfirmationRequest
 import io.github.saadahmed1122.bibi.core.tools.PermissionEngine
 import io.github.saadahmed1122.bibi.core.tools.RunResult
+import io.github.saadahmed1122.bibi.core.tools.ShortcutParser
 import io.github.saadahmed1122.bibi.core.tools.UserResponse
 import io.github.saadahmed1122.bibi.domain.model.Message
 import io.github.saadahmed1122.bibi.domain.model.ModelState
@@ -51,6 +52,8 @@ data class ChatUiState(
     val voiceReady: Boolean = false,
     val listening: Boolean = false,
     val speakReplies: Boolean = false,
+    /** Safe mode (FR-076): no actions, no memory writes; shown as a label. */
+    val safeMode: Boolean = false,
 ) {
     /** Push-to-talk is offered: voice ready, and not while Bibi writes (memory check, #72). */
     val canTalk: Boolean get() = voiceReady && banner == null && !generating && pendingAction == null
@@ -75,6 +78,9 @@ sealed interface ChatIntent {
     /** "Read answers aloud" on or off. */
     data object ToggleSpeaker : ChatIntent
 
+    /** Safe mode on or off (the floating card's header switch). */
+    data object ToggleSafeMode : ChatIntent
+
     /** Answers to the confirmation card of a Sensitive action. */
     data object ConfirmAction : ChatIntent
     data object CancelAction : ChatIntent
@@ -97,6 +103,9 @@ class ChatViewModel(
     /** Called with this chat's mood whenever it changes (floating Bibi shows it). */
     private val onMood: (BibiMood) -> Unit = {},
     private val voice: ChatVoice? = null,
+    /** Safe mode (FR-076); [setSafeMode] saves a change. Null means no switch. */
+    private val safeMode: StateFlow<Boolean>? = null,
+    private val setSafeMode: (Boolean) -> Unit = {},
     scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob()),
 ) : ViewModel(scope) {
 
@@ -166,7 +175,7 @@ class ChatViewModel(
             ChatUiState(messages, text, streamingText, banner, request?.summary, note)
         }.combine(combine(voice?.ready ?: flowOf(false), listening, voice?.speakReplies ?: flowOf(false), ::Triple)) { ui, (ready, mic, aloud) ->
             ui.copy(voiceReady = ready, listening = mic, speakReplies = aloud)
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
+        }.combine(safeMode ?: flowOf(false)) { ui, safe -> ui.copy(safeMode = safe) }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
 
     init {
         viewModelScope.launch {
@@ -183,6 +192,7 @@ class ChatViewModel(
                 client.stop()
                 silence()
             }
+            ChatIntent.ToggleSafeMode -> safeMode?.let { setSafeMode(!it.value) }
             ChatIntent.MicDown -> micDown()
             ChatIntent.MicUp -> micUp()
             ChatIntent.ToggleSpeaker -> voice?.let { v ->
@@ -198,6 +208,10 @@ class ChatViewModel(
                 }
             }
             is ChatIntent.RememberMessage -> memory?.let { m ->
+                if (!m.writesAllowed()) {
+                    showNotice(m.texts.safeMode())
+                    return
+                }
                 viewModelScope.launch {
                     when (val r = m.remember(intent.text)) {
                         is Remember.Result.Saved -> showNotice(m.texts.noticeSaved())
@@ -215,6 +229,7 @@ class ChatViewModel(
     private suspend fun rememberPhrase(text: String): String? {
         val m = memory ?: return null
         val fact = RememberPhrase.fact(text) ?: return null
+        if (!m.writesAllowed()) return m.texts.safeMode()
         return when (val r = m.remember(fact)) {
             is Remember.Result.Saved -> m.texts.saved()
             is Remember.Result.Blocked -> m.texts.blocked(r.reason).also { puzzle() }
@@ -232,7 +247,11 @@ class ChatViewModel(
     }
 
     /** Main thread, inside the send. Returns Bibi's reply when the message was an action, null for chat. */
-    private suspend fun planAndRun(a: ChatActions, text: String): String? = when (val plan = a.plan(text)) {
+    private suspend fun planAndRun(a: ChatActions, text: String): String? = if (!a.enabled()) {
+        // Safe mode: no router and no action. A clear shortcut request gets an honest answer instead
+        // of the model improvising ("Let's see if we can get some light" on the vivo).
+        if (ShortcutParser.parse(text) != null) a.texts.safeMode() else null
+    } else when (val plan = a.plan(text)) {
         TurnPlan.Chat -> null
         is TurnPlan.Ask -> plan.question.also { puzzle() }
         is TurnPlan.Act -> describe(a, a.runner.submit(plan.call))

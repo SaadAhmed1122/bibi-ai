@@ -132,6 +132,7 @@ fun ChatScreen(
                     Text(stringResource(R.string.chat_clear))
                 }
             }
+            if (state.safeMode) SafeModeLabel()
             MessageList(state, Modifier.weight(1f), onIntent)
             state.banner?.let { Banner(it, onOpenModel) }
             state.pendingAction?.let { ConfirmAction(it, onIntent) }
@@ -173,6 +174,17 @@ internal fun TalkButton(state: ChatUiState, onIntent: (ChatIntent) -> Unit, modi
     ) {
         Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(14.dp), textAlign = TextAlign.Center)
     }
+}
+
+/** Shown while Safe mode is on (FR-076). */
+@Composable
+internal fun SafeModeLabel() {
+    Text(
+        stringResource(R.string.chat_safe_mode_label),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.tertiary,
+        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+    )
 }
 
 /** A short message that goes away by itself (ChatUiState.notice). */

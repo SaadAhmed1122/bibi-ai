@@ -4,13 +4,14 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.os.SystemClock
 import android.provider.Settings
+import io.github.saadahmed1122.bibi.ai.inference.api.Persona
+import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.companion.overlay.FloatingToggle
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
-import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
-import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.database.RoomMemoryRepository
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.tools.ActionRunner
 import io.github.saadahmed1122.bibi.core.tools.AppResolver
 import io.github.saadahmed1122.bibi.core.tools.PermissionEngine
@@ -25,6 +26,7 @@ import io.github.saadahmed1122.bibi.domain.usecase.MemoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
 import io.github.saadahmed1122.bibi.domain.usecase.Recall
 import io.github.saadahmed1122.bibi.domain.usecase.Remember
+import io.github.saadahmed1122.bibi.domain.usecase.Retention
 import io.github.saadahmed1122.bibi.domain.usecase.VoicePackRepository
 import io.github.saadahmed1122.bibi.feature.chat.AudioRecordSource
 import io.github.saadahmed1122.bibi.feature.chat.ChatActions
@@ -43,6 +45,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.File
@@ -101,8 +104,8 @@ class AppContainer(context: Context) {
                 if (on) inference.connect() else inference.disconnect()
             }
         }
-        val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
-        val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory))
+        val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext)) { !safeMode.value }
+        val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory)) { !safeMode.value }
         val key = Any()
         val chatVoice = ChatVoice(
             audio = AudioRecordSource(),
@@ -116,6 +119,8 @@ class AppContainer(context: Context) {
             onModelReady = setConnected, actions = chatActions, memory = chatMemory, summaries = summaries,
             onMood = { reportMood(key, it) },
             voice = chatVoice,
+            safeMode = safeMode,
+            setSafeMode = ::setSafeMode,
         ).apply {
             addCloseable {
                 setConnected(false)
@@ -129,6 +134,43 @@ class AppContainer(context: Context) {
 
     /** "Read answers aloud" (SPEC-voice.md), off by default, shared by the app chat and the floating card. */
     val speakReplies: StateFlow<Boolean> get() = _speakReplies
+
+    private val _safeMode by lazy { MutableStateFlow(prefs.getBoolean(KEY_SAFE_MODE, false)) }
+
+    /** Safe mode (FR-076, SPEC-privacy.md): no actions, no memory writes, no summaries; chat still works. */
+    val safeMode: StateFlow<Boolean> get() = _safeMode
+
+    fun setSafeMode(on: Boolean) {
+        _safeMode.value = on
+        prefs.edit().putBoolean(KEY_SAFE_MODE, on).apply()
+    }
+
+    /** Counts for the Privacy dashboard. */
+    suspend fun storedData(): StoredData = StoredData(
+        messages = chatHistory.observeAll().first().size,
+        memories = memory.count(),
+        actionLogBytes = actionLog.read().toByteArray().size.toLong(),
+        crashLogBytes = crashLog.read().toByteArray().size.toLong(),
+    )
+
+    /** Delete everything (SPEC-privacy.md): chats, memories, logs, settings; a fresh conversation. Models stay. Main thread. */
+    suspend fun deleteEverything() = DeleteEverything(
+        listOf(
+            { chatHistory.deleteAll() },
+            { memory.deleteAll() },
+            { actionLog.clear() },
+            { crashLog.clear() },
+            {
+                // Settings back to their defaults; the first-run flag and Floating Bibi stay.
+                persona.choose(Persona.FRIENDLY)
+                retention.choose(Retention.DEFAULT)
+                setSpeakReplies(false)
+                setSafeMode(false)
+                prefs.edit().remove(KEY_LAST_SUMMARIZED).apply()
+            },
+            { inference.resetConversation() },
+        ),
+    )()
 
     private fun setSpeakReplies(on: Boolean) {
         _speakReplies.value = on
@@ -166,6 +208,8 @@ class AppContainer(context: Context) {
             audit = actionLog,
             execute = executor::execute,
             deviceLocked = { appContext.getSystemService(KeyguardManager::class.java).isDeviceLocked },
+            // Safe mode is also the Permission Engine's kill switch, behind the chat's own check.
+            actionsEnabled = { !safeMode.value },
         )
     }
 
@@ -214,6 +258,7 @@ class AppContainer(context: Context) {
             memory = memory,
             lastSummarized = { prefs.getLong(KEY_LAST_SUMMARIZED, 0L) },
             setLastSummarized = { prefs.edit().putLong(KEY_LAST_SUMMARIZED, it).apply() },
+            enabled = { !safeMode.value },
         )
     }
 
@@ -235,5 +280,6 @@ class AppContainer(context: Context) {
         const val KEY_LAST_SUMMARIZED = "last_summarized_message_id"
         const val KEY_RETENTION = "memory_retention"
         const val KEY_SPEAK_REPLIES = "speak_replies"
+        const val KEY_SAFE_MODE = "safe_mode"
     }
 }
