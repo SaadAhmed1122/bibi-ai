@@ -12,6 +12,7 @@ import android.os.RemoteException
 import io.github.saadahmed1122.bibi.ai.inference.api.EngineState
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceClient
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceProtocol
+import io.github.saadahmed1122.bibi.ai.inference.api.Pcm16
 import io.github.saadahmed1122.bibi.ai.inference.api.Persona
 import io.github.saadahmed1122.bibi.ai.inference.api.ProtocolMessage
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
@@ -53,6 +54,8 @@ class MessengerInferenceClient(
     private val persona: () -> String = { Persona.FRIENDLY },
     /** The pinned memory notes block, sent before every Load (SPEC-memory.md). */
     private val memoryNotes: () -> String = { "" },
+    /** The imported voice pack folder, "" for none; sent at bind. */
+    private val voiceDir: () -> String = { "" },
 ) : InferenceClient {
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Unbound)
@@ -79,6 +82,10 @@ class MessengerInferenceClient(
     /** Main thread only. Summary requests waiting for their answer, by request id. */
     private val summaries = HashMap<Long, CompletableDeferred<String?>>()
 
+    /** Main thread only. Transcripts and spoken replies waiting, by request id. */
+    private val transcripts = HashMap<Long, CompletableDeferred<String?>>()
+    private val spoken = HashMap<Long, CompletableDeferred<Boolean>>()
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             val s = Messenger(binder)
@@ -86,6 +93,7 @@ class MessengerInferenceClient(
             sendTo(s, ProtocolMessage.Register, replyTo = replies)
             sendTo(s, ProtocolMessage.SetPersona(persona()))
             sendTo(s, ProtocolMessage.SetMemory(memoryNotes()))
+            sendTo(s, ProtocolMessage.SetVoice(voiceDir()))
             sendTo(s, ProtocolMessage.Load(modelPath()))
             routerPath()?.let { sendTo(s, ProtocolMessage.LoadRouter(it)) }
         }
@@ -219,11 +227,59 @@ class MessengerInferenceClient(
         }
     }
 
+    /** Tells a running service about a newly imported (or removed) voice pack. Main thread. */
+    fun setVoiceDir(dir: String) {
+        service?.let { sendTo(it, ProtocolMessage.SetVoice(dir)) }
+    }
+
+    override fun startListening(): Long {
+        val id = nextRequestId.getAndIncrement()
+        service?.let { sendTo(it, ProtocolMessage.SttStart(id)) }
+        return id
+    }
+
+    override fun sendAudio(id: Long, samples: FloatArray) {
+        service?.let { sendTo(it, ProtocolMessage.SttChunk(id, Pcm16.encode(samples))) }
+    }
+
+    override suspend fun finishListening(id: Long): String? = withContext(Dispatchers.Main.immediate) {
+        val s = service ?: return@withContext null
+        val answer = CompletableDeferred<String?>()
+        transcripts[id] = answer
+        try {
+            if (!sendTo(s, ProtocolMessage.SttEnd(id))) return@withContext null
+            answer.await()
+        } finally {
+            transcripts.remove(id)
+        }
+    }
+
+    override suspend fun speak(text: String): Boolean = withContext(Dispatchers.Main.immediate) {
+        val s = service ?: return@withContext false
+        val id = nextRequestId.getAndIncrement()
+        val answer = CompletableDeferred<Boolean>()
+        spoken[id] = answer
+        try {
+            if (!sendTo(s, ProtocolMessage.Speak(id, text))) return@withContext false
+            answer.await()
+        } finally {
+            spoken.remove(id)
+        }
+    }
+
+    override fun stopSpeaking() {
+        service?.let { sendTo(it, ProtocolMessage.SpeakStop) }
+    }
+
     private fun failRoutes() {
         routes.values.forEach { it.complete(RouteResult.Unavailable(REASON_DISCONNECTED)) }
         routes.clear()
         summaries.values.forEach { it.complete(null) }
         summaries.clear()
+        transcripts.values.forEach { it.complete(null) }
+        transcripts.clear()
+        spoken.values.forEach { it.complete(false) }
+        spoken.clear()
     }
 
     private fun onReply(msg: android.os.Message) {
@@ -235,6 +291,8 @@ class MessengerInferenceClient(
             is ProtocolMessage.Reply -> active.deliver(m.requestId, m.event)
             is ProtocolMessage.Routed -> routes[m.requestId]?.complete(m.result)
             is ProtocolMessage.Summary -> summaries[m.requestId]?.complete(m.text?.takeIf { it.isNotBlank() })
+            is ProtocolMessage.Transcript -> transcripts[m.requestId]?.complete(m.text)
+            is ProtocolMessage.Spoken -> spoken[m.requestId]?.complete(m.reason.isEmpty())
             else -> Unit
         }
     }

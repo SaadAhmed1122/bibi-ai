@@ -25,6 +25,30 @@ class InferenceProtocolTest {
     }
 
     @Test
+    fun voiceMessagesRoundTrip() {
+        roundTrip(ProtocolMessage.SetVoice("/data/user/0/app/files/voice"))
+        roundTrip(ProtocolMessage.SttStart(5))
+        roundTrip(ProtocolMessage.SttChunk(5, Pcm16.encode(floatArrayOf(0f, 0.5f, -0.5f))))
+        roundTrip(ProtocolMessage.SttEnd(5))
+        roundTrip(ProtocolMessage.Speak(6, "Timer started for 5 min."))
+        roundTrip(ProtocolMessage.SpeakStop)
+        roundTrip(ProtocolMessage.Transcript(5, "set a timer for ten minutes"))
+        roundTrip(ProtocolMessage.Transcript(5, null, "no voice pack"))
+        roundTrip(ProtocolMessage.Spoken(6))
+        roundTrip(ProtocolMessage.Spoken(6, "stopped"))
+    }
+
+    @Test
+    fun pcmSurvivesTheTextEncodingWithinOneStep() {
+        val samples = FloatArray(8_000) { kotlin.math.sin(it / 10.0).toFloat() * 0.8f }
+        val back = Pcm16.decode(Pcm16.encode(samples))
+        assertEquals(samples.size, back.size)
+        samples.indices.forEach { assertEquals(samples[it], back[it], 1f / Short.MAX_VALUE) }
+        // 0.5 s at 16 kHz stays small enough for one binder message.
+        org.junit.Assert.assertTrue(Pcm16.encode(samples).length < 25_000)
+    }
+
+    @Test
     fun summaryAnswersRoundTrip() {
         roundTrip(ProtocolMessage.Summary(3, "You asked about sleep."))
         roundTrip(ProtocolMessage.Summary(3, null, "busy"))
@@ -85,6 +109,12 @@ class InferenceProtocolTest {
             ProtocolMessage.SetPersona(Persona.FRIENDLY),
             ProtocolMessage.SetMemory(""),
             ProtocolMessage.Summarize(1, "t"),
+            ProtocolMessage.SetVoice("d"),
+            ProtocolMessage.SttStart(1),
+            ProtocolMessage.SttChunk(1, "p"),
+            ProtocolMessage.SttEnd(1),
+            ProtocolMessage.Speak(1, "t"),
+            ProtocolMessage.SpeakStop,
             ProtocolMessage.State(EngineState.Ready),
             ProtocolMessage.Reply(1, ReplyEvent.Token("a")),
             ProtocolMessage.Reply(1, ReplyEvent.Done("a")),
@@ -92,6 +122,8 @@ class InferenceProtocolTest {
             ProtocolMessage.Reply(1, ReplyEvent.Error("a", "a")),
             ProtocolMessage.Routed(1, RouteResult.Label("none", 0f)),
             ProtocolMessage.Summary(1, "s"),
+            ProtocolMessage.Transcript(1, "t"),
+            ProtocolMessage.Spoken(1),
         ).map { InferenceProtocol.encode(it).what }
         assertEquals(
             listOf(
@@ -105,6 +137,12 @@ class InferenceProtocolTest {
                 InferenceProtocol.MSG_SET_PERSONA,
                 InferenceProtocol.MSG_SET_MEMORY,
                 InferenceProtocol.MSG_SUMMARIZE,
+                InferenceProtocol.MSG_SET_VOICE,
+                InferenceProtocol.MSG_STT_START,
+                InferenceProtocol.MSG_STT_CHUNK,
+                InferenceProtocol.MSG_STT_END,
+                InferenceProtocol.MSG_SPEAK,
+                InferenceProtocol.MSG_SPEAK_STOP,
                 InferenceProtocol.MSG_STATE,
                 InferenceProtocol.MSG_TOKEN,
                 InferenceProtocol.MSG_DONE,
@@ -112,6 +150,8 @@ class InferenceProtocolTest {
                 InferenceProtocol.MSG_ERROR,
                 InferenceProtocol.MSG_ROUTED,
                 InferenceProtocol.MSG_SUMMARY,
+                InferenceProtocol.MSG_TRANSCRIPT,
+                InferenceProtocol.MSG_SPOKEN,
             ),
             codes,
         )

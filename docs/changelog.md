@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 13: optional voice pack import (Parakeet speech-to-text and Piper voice, folder picker, every file checked) and the voice engines in Bibi's AI process, loaded only when used and released after 2 quiet minutes (#84).
 - P2 Task 12: Bibi shows what it is doing (thinking, speaking, confused for a moment after a problem, idle) on floating Bibi and in the chat headers; TalkBack names the state (#83).
 - P2 Task 11: choose how long memories are kept (1 week to forever, 3 months by default; pinned ones always stay), a daily clean-up while charging, deleted rows overwritten, and Export to `bibimem.json` (#82).
 - P2 Task 10: automatic chat summaries: after 5 quiet minutes Bibi writes a one- or two-sentence summary of the new conversation into memory, never during a reply and never with a password or card number in it (#81).

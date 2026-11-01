@@ -14,6 +14,7 @@ import io.github.saadahmed1122.bibi.ai.inference.api.EngineState
 import io.github.saadahmed1122.bibi.ai.inference.api.Envelope
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceClient
 import io.github.saadahmed1122.bibi.ai.inference.api.InferenceProtocol
+import io.github.saadahmed1122.bibi.ai.inference.api.Pcm16
 import io.github.saadahmed1122.bibi.ai.inference.api.Persona
 import io.github.saadahmed1122.bibi.ai.inference.api.ProtocolMessage
 import io.github.saadahmed1122.bibi.ai.inference.api.ReplyEvent
@@ -39,6 +40,7 @@ class InferenceService : Service() {
 
     private val engineThread = Executors.newSingleThreadExecutor { Thread(it, "llm-engine") }
     private val routerThread = Executors.newSingleThreadExecutor { Thread(it, "router") }
+    private val voiceThread = Executors.newSingleThreadExecutor { Thread(it, "voice") }
     private val main = Handler(Looper.getMainLooper())
     private val messenger = Messenger(Handler(Looper.getMainLooper()) { handle(it); true })
 
@@ -60,6 +62,20 @@ class InferenceService : Service() {
 
     /** Written on the engine thread; read on main for [LiteRtLmEngine.cancel]. */
     @Volatile private var engine: LiteRtLmEngine? = null
+
+    /** Main thread only. The imported voice pack folder, "" when there is none. */
+    private var voiceDir = ""
+
+    /** Voice thread only. Loaded on first use, released after [VOICE_IDLE_MS] (memory check, #72). */
+    private var stt: ParakeetStt? = null
+    private var tts: PiperTts? = null
+
+    /** Read from the main thread for [ProtocolMessage.SpeakStop]. */
+    @Volatile private var speaking: PiperTts? = null
+
+    /** Main thread only. Audio of the push-to-talk in progress, by request id. */
+    private val listening = HashMap<Long, MutableList<FloatArray>>()
+    private val releaseVoice = Runnable { voiceThread.execute { releaseVoiceEngines() } }
 
     /** Pinned memory notes; read on the engine thread whenever a conversation opens. */
     @Volatile private var memoryNotes = ""
@@ -96,6 +112,10 @@ class InferenceService : Service() {
             router = null
         }
         routerThread.shutdown()
+        main.removeCallbacks(releaseVoice)
+        speaking?.stop()
+        voiceThread.execute { releaseVoiceEngines() }
+        voiceThread.shutdown()
         super.onDestroy()
     }
 
@@ -146,6 +166,28 @@ class InferenceService : Service() {
                 routerThread.execute { loadRouter(m.modelPath) }
             }
             is ProtocolMessage.Route -> routerThread.execute { route(m.requestId, m.text) }
+            is ProtocolMessage.SetVoice -> voiceDir = m.dir
+            is ProtocolMessage.SttStart -> {
+                listening[m.requestId] = mutableListOf()
+                // Load while the user is still talking (Parakeet takes about 10 s, S3).
+                val dir = voiceDir
+                if (dir.isNotEmpty()) voiceThread.execute { sttEngine(dir) }
+            }
+            is ProtocolMessage.SttChunk -> listening[m.requestId]?.add(Pcm16.decode(m.pcm))
+            is ProtocolMessage.SttEnd -> {
+                val chunks = listening.remove(m.requestId)
+                val dir = voiceDir
+                when {
+                    chunks == null -> post(ProtocolMessage.Transcript(m.requestId, null, "not listening"))
+                    dir.isEmpty() -> post(ProtocolMessage.Transcript(m.requestId, null, REASON_NO_VOICE))
+                    else -> voiceThread.execute { transcribe(m.requestId, dir, chunks) }
+                }
+            }
+            is ProtocolMessage.Speak -> {
+                val dir = voiceDir
+                if (dir.isEmpty()) post(ProtocolMessage.Spoken(m.requestId, REASON_NO_VOICE)) else voiceThread.execute { speak(m.requestId, dir, m.text) }
+            }
+            ProtocolMessage.SpeakStop -> speaking?.stop()
             is ProtocolMessage.Summarize -> {
                 if (state != EngineState.Ready || activeRequestId != null || summarizing) {
                     post(ProtocolMessage.Summary(m.requestId, null, REASON_BUSY))
@@ -164,7 +206,8 @@ class InferenceService : Service() {
                 if (reopen) engineThread.execute { switchPersona(next) }
             }
             // Service -> client messages and unknown codes are ignored.
-            is ProtocolMessage.State, is ProtocolMessage.Reply, is ProtocolMessage.Routed, is ProtocolMessage.Summary, null -> Unit
+            is ProtocolMessage.State, is ProtocolMessage.Reply, is ProtocolMessage.Routed, is ProtocolMessage.Summary,
+            is ProtocolMessage.Transcript, is ProtocolMessage.Spoken, null -> Unit
         }
     }
 
@@ -237,6 +280,74 @@ class InferenceService : Service() {
             }
         }
         post(ProtocolMessage.Routed(requestId, result))
+    }
+
+    /** Voice thread. The recognizer, loaded on first use. */
+    private fun sttEngine(dir: String): ParakeetStt = stt ?: run {
+        val t0 = SystemClock.elapsedRealtime()
+        ParakeetStt(File(dir, VoicePackDirs.STT)).also {
+            stt = it
+            Log.i(TAG, "stt load_ms=${SystemClock.elapsedRealtime() - t0}")
+        }
+    }
+
+    /** Voice thread. */
+    private fun transcribe(requestId: Long, dir: String, chunks: List<FloatArray>) {
+        val result = try {
+            val samples = FloatArray(chunks.sumOf { it.size }).also { out ->
+                var at = 0
+                for (c in chunks) { c.copyInto(out, at); at += c.size }
+            }
+            val t0 = SystemClock.elapsedRealtime()
+            val text = sttEngine(dir).transcribe(samples)
+            val ms = SystemClock.elapsedRealtime() - t0
+            Log.i(TAG, "stt audio_ms=${samples.size * 1000L / ParakeetStt.SAMPLE_RATE} ms=$ms chars=${text.length}")
+            ProtocolMessage.Transcript(requestId, text)
+        } catch (e: Exception) {
+            Log.w(TAG, "stt failed", e)
+            ProtocolMessage.Transcript(requestId, null, "${e.javaClass.simpleName}: ${e.message}")
+        }
+        post(result)
+        scheduleVoiceRelease()
+    }
+
+    /** Voice thread. Speaks one sentence or short text; blocks until it has played. */
+    private fun speak(requestId: Long, dir: String, text: String) {
+        val reason = try {
+            val engine = tts ?: run {
+                val t0 = SystemClock.elapsedRealtime()
+                PiperTts(File(dir, VoicePackDirs.TTS)).also {
+                    tts = it
+                    Log.i(TAG, "tts load_ms=${SystemClock.elapsedRealtime() - t0}")
+                }
+            }
+            speaking = engine
+            val t0 = SystemClock.elapsedRealtime()
+            val finished = engine.speak(text)
+            Log.i(TAG, "tts chars=${text.length} ms=${SystemClock.elapsedRealtime() - t0} finished=$finished")
+            if (finished) "" else "stopped"
+        } catch (e: Exception) {
+            Log.w(TAG, "tts failed", e)
+            "${e.javaClass.simpleName}: ${e.message}"
+        } finally {
+            speaking = null
+        }
+        post(ProtocolMessage.Spoken(requestId, reason))
+        scheduleVoiceRelease()
+    }
+
+    private fun scheduleVoiceRelease() {
+        main.removeCallbacks(releaseVoice)
+        main.postDelayed(releaseVoice, VOICE_IDLE_MS)
+    }
+
+    /** Voice thread. */
+    private fun releaseVoiceEngines() {
+        if (stt != null || tts != null) Log.i(TAG, "voice released")
+        stt?.close()
+        stt = null
+        tts?.close()
+        tts = null
     }
 
     /** Engine thread. A memory summary in a temporary conversation; the chat conversation is untouched. */
@@ -369,6 +480,10 @@ class InferenceService : Service() {
         const val TAG = "BibiInference"
         const val REASON_NO_ROUTER = "router not loaded"
         const val REASON_BUSY = "busy"
+        const val REASON_NO_VOICE = "no voice pack"
+
+        /** Voice models leave memory after 2 idle minutes (SPEC-voice.md). */
+        const val VOICE_IDLE_MS = 120_000L
         const val REASON_CANCELLED = "cancelled by a new message"
         const val SUMMARY_ASSET = "summary_instruction.txt"
 

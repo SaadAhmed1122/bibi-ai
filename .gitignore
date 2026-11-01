@@ -100,3 +100,6 @@ node_modules/
 
 # Engine-generated plugin types (rewritten on every load)
 plugins/*/.claude-plugin/types/
+
+# sherpa-onnx AAR (not on Maven; downloaded once, see SPEC-voice.md)
+/libs/*.aar

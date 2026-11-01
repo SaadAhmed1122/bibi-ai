@@ -38,6 +38,20 @@ interface InferenceClient {
      */
     suspend fun summarize(transcript: String): String?
 
+    /** Push-to-talk (SPEC-voice.md): returns the id for [sendAudio] and [finishListening]. Loads the recognizer meanwhile. */
+    fun startListening(): Long
+
+    /** 16 kHz mono samples in -1..1, about 0.5 s at a time. */
+    fun sendAudio(id: Long, samples: FloatArray)
+
+    /** What was heard, or null (no voice pack, not connected, or the recognizer failed). */
+    suspend fun finishListening(id: Long): String?
+
+    /** Speaks [text] aloud; true when it played to the end, false when stopped or unavailable. */
+    suspend fun speak(text: String): Boolean
+
+    fun stopSpeaking()
+
     companion object {
         const val ERROR_BUSY = "busy"
         const val ERROR_NOT_READY = "not ready"
