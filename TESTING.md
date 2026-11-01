@@ -206,6 +206,11 @@ Claude's runs on the vivo passed in portrait and landscape: the permission expla
 6. [ ] Turn on **Calm mode**: the animation slows down.
 7. [ ] Note anything odd on issue #44.
 
+## P2 — licenses, privacy policy, report a reply (issue #88)
+- [ ] Settings → Privacy policy and Licenses open and scroll, in portrait and landscape.
+- [ ] Long-press one of Bibi's replies → Report this reply → the share sheet shows the reply; pick an app, or press Back to cancel. From the floating card, the card closes first.
+- [ ] Host `docs/privacy-policy.md` at a public URL for the Play listing.
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 

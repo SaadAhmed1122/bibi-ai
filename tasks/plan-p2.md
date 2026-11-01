@@ -52,7 +52,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 
 ### Phase 5: Privacy and closed test
 - [x] **Task 16 (#87): Privacy dashboard, Delete everything, Safe mode.** **M**
-- [ ] **Task 17 (#88): Licenses, privacy policy, report a reply.** **S**
+- [x] **Task 17 (#88): Licenses, privacy policy, report a reply.** **S**
 ### Phase 5b: Design (owner request, 2026-10-31; [SPEC-design.md](../SPEC-design.md))
 - [ ] **Task 20 (#93): Design system and navigation.** Starts with 2–3 mood directions (palette, type, Home and Chat mock-ups) as an artifact; the owner picks one. Then `core/designsystem` tokens light/dark, type, components, and the navigation structure.
   - Acceptance: SPEC-design criteria 1–2; app builds with the new theme; debug screens debug-only. **M**

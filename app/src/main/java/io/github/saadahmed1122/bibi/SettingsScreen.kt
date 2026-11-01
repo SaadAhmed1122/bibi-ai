@@ -36,15 +36,17 @@ fun SettingsRoute(
     safeMode: StateFlow<Boolean>,
     onSafeMode: (Boolean) -> Unit,
     onOpenPrivacy: () -> Unit,
+    onOpenPolicy: () -> Unit,
+    onOpenLicenses: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val current by persona.current.collectAsStateWithLifecycle()
     val safe by safeMode.collectAsStateWithLifecycle()
-    SettingsScreen(current, persona::choose, onBack, modifier, safe, onSafeMode, onOpenPrivacy)
+    SettingsScreen(current, persona::choose, onBack, modifier, safe, onSafeMode, onOpenPrivacy, onOpenPolicy, onOpenLicenses)
 }
 
-/** Settings (SPEC-personality.md). The Privacy dashboard and Safe mode join it later (SPEC-privacy.md). */
+/** Settings (SPEC-personality.md): persona, Safe mode, and links to Privacy, the policy and licenses (SPEC-privacy.md). */
 @Composable
 fun SettingsScreen(
     persona: String,
@@ -54,6 +56,8 @@ fun SettingsScreen(
     safeMode: Boolean = false,
     onSafeMode: (Boolean) -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
+    onOpenPolicy: () -> Unit = {},
+    onOpenLicenses: () -> Unit = {},
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
@@ -78,6 +82,8 @@ fun SettingsScreen(
             }
             HorizontalDivider()
             TextButton(onClick = onOpenPrivacy) { Text(stringResource(R.string.settings_privacy)) }
+            TextButton(onClick = onOpenPolicy) { Text(stringResource(R.string.policy_title)) }
+            TextButton(onClick = onOpenLicenses) { Text(stringResource(R.string.licenses_title)) }
         }
     }
 }

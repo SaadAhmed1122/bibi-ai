@@ -29,6 +29,15 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: The fine print for a "free" offline app
+- **Test:** writing the Licenses screen and the "Report this reply" button.
+- **Numbers:**
+  - One small offline app ships **4 AI models and 6 libraries**, under **5 different licenses** (Gemma Terms of Use, CC BY 4.0, CC BY-SA 4.0, Apache 2.0, and MIT).
+  - Report a reply opens the phone's share menu in **0.66 s**. The app has no internet permission, so the user's own share is the only way a report leaves the phone.
+  - From the floating chat bubble, the share menu opened **under** Bibi's card: an overlay window sits above even the system's share sheet. The card now closes first.
+- **Lesson:** "open models" still come with homework: every model needs its credit line, and a voice dataset's license can be on a different site from the voice.
+- Image: `media/licenses-screen.png`. Source: #88.
+
 ### 2026-11-01: One switch for "just talk", one button for "forget me"
 - **Test:** Safe mode and Delete everything on the vivo.
 - **What happened:**
