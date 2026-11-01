@@ -149,14 +149,14 @@ internal fun ChatBody(state: ChatUiState, onIntent: (ChatIntent) -> Unit, onOpen
     }
 }
 
-/** Bibi's face and what it's doing, the Read aloud toggle when voice is ready, then [actions]. */
+/** Bibi's face, a status line (unless [showStatus] is false), the Read aloud toggle when voice is ready, then [actions]. */
 @Composable
-internal fun ChatHeader(state: ChatUiState, mood: BibiMood, onIntent: (ChatIntent) -> Unit, actions: @Composable () -> Unit) {
+internal fun ChatHeader(state: ChatUiState, mood: BibiMood, onIntent: (ChatIntent) -> Unit, showStatus: Boolean = true, actions: @Composable () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = Space.s), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
         BibiAvatar(mood, size = Space.avatarSmall + Space.s)
         Column(Modifier.weight(1f)) {
             Text(stringResource(R.string.chat_bibi), style = MaterialTheme.typography.titleLarge, maxLines = 1)
-            Text(
+            if (showStatus) Text(
                 stringResource(if (state.safeMode) R.string.chat_safe_mode_label else R.string.chat_status),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (state.safeMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,

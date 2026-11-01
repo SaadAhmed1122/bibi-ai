@@ -57,7 +57,8 @@ fun ChatCard(
         shadowElevation = Elevation.card,
     ) {
         Column(Modifier.padding(horizontal = Space.m)) {
-            ChatHeader(state, mood, onIntent) {
+            // No status line: the narrow card needs the room, and the Safe mode button shows the state.
+            ChatHeader(state, mood, onIntent, showStatus = false) {
                 // FR-076: one tap in the card turns Safe mode on or off.
                 TextButton(onClick = { onIntent(ChatIntent.ToggleSafeMode) }) {
                     Text(stringResource(if (state.safeMode) R.string.chat_safe_mode_on else R.string.chat_safe_mode_off))
