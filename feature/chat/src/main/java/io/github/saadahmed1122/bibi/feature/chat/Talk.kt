@@ -83,21 +83,24 @@ class Endpointer(private val rate: Int = 16_000) {
     }
 }
 
-/** What a spoken turn can mean besides a message to Bibi (#118). Whole short phrases only. */
+/** What a spoken turn can mean besides a message to Bibi (#118). Whole short phrases only; Parakeet writes "Bibi" as "BB". */
 enum class TalkCommand {
     OPEN_CHAT,
     END,
     ;
 
     companion object {
-        private val OPEN = Regex("""^(?:(?:hey |ok |okay )?bibi,? )?(?:please )?(?:open|show|switch to|go to)(?: the)? chat(?: mode)?(?: please)?$|^let me type$""")
-        private val STOP = Regex("""^(?:(?:ok|okay|thanks|thank you),? )?(?:stop(?: listening)?|bye|goodbye(?: bibi)?|bye bibi|that'?s all|that is all)(?: bibi)?$""")
+        private val OPEN = Regex("""^(?:(?:hey |ok |okay )?(?:bibi|bb),? )?(?:please )?(?:open|show|switch to|go to)(?: the)? chat(?: mode)?(?: please)?$|^let me type$""")
+        private val STOP = Regex("""^(?:(?:ok|okay|thanks|thank you),? )?(?:stop(?: listening)?|that'?s all|that is all)(?: (?:bibi|bb))?$""")
+
+        // "Bye Bibi" comes out as "Bye BB", "Bye B D." and more: any two short words may follow a bye.
+        private val BYE = Regex("""^(?:(?:ok|okay|thanks|thank you),? )?(?:good)?bye(?: [a-z]{1,4}){0,2}$""")
 
         fun parse(text: String): TalkCommand? {
-            val t = text.lowercase().trim().trimEnd('.', '!', '?').trim()
+            val t = text.lowercase().replace(Regex("[.,!?]"), "").replace(Regex("\\s+"), " ").trim()
             return when {
                 OPEN.matches(t) -> OPEN_CHAT
-                STOP.matches(t) -> END
+                STOP.matches(t) || BYE.matches(t) -> END
                 else -> null
             }
         }
