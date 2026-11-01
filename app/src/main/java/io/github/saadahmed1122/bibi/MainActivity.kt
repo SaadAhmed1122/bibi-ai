@@ -12,7 +12,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -27,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -100,11 +103,15 @@ class MainActivity : ComponentActivity() {
                 val tab = screen.tab
                 // The bar shows on the four top-level places, not during onboarding or while typing.
                 val showBar = tab != null && onboardingStep == null && !WindowInsets.isImeVisible
+                // Landscape: a rail on the side keeps the little height there is for the screen.
+                val wide = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
                 Scaffold(
-                    bottomBar = { if (showBar) AppNavBar(tab, onSelect = { screen = it.screen }) },
+                    bottomBar = { if (showBar && !wide) AppNavBar(tab, onSelect = { screen = it.screen }) },
                     contentWindowInsets = WindowInsets(0),
                 ) { barPadding ->
-                Box(Modifier.padding(barPadding).consumeWindowInsets(barPadding)) {
+                Row(Modifier.padding(barPadding).consumeWindowInsets(barPadding)) {
+                if (showBar && wide) AppNavRail(tab, onSelect = { screen = it.screen })
+                Box(Modifier.weight(1f)) {
                 when (screen) {
                     Screen.Home -> onboardingStep?.let { step ->
                         val importer = viewModel { ModelImportViewModel(container.models) }
@@ -232,6 +239,7 @@ class MainActivity : ComponentActivity() {
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome, summaries = container.summaries)
                     Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)
+                }
                 }
                 }
                 }

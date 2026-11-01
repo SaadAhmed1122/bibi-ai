@@ -5,6 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,6 +45,31 @@ fun AppNavBar(selected: Tab, onSelect: (Tab) -> Unit, modifier: Modifier = Modif
     }
 }
 
+/** The same places as a side rail, for landscape. */
+@Composable
+fun AppNavRail(selected: Tab, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    NavigationRail(modifier = modifier, containerColor = colors.surfaceContainer) {
+        Tab.entries.forEach { tab ->
+            NavigationRailItem(
+                selected = tab == selected,
+                onClick = { onSelect(tab) },
+                icon = { Icon(painterResource(tab.icon), contentDescription = null) },
+                label = { Text(stringResource(tab.label)) },
+                colors = NavigationRailItemDefaults.colors(
+                    indicatorColor = colors.primaryContainer,
+                    selectedIconColor = colors.onPrimaryContainer,
+                    selectedTextColor = colors.onSurface,
+                ),
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun AppNavBarPreview() = BibiTheme { AppNavBar(Tab.HOME, {}) }
+
+@Preview(heightDp = 400)
+@Composable
+private fun AppNavRailPreview() = BibiTheme(darkTheme = true) { AppNavRail(Tab.MEMORY, {}) }
