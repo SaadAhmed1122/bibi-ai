@@ -335,12 +335,12 @@ class ChatViewModel(
                 // Read the sources, not [state]: a chat created for this tap has no state out yet.
                 // A model still loading is fine: Bibi listens meanwhile and answers once it's ready.
                 val blocked = banner.value == ChatBanner.ImportModel || banner.value == ChatBanner.Error
+                talk.value = TalkPhase.THINKING
                 if (!v.ready.first() || blocked) {
                     openChatRequests.trySend(Unit)
                     return@launch
                 }
                 while (true) {
-                    talk.value = TalkPhase.LISTENING
                     val heard = hear(v) ?: break
                     if (heard.isBlank()) continue
                     when (TalkCommand.parse(heard)) {
@@ -399,6 +399,8 @@ class ChatViewModel(
             if (event != null) events.trySend(event)
         }
         if (!v.audio.start(onChunk)) return null
+        // Only now: "Listening…" before the mic is open makes people talk into nothing.
+        if (talk.value != TalkPhase.HEARING) talk.value = TalkPhase.LISTENING
         try {
             var event = events.receive()
             if (event == Endpointer.Event.SpeechStarted) {

@@ -75,6 +75,15 @@ class EndpointerTest {
     }
 
     @Test
+    fun speechDuringCalibrationDoesNotHideQuieterSpeech() {
+        // Found on the vivo: the mic opened mid-sentence, so calibration heard speech, not the room.
+        val e = Endpointer()
+        e.feed(0.004f, 1)
+        e.feed(0.03f, 2)
+        assertEquals(listOf(Endpointer.Event.SpeechStarted), e.feed(0.03f, 3))
+    }
+
+    @Test
     fun aNoisyRoomRaisesTheBar() {
         val e = Endpointer()
         // Steady fan noise at 0.02 for 1 s: not speech, and it lifts the threshold above 0.02.

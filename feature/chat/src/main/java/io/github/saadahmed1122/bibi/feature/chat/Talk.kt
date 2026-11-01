@@ -4,8 +4,7 @@ import kotlin.math.sqrt
 
 /**
  * Hears when someone starts and stops speaking, from the loudness of each piece of audio, for
- * tap-to-talk (#118). The first [CALIBRATE_MS] set the room's noise level (people take longer than
- * that to start talking); speech is anything clearly louder, held for [MIN_SPEECH_MS]; while it lasts, half that loudness
+ * tap-to-talk (#118). The quietest piece of the first [CALIBRATE_MS] sets the room's noise level; speech is anything clearly louder, held for [MIN_SPEECH_MS]; while it lasts, half that loudness
  * still counts, so soft syllables don't end a sentence. The talk
  * turn ends after [END_SILENCE_MS] of quiet, or at [MAX_UTTERANCE_MS]; nothing at all for
  * [NO_SPEECH_MS] is [Event.NoSpeech]. Thresholds are first guesses from the vivo's room noise
@@ -15,8 +14,7 @@ class Endpointer(private val rate: Int = 16_000) {
     enum class Event { SpeechStarted, SpeechEnded, NoSpeech }
 
     private var elapsedMs = 0
-    private var calibrationSum = 0f
-    private var calibrationFrames = 0
+    private var calibrated = false
     private var noise = 0f
     private var loudMs = 0
     private var quietMs = 0
@@ -30,9 +28,9 @@ class Endpointer(private val rate: Int = 16_000) {
         val level = rms(samples)
         elapsedMs += ms
         if (elapsedMs <= CALIBRATE_MS) {
-            calibrationSum += level
-            calibrationFrames++
-            noise = calibrationSum / calibrationFrames
+            // The quietest piece: someone may already be talking when the mic opens.
+            noise = if (calibrated) minOf(noise, level) else level
+            calibrated = true
             return null
         }
         // Hysteresis: once someone is talking, softer syllables still count, down to half the bar.
@@ -75,7 +73,7 @@ class Endpointer(private val rate: Int = 16_000) {
         private const val NOISE_ADAPT = 0.05f
         private const val HOLD_FACTOR = 0.5f
         private const val MIN_THRESHOLD = 0.012f
-        private const val MAX_THRESHOLD = 0.04f
+        private const val MAX_THRESHOLD = 0.025f
     }
 }
 
