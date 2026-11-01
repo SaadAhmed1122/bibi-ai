@@ -13,6 +13,7 @@ import android.graphics.Rect
 import android.view.Choreographer
 import android.view.MotionEvent
 import android.view.View
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import android.view.ViewConfiguration
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -42,10 +43,20 @@ class BibiView(
     private val onTap: () -> Unit,
 ) : View(context), Choreographer.FrameCallback {
 
-    private val idle: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bibi_idle)
-    private val blink: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bibi_idle_blink)
+    /** One 288 px frame per state, decoded once (about 330 KB each). */
+    private val frames: Map<BibiMood, Bitmap> = BibiMood.entries.associateWith { BitmapFactory.decodeResource(resources, it.frame) }
+    private val blink: Bitmap = BitmapFactory.decodeResource(resources, BibiMood.BLINK_FRAME)
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
-    private val src = Rect(0, 0, idle.width, idle.height)
+    private val src = Rect(0, 0, blink.width, blink.height)
+
+    /** What Bibi shows (SPEC-avatar-states.md); the blink and breathing belong to idle only. */
+    var mood: BibiMood = BibiMood.IDLE
+        set(value) {
+            if (value == field) return
+            field = value
+            contentDescription = context.getString(R.string.overlay_bibi_description_state, context.getString(value.description))
+            invalidate()
+        }
     private val dst = Rect()
 
     private val startNanos = System.nanoTime()
@@ -67,7 +78,7 @@ class BibiView(
     private var vsyncNanos = 1_000_000_000L / 60
 
     init {
-        contentDescription = context.getString(R.string.overlay_bibi_description)
+        contentDescription = context.getString(R.string.overlay_bibi_description_state, context.getString(BibiMood.IDLE.description))
         scheduleNextBlink(startNanos)
     }
 
@@ -113,12 +124,13 @@ class BibiView(
 
     override fun onDraw(canvas: Canvas) {
         val now = System.nanoTime()
-        val breath = if (calm) 0f else (sin(2 * PI * ((now - startNanos) / 1e9) / 3.5) * 0.02).toFloat()
+        val breath = if (calm || mood != BibiMood.IDLE) 0f else (sin(2 * PI * ((now - startNanos) / 1e9) / 3.5) * 0.02).toFloat()
         canvas.save()
         // Scale around the paws so Bibi breathes upward instead of floating.
         canvas.scale(1f - breath * 0.5f, 1f + breath, width / 2f, height.toFloat())
         dst.set(0, 0, width, height)
-        canvas.drawBitmap(if (now < blinkUntilNanos) blink else idle, src, dst, paint)
+        val frame = if (mood == BibiMood.IDLE && now < blinkUntilNanos) blink else frames.getValue(mood)
+        canvas.drawBitmap(frame, src, dst, paint)
         canvas.restore()
     }
 

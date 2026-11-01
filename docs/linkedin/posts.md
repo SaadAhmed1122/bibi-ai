@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Bibi gets a face for each moment
+- **Test:** floating Bibi and the chat header during real chats on the vivo, in portrait and landscape.
+- **What you see:**
+  - **thinking** (paw on chin, violet dots) while Bibi works out the answer, about the first 1.5 s;
+  - **speaking** (paw up, mouth open) while words stream;
+  - **confused** (head tilt, question-mark tail) for about **3 s** when it has to ask "What time should the alarm ring?";
+  - then **idle** again.
+- **Detail:** the new faces are rendered from the same vector files as the old one, and the old frame came out **pixel-identical**, so nothing jumps between states.
+- **Lesson:** a character that reacts makes a 1.3 s wait feel like thinking instead of lag.
+- Images: `media/bibi-four-states.png`, `media/bibi-speaking-landscape.png`. Source: #83.
+
 ### 2026-11-01: Bibi writes its own diary (and refuses to write down a password)
 - **Test:** after a quiet spell, Bibi summarizes the new chat into a one-line memory, using a second, temporary conversation next to the main one, on the vivo.
 - **Numbers:**

@@ -8,11 +8,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.saadahmed1122.bibi.companion.overlay.ChatCardHost
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.core.common.ProcessNames
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.common.crash.CrashHandler
 import io.github.saadahmed1122.bibi.core.common.crash.ExitInfoCollector
 import io.github.saadahmed1122.bibi.core.common.crash.PlatformExitInfoSource
 import io.github.saadahmed1122.bibi.core.common.crash.PrefsLastSeenStore
 import io.github.saadahmed1122.bibi.feature.chat.ChatCardRoute
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.concurrent.thread
 
 class BibiApplication : Application(), ChatCardHost {
@@ -38,6 +40,8 @@ class BibiApplication : Application(), ChatCardHost {
         container.syncPinnedNotes()
         RetentionWorker.schedule(this)
     }
+
+    override val bibiMood: StateFlow<BibiMood> get() = container.bibiMood
 
     /** The floating chat card (OverlayService). Its ViewModel lives in the overlay's own store. */
     @Composable

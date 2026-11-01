@@ -1,6 +1,7 @@
 package io.github.saadahmed1122.bibi.feature.chat
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -46,13 +49,25 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.domain.model.Message
 
 @Composable
 fun ChatRoute(viewModel: ChatViewModel, onOpenModel: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ChatScreen(state = state, onIntent = viewModel::onIntent, onOpenModel = onOpenModel, onBack = onBack, modifier = modifier)
+    val mood by viewModel.mood.collectAsStateWithLifecycle()
+    ChatScreen(state = state, onIntent = viewModel::onIntent, onOpenModel = onOpenModel, onBack = onBack, modifier = modifier, mood = mood)
+}
+
+/** Small Bibi in a chat header, showing [mood] (SPEC-avatar-states.md). */
+@Composable
+internal fun BibiFace(mood: BibiMood, modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(mood.frame),
+        contentDescription = stringResource(mood.description),
+        modifier = modifier.size(40.dp),
+    )
 }
 
 @Composable
@@ -62,12 +77,14 @@ fun ChatScreen(
     onOpenModel: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    mood: BibiMood = BibiMood.IDLE,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         // Consume the Scaffold's insets so imePadding doesn't add the navigation bar a second time.
         Column(Modifier.padding(padding).consumeWindowInsets(padding).imePadding().padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onBack) { Text(stringResource(R.string.chat_back)) }
+                BibiFace(mood)
                 Text(
                     stringResource(R.string.chat_title),
                     style = MaterialTheme.typography.titleLarge,

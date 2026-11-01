@@ -18,6 +18,9 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.view.Gravity
 import android.view.WindowManager
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Foreground service (type `specialUse`) that shows Bibi over other apps (SPEC-overlay.md), ported
@@ -35,6 +38,9 @@ class OverlayService : Service() {
     private var screenOn = true
     private val cardOwner = OverlayLifecycleOwner()
     private val card by lazy { ChatCardWindow(this, windowManager, cardOwner, application as ChatCardHost) }
+
+    /** Follows Bibi's mood for the floating view; cancelled in onDestroy. */
+    private val scope = MainScope()
 
     private val controller = OverlayController(
         object : OverlayWindow {
@@ -56,6 +62,7 @@ class OverlayService : Service() {
         super.onCreate()
         running = true
         windowManager = getSystemService(WindowManager::class.java)
+        scope.launch { (application as ChatCardHost).bibiMood.collect { view?.mood = it } }
         screenOn = getSystemService(PowerManager::class.java).isInteractive
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel(CHANNEL_ID, getString(R.string.overlay_channel), NotificationManager.IMPORTANCE_LOW),
@@ -134,6 +141,7 @@ class OverlayService : Service() {
             onTap = ::toggleCard,
         )
         v.calm = prefs.getBoolean(KEY_CALM, false)
+        v.mood = (application as ChatCardHost).bibiMood.value
         try {
             windowManager.addView(v, params)
         } catch (e: WindowManager.BadTokenException) {
@@ -168,6 +176,7 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         running = false
+        scope.cancel()
         unregisterReceiver(screenReceiver)
         card.close()
         cardOwner.destroy()

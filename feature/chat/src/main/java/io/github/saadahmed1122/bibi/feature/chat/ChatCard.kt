@@ -17,12 +17,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 
 @Composable
 fun ChatCardRoute(viewModel: ChatViewModel, onOpenModel: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ChatCard(state, viewModel::onIntent, onOpenModel, onClose, modifier)
+    val mood by viewModel.mood.collectAsStateWithLifecycle()
+    ChatCard(state, viewModel::onIntent, onOpenModel, onClose, modifier, mood)
 }
 
 /** The compact chat shown over other apps when floating Bibi is tapped (SPEC-overlay.md). Same state as [ChatScreen]. */
@@ -33,6 +35,7 @@ fun ChatCard(
     onOpenModel: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    mood: BibiMood = BibiMood.IDLE,
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -42,6 +45,7 @@ fun ChatCard(
     ) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                BibiFace(mood)
                 Text(
                     stringResource(R.string.chat_bibi),
                     style = MaterialTheme.typography.titleMedium,
