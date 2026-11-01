@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Fixed
+- Gemma 3 1B could repeat a phrase until the answer limit ("Sara-Marie-Jones-Smith-Jones-Smith-…", about 35 s). The reply now stops at the first repeat and keeps one copy (#107).
+- "Close the flashlight" and the spoken "off the flashlight" (which the speech recognizer writes as "Of the flashlight") turned the light on; they now turn it off.
 - A chat question the router mistook for an action ("how do I get better sleep" → alarm) no longer gets "What time should the alarm ring?": Bibi asks for a missing value only when the message names the action, and otherwise chats.
 - In-app chat with the keyboard open: the message box sat a whole keyboard height above the keyboard (keyboard space counted twice). The activity now uses `adjustResize` and the chat consumes the Scaffold insets.
 - "open the light", "turn on the light" and "lights off" now control the flashlight; "open the light" used to look for an app called "light" (found in the owner's Checkpoint E1 try).

@@ -36,6 +36,9 @@ object ShortcutParser {
     // "light(s)" too: the torch is the only light Bibi controls ("open the light" looked for an app).
     private const val FL = "(?:flash\\s?light|torch|lights?)"
     private val FLASH_OPEN = Regex("^open\\s+(?:the\\s+)?$FL$", OPT)
+
+    // "Close"/"shut" the light means off; "of"/"off" first is how Parakeet writes a spoken "off the light".
+    private val FLASH_CLOSE = Regex("^(?:close|shut|off?)\\s+(?:the\\s+)?$FL$", OPT)
     private val FLASH_VERB_FIRST = Regex("^(?:turn|switch)\\s+(on|off)\\s+(?:the\\s+)?$FL$", OPT)
     private val FLASH_VERB_LAST = Regex("^(?:turn|switch)\\s+(?:the\\s+)?$FL\\s+(on|off)$", OPT)
     private val FLASH_BARE = Regex("^(?:the\\s+)?$FL\\s+(on|off)$", OPT)
@@ -71,6 +74,7 @@ object ShortcutParser {
 
     private fun flashlight(s: String): ToolCall? {
         if (FLASH_OPEN.matches(s)) return ToolCall.Flashlight(true)
+        if (FLASH_CLOSE.matches(s)) return ToolCall.Flashlight(false)
         val m = FLASH_VERB_FIRST.matchEntire(s) ?: FLASH_VERB_LAST.matchEntire(s) ?: FLASH_BARE.matchEntire(s) ?: return null
         return ToolCall.Flashlight(m.groupValues[1].equals("on", ignoreCase = true))
     }

@@ -36,6 +36,11 @@ fun shortcutParserTests() {
         "switch the flashlight off" to ToolCall.Flashlight(false),
         // "light" means the flashlight (owner's try on the vivo, 2026-11-01: "open the light" looked for an app)
         "open the light" to ToolCall.Flashlight(true),
+        // Owner's tries on the vivo (2026-11-01): both turned the light on. "Of" is Parakeet's "off".
+        "close the flashlight" to ToolCall.Flashlight(false),
+        "shut the torch" to ToolCall.Flashlight(false),
+        "of the flashlight" to ToolCall.Flashlight(false),
+        "off the light" to ToolCall.Flashlight(false),
         "turn on the light" to ToolCall.Flashlight(true),
         "lights off" to ToolCall.Flashlight(false),
         "switch off the lights" to ToolCall.Flashlight(false),
