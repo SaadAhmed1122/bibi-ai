@@ -24,7 +24,7 @@ class AssetTextTest {
         val licenses = asset(AssetText.LICENSES).readText()
         listOf(
             "Gemma Terms of Use", "EmbeddingGemma", "Parakeet", "CC BY 4.0", "amy", "CC BY-SA 4.0",
-            "LiteRT-LM", "MediaPipe", "sherpa-onnx", "ONNX Runtime", "MIT License", "Apache License 2.0",
+            "LiteRT-LM", "MediaPipe", "Bricolage Grotesque", "Figtree", "SIL Open Font License", "sherpa-onnx", "ONNX Runtime", "MIT License", "Apache License 2.0",
         ).forEach { assertTrue(it, licenses.contains(it)) }
     }
 }

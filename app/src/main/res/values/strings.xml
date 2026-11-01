@@ -62,4 +62,8 @@
     <string name="llm_debug_summarize">Summarize now</string>
     <string name="llm_debug_voice_clip">Transcribe test clip</string>
     <string name="llm_debug_speak">Speak test</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_chat">Chat</string>
+    <string name="tab_memory">Memory</string>
+    <string name="tab_settings">Settings</string>
 </resources>
