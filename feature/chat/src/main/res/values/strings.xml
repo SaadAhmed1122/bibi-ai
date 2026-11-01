@@ -62,6 +62,11 @@
     <string name="voice_remove">Remove voice pack</string>
     <string name="voice_invalid_missing">The file %1$s wasn\'t found in that folder. Choose the folder that holds both the Parakeet and the Piper folders.</string>
     <string name="voice_invalid_file">A voice file is damaged or a different version. Copy the voice pack again and choose it.</string>
+    <string name="action_safe_mode">Safe mode is on, so I can\'t do phone actions. You can turn it off in Settings.</string>
+    <string name="memory_safe_mode">Safe mode is on, so I won\'t save that.</string>
+    <string name="chat_safe_mode_label">Safe mode: chat only</string>
+    <string name="chat_safe_mode_on">Safe mode: on</string>
+    <string name="chat_safe_mode_off">Safe mode: off</string>
     <string name="router_title">Phone actions (optional)</string>
     <string name="router_missing">To understand requests like \"wake me up at seven\", Bibi uses a second, smaller model: the file %1$s (about 165 MB). Without it, Bibi still does actions for simple phrases such as \"set a timer for 5 minutes\".</string>
     <string name="router_choose">Choose action model</string>

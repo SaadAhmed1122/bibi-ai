@@ -23,4 +23,6 @@ class ResourceActionTexts(private val context: Context) : ActionTexts {
     override fun timedOut() = context.getString(R.string.action_timed_out)
 
     override fun confirm() = context.getString(R.string.action_confirm)
+
+    override fun safeMode() = context.getString(R.string.action_safe_mode)
 }

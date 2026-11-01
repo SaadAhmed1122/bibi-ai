@@ -10,9 +10,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,16 +28,33 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.saadahmed1122.bibi.ai.inference.api.Persona
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-fun SettingsRoute(persona: PersonaSetting, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsRoute(
+    persona: PersonaSetting,
+    safeMode: StateFlow<Boolean>,
+    onSafeMode: (Boolean) -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val current by persona.current.collectAsStateWithLifecycle()
-    SettingsScreen(current, persona::choose, onBack, modifier)
+    val safe by safeMode.collectAsStateWithLifecycle()
+    SettingsScreen(current, persona::choose, onBack, modifier, safe, onSafeMode, onOpenPrivacy)
 }
 
 /** Settings (SPEC-personality.md). The Privacy dashboard and Safe mode join it later (SPEC-privacy.md). */
 @Composable
-fun SettingsScreen(persona: String, onPersona: (String) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    persona: String,
+    onPersona: (String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    safeMode: Boolean = false,
+    onSafeMode: (Boolean) -> Unit = {},
+    onOpenPrivacy: () -> Unit = {},
+) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
             Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(24.dp),
@@ -49,6 +68,16 @@ fun SettingsScreen(persona: String, onPersona: (String) -> Unit, onBack: () -> U
                 PersonaOption(Persona.CONCISE, R.string.persona_concise, R.string.persona_concise_desc, persona, onPersona)
             }
             Text(stringResource(R.string.settings_personality_note), style = MaterialTheme.typography.bodySmall)
+            HorizontalDivider()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_safe_mode), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.settings_safe_mode_desc), style = MaterialTheme.typography.bodyMedium)
+                }
+                Switch(checked = safeMode, onCheckedChange = onSafeMode)
+            }
+            HorizontalDivider()
+            TextButton(onClick = onOpenPrivacy) { Text(stringResource(R.string.settings_privacy)) }
         }
     }
 }

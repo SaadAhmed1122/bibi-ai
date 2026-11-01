@@ -16,4 +16,6 @@ class ResourceMemoryTexts(private val context: Context) : MemoryTexts {
     )
 
     override fun noticeSaved() = context.getString(R.string.memory_notice_saved)
+
+    override fun safeMode() = context.getString(R.string.memory_safe_mode)
 }

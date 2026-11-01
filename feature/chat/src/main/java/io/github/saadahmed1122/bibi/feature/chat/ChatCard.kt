@@ -62,6 +62,10 @@ fun ChatCard(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f).padding(start = 4.dp),
                 )
+                // FR-076: one tap in the card turns Safe mode on or off.
+                TextButton(onClick = { onIntent(ChatIntent.ToggleSafeMode) }) {
+                    Text(stringResource(if (state.safeMode) R.string.chat_safe_mode_on else R.string.chat_safe_mode_off))
+                }
                 TextButton(onClick = onClose) { Text(stringResource(R.string.chat_close)) }
             }
             MessageList(state, Modifier.weight(1f), onIntent)

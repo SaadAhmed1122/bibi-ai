@@ -29,6 +29,15 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: One switch for "just talk", one button for "forget me"
+- **Test:** Safe mode and Delete everything on the vivo.
+- **What happened:**
+  - With Safe mode on, "turn on the flashlight" first got "Okay! Let's see if we can get some light." from the chat model, with **no light**. The model didn't know actions were off and improvised.
+  - Now Bibi says plainly: "Safe mode is on, so I can't do phone actions."
+  - Delete everything took **237 messages, 2 memories and both logs to 0** in one tap. The 600 MB of AI models stayed, so nothing has to be re-imported.
+- **Lesson:** when a feature is switched off, tell the model, or answer for it. A language model will happily pretend.
+- Image: `media/privacy-dashboard.png`. Source: #87.
+
 ### 2026-11-01: "Hey Bibi, wake me up at seven" from any app
 - **Test:** push-to-talk in Bibi's floating chat card over the phone's home screen, on the vivo.
 - **Numbers:**

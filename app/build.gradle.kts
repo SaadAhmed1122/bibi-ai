@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 /** Fails the build if a merged manifest asks for INTERNET: Bibi is offline (SPEC.md Boundaries). */

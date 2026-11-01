@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +29,7 @@ import io.github.saadahmed1122.bibi.debug.CrashLogRoute
 import io.github.saadahmed1122.bibi.debug.LlmDebugRoute
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.usecase.MemoryExport
+import io.github.saadahmed1122.bibi.domain.usecase.Retention
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
@@ -41,7 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
-private enum class Screen { Home, Chat, Model, Memory, Settings, Terms, CrashLog, LlmDebug, ActionsDebug }
+private enum class Screen { Home, Chat, Model, Memory, Settings, Privacy, Terms, CrashLog, LlmDebug, ActionsDebug }
 
 class MainActivity : ComponentActivity() {
     /** Set by a tap on floating Bibi or the notification's Open chat ([OverlayService.EXTRA_OPEN_CHAT]). */
@@ -149,7 +152,32 @@ class MainActivity : ComponentActivity() {
                             onPickVoice = { voicePicker.launch(null) },
                         )
                     }
-                    Screen.Settings -> SettingsRoute(container.persona, onBack = goHome)
+                    Screen.Settings -> SettingsRoute(
+                        persona = container.persona,
+                        safeMode = container.safeMode,
+                        onSafeMode = container::setSafeMode,
+                        onOpenPrivacy = { screen = Screen.Privacy },
+                        onBack = goHome,
+                    )
+                    Screen.Privacy -> {
+                        var stored by remember { mutableStateOf<StoredData?>(null) }
+                        val retention by container.retention.current.collectAsStateWithLifecycle()
+                        val scope = rememberCoroutineScope()
+                        LaunchedEffect(Unit) { stored = container.storedData() }
+                        PrivacyScreen(
+                            stored = stored,
+                            retentionLabel = retentionText(retention),
+                            onOpenMemory = { screen = Screen.Memory },
+                            onDeleteEverything = {
+                                scope.launch {
+                                    runCatching { container.deleteEverything() }
+                                    stored = container.storedData()
+                                    Toast.makeText(this@MainActivity, R.string.privacy_deleted, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onBack = { screen = Screen.Settings },
+                        )
+                    }
                     Screen.Memory -> {
                         val retention by container.retention.current.collectAsStateWithLifecycle()
                         val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -171,6 +199,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun retentionText(r: Retention): String = getString(
+        when (r) {
+            Retention.WEEK -> io.github.saadahmed1122.bibi.feature.memory.R.string.memory_keep_week
+            Retention.MONTH -> io.github.saadahmed1122.bibi.feature.memory.R.string.memory_keep_month
+            Retention.THREE_MONTHS -> io.github.saadahmed1122.bibi.feature.memory.R.string.memory_keep_three_months
+            Retention.YEAR -> io.github.saadahmed1122.bibi.feature.memory.R.string.memory_keep_year
+            Retention.FOREVER -> io.github.saadahmed1122.bibi.feature.memory.R.string.memory_keep_forever
+        },
+    )
 
     /** Writes `bibimem.json` to the place the user picked (no storage permission needed). */
     private fun exportMemory(uri: Uri) {
