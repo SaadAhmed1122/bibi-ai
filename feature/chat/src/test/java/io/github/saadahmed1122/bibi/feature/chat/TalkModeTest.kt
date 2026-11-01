@@ -1,5 +1,6 @@
 package io.github.saadahmed1122.bibi.feature.chat
 
+import io.github.saadahmed1122.bibi.ai.inference.api.EngineState
 import io.github.saadahmed1122.bibi.ai.inference.api.FakeInferenceClient
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import kotlinx.coroutines.CoroutineScope
@@ -113,6 +114,30 @@ class TalkModeTest {
         runCurrent() // advanceUntilIdle doesn't wait for backgroundScope
         assertEquals(1, opened)
         assertEquals(0, audio.starts)
+    }
+
+    @Test
+    fun whileTheModelLoadsBibiListensAndAnswersOnceReady() = runTest {
+        val client = FakeInferenceClient(initialState = EngineState.Loading).apply {
+            enqueueReply("Paris.")
+        }
+        val said = listOf("what is the capital of france", "bye")
+        val audio = ScriptedAudio(listOf(utterance, utterance)) { client.transcriptResult = said[it] }
+        val vm = viewModel(client, audio)
+        var opened = 0
+        backgroundScope.launch { vm.openChat.collect { opened++ } }
+        vm.onIntent(ChatIntent.StartTalk)
+        advanceUntilIdle()
+        // Heard, but waiting for the model: nothing sent yet, and the chat didn't open.
+        assertTrue(client.sentTexts.isEmpty())
+        assertEquals(TalkPhase.THINKING, vm.state.value.talk)
+        client.setState(EngineState.Ready)
+        advanceUntilIdle()
+        runCurrent()
+        assertEquals(listOf("what is the capital of france"), client.sentTexts)
+        assertEquals(listOf("Paris."), client.spokenTexts)
+        assertEquals(0, opened)
+        assertNull(vm.state.value.talk)
     }
 
     @Test

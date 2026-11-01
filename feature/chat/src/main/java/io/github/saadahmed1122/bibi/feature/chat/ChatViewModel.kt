@@ -324,7 +324,8 @@ class ChatViewModel(
      */
     private fun startTalk() {
         val v = voice
-        if (v == null || !state.value.voiceReady || banner.value != null) {
+        // A model still loading is fine: Bibi listens meanwhile and answers once it's ready.
+        if (v == null || !state.value.voiceReady || banner.value == ChatBanner.ImportModel || banner.value == ChatBanner.Error) {
             openChatRequests.trySend(Unit)
             return
         }
@@ -343,6 +344,10 @@ class ChatViewModel(
                         }
                         TalkCommand.END -> break
                         null -> Unit
+                    }
+                    if (banner.first { it == null || it == ChatBanner.ImportModel || it == ChatBanner.Error } != null) {
+                        openChatRequests.trySend(Unit)
+                        break
                     }
                     input.value = heard.take(MAX_INPUT_CHARS)
                     val reply = send(aloud = true) ?: break
