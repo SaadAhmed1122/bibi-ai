@@ -47,7 +47,7 @@ object ShortcutParser {
 
     private val OPEN = Regex("^(?:open|launch|start)\\s+(?:the\\s+)?([\\p{L}\\p{N}][\\p{L}\\p{N} &'+\\-._]*?)(?:\\s+app)?$", OPT)
 
-    private val PREFIX = Regex("^(?:(?:hey\\s+)?bibi\\s*,?\\s+|please\\s+|can\\s+you\\s+|could\\s+you\\s+)", OPT)
+    private val PREFIX = Regex("^(?:(?:hey\\s+)?(?:bibi|bb)\\s*,?\\s+|please\\s+|can\\s+you\\s+|could\\s+you\\s+)", OPT)
     private val SUFFIX = Regex("\\s+please$", OPT)
 
     fun parse(text: String): ToolCall? {
@@ -61,7 +61,7 @@ object ShortcutParser {
         return null
     }
 
-    /** Trims, drops trailing . ! ?, collapses spaces, strips "hey bibi,", "please", "can you" and a trailing "please". Keeps case. */
+    /** Trims, drops trailing . ! ?, collapses spaces, strips "hey bibi," (or Parakeet's "BB"), "please", "can you" and a trailing "please". Keeps case. */
     internal fun normalize(text: String): String {
         var s = text.trim().trimEnd('.', '!', '?').trim().replace(Regex("\\s+"), " ")
         while (true) {

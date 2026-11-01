@@ -38,6 +38,9 @@ fun shortcutParserTests() {
         "open the light" to ToolCall.Flashlight(true),
         // Owner's tries on the vivo (2026-11-01): both turned the light on. "Of" is Parakeet's "off".
         "close the flashlight" to ToolCall.Flashlight(false),
+        // Parakeet writes a spoken "Bibi" as "BB" (owner's try through the floating card, 2026-11-01).
+        "Hey BB, turn on the flashlight." to ToolCall.Flashlight(true),
+        "BB, flashlight off" to ToolCall.Flashlight(false),
         "shut the torch" to ToolCall.Flashlight(false),
         "of the flashlight" to ToolCall.Flashlight(false),
         "off the light" to ToolCall.Flashlight(false),

@@ -95,21 +95,21 @@ class EndpointerTest {
 class TalkCommandTest {
     @Test
     fun opensChat() {
-        listOf("Open chat", "open the chat.", "Bibi, open chat mode", "let me type", "Switch to chat").forEach {
+        listOf("Open chat", "open the chat.", "Bibi, open chat mode", "Hey BB, open chat", "let me type", "Switch to chat").forEach {
             assertEquals(it, TalkCommand.OPEN_CHAT, TalkCommand.parse(it))
         }
     }
 
     @Test
     fun ends() {
-        listOf("Stop.", "bye", "Goodbye Bibi", "that's all", "Thanks, that's all", "stop listening").forEach {
+        listOf("Stop.", "bye", "Goodbye Bibi", "Bye BB", "Bye B D.", "bye for now", "that's all", "Thanks, that's all", "stop listening").forEach {
             assertEquals(it, TalkCommand.END, TalkCommand.parse(it))
         }
     }
 
     @Test
     fun normalSentencesAreNotCommands() {
-        listOf("Where is the bus stop?", "How do I open a chat with my friend on WhatsApp", "set a timer").forEach {
+        listOf("Where is the bus stop?", "stop the music", "bye the way, what time is it", "How do I open a chat with my friend on WhatsApp", "set a timer").forEach {
             assertNull(it, TalkCommand.parse(it))
         }
     }
