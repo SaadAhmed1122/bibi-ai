@@ -48,7 +48,7 @@ Notes on the vivo Y17s:
 | 4 | Second test phone (6–8 GB) | vivo Y17s available (6 GB, Helio G85, Android 15). It covers the 6 GB RAM case, but not a recent chip. | Partly resolved |
 | 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
 | 5 | Final app name | **Bibi AI** chosen (2026-10-28). Web check done; similar "Bibi" products exist (see brainstorm.md). Formal trademark, Play listing, and domain checks still needed. | Partly resolved [VERIFY] |
-| 6 | Model pack hosting | Side-load for the closed test (owner, 2026-10-31); download built once a host is chosen | Deferred past P2 |
+| 6 | Model pack hosting | Closed test: owner's Google Drive link + the in-app file picker (owner, 2026-11-01); steps in docs/tester-guide.md; Drive link [OPEN] | In-app download deferred past P2 |
 | 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged. The file is still not in `reference/` (checked 2026-10-30); S1–S4 numbers live in the spikes' `results/RESULTS.md` files instead. | Open |
 | 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Resolved 2026-10-31: Sensitive (owner) |
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-11-01 — Closed testers and Play reviewers get the model from the owner's Google Drive (download link + the existing file picker), not Play Asset Delivery or an in-app download; the app stays without `INTERNET`. The Drive folder carries the Gemma NOTICE file, a README with the use restrictions and a copy of the Gemma Terms, as the Gemma Terms require for redistribution — Owner decision — docs/tester-guide.md, open item 6
 - 2026-11-01 — Design direction A "Expressive Tabby" (tangerine and violet from the character, very round shapes, Bricolage Grotesque + Figtree, light and dark) — Owner pick from three mock-ups — SPEC-design.md, #93
 - 2026-11-01 — Floating Bibi becomes voice-first: one tap starts a spoken conversation (listen → answer aloud plus a reply bubble next to Bibi → listen again), which ends after about 8 s of quiet or another tap; long-press or saying "open chat" opens the chat card; the app is for typing. Overrides SPEC-overlay "tap opens the chat card" and PRD §17 gesture "tap (open card)". Within PRD 0.9/FR-117: the mic starts only from the tap, never while Bibi speaks, with a visible listening indicator; no wake word — Owner request — SPEC-overlay.md, SPEC-voice.md
 - 2026-11-01 — The overlay service runs as `specialUse|microphone` once the mic permission is granted (type set only when the app is in front); without it Android silenced push-to-talk from the floating card (RMS 0). The mic still records only while the talk button is held; the `microphone` FGS use needs its own Play declaration — Measured on the vivo — SPEC-voice.md, #86
@@ -126,6 +127,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-11-01 ~16:30: Model delivery decided (Drive link + side-load). Written: docs/tester-guide.md (Drive folder contents for the owner, 5 tester steps, Play App access text), docs/model-pack/NOTICE.txt and README.txt for the Drive folder, play-console.md updated. S1 kill/restart check passed on the vivo (comment on #4). Next: owner uploads the pack to Drive and sends the link; Claude records it in tester-guide.md and play-console.md.
+
 2026-11-01 ~16:20: "Hey BB" prefix (ShortcutParser) and "bye" + up to two short words (TalkCommand) fixed test-first; on the vivo by voice from the laptop: "Hey Bibi, turn off the flashlight." → "Hey BB, …" → "Flashlight off."; "Bye Bibi" ended the talk. Next: owner items below.
 
 2026-11-01 ~16:15: Fixes on `bugfix/107-repetition-stop`: `RepetitionGuard` stops a reply that repeats a 2–60 character piece 3+ times over 30+ characters (the #107 text is the test; on the vivo "who is Sara" and "tell me about my sister" didn't loop this time, normal replies unchanged at ttft 1.27 s). Flashlight: "close"/"shut" and Parakeet's "of the flashlight" mean off (found in the owner's chat history; checked on the vivo, the torch log shows off). CLAUDE.md trimmed to under 150 lines. Strix wasn't run for the regex-only parser change. Next: owner items below.

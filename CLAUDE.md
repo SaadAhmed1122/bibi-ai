@@ -47,7 +47,7 @@ docs/
   linkedin/posts.md         LinkedIn log of test findings (+ media/ charts); first-post.md = first post + answer guide
   tooling.md, local-setup.md  agent tools; same setup on a laptop or cloud
   release.md                owner checklist: upload key, bundleRelease, Play internal track
-  play-console.md           Play Console answers (Data safety, FGS, permissions) + PRD 0.9 checklist
+  play-console.md, tester-guide.md  Play Console answers + 0.9 checklist; model via Drive (+ model-pack/)
   privacy-policy.md         privacy policy (same text in the app; owner hosts it)
   p1-gate.md                P1 exit gate: 1-hour session results
   features/overlay.md       floating character, foreground service (S1)
