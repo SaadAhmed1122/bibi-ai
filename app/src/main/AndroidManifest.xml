@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- No INTERNET permission: Bibi works offline (SPEC.md). A build check enforces this. -->
+    <!-- Push-to-talk (SPEC-voice.md): asked the first time the mic is pressed, used only while the
+         button is held. Audio never leaves the phone. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <application
         android:name=".BibiApplication"
         android:allowBackup="false"

@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Hold to talk, hear the answer
+- **Test:** push-to-talk and read-aloud in Bibi's chat on the vivo.
+- **Numbers:**
+  - The mic records only while the button is held. Audio goes to the speech model in **0.5 s pieces** and never leaves the phone.
+  - The first press loads the 650 MB speech model (**12.5 s**), so the first answer waits; after that it takes about **1.5 s** for 4 s of speech.
+  - Read aloud speaks each sentence as soon as it's finished, while the rest is still being written. The first sentence waits for the voice to load (**10 s**); the rest follow straight away.
+  - Holding the button in silence correctly gave "I didn't catch that" instead of a made-up sentence.
+- **Small catch:** Gemma sometimes writes *markdown*, so asterisks are now removed before speaking.
+- **Lesson:** loading time is the real cost of on-device voice, not the speed once it runs.
+- Image: `media/push-to-talk.png`. Source: #85.
+
 ### 2026-11-01: Bibi can hear and speak (and forgets the voice when it's quiet)
 - **Test:** the voice models running inside the app's AI process on the vivo, next to the chat model.
 - **Numbers:**

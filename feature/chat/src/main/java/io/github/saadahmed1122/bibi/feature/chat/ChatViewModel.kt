@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -45,7 +47,13 @@ data class ChatUiState(
     val banner: ChatBanner? = ChatBanner.Loading,
     val pendingAction: String? = null,
     val notice: String? = null,
+    /** Voice (SPEC-voice.md): the pack is imported; the mic is held; answers are read aloud. */
+    val voiceReady: Boolean = false,
+    val listening: Boolean = false,
+    val speakReplies: Boolean = false,
 ) {
+    /** Push-to-talk is offered: voice ready, and not while Bibi writes (memory check, #72). */
+    val canTalk: Boolean get() = voiceReady && banner == null && !generating && pendingAction == null
     val generating: Boolean get() = streamingText != null
     val canSend: Boolean get() = banner == null && !generating && pendingAction == null && input.isNotBlank()
     val canClear: Boolean get() = !generating && messages.isNotEmpty()
@@ -59,6 +67,13 @@ sealed interface ChatIntent {
 
     /** "Remember this" on a message: saves its text unless it is something Bibi never stores. */
     data class RememberMessage(val text: String) : ChatIntent
+
+    /** Push-to-talk: the mic button is pressed / released. */
+    data object MicDown : ChatIntent
+    data object MicUp : ChatIntent
+
+    /** "Read answers aloud" on or off. */
+    data object ToggleSpeaker : ChatIntent
 
     /** Answers to the confirmation card of a Sensitive action. */
     data object ConfirmAction : ChatIntent
@@ -81,6 +96,7 @@ class ChatViewModel(
     private val summaries: SummaryScheduler? = null,
     /** Called with this chat's mood whenever it changes (floating Bibi shows it). */
     private val onMood: (BibiMood) -> Unit = {},
+    private val voice: ChatVoice? = null,
     scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob()),
 ) : ViewModel(scope) {
 
@@ -98,6 +114,17 @@ class ChatViewModel(
     private val pending = MutableStateFlow<ConfirmationRequest?>(null)
     private var pendingTimeout: Job? = null
 
+    /** Push-to-talk in progress (its listening id), and the transcription wait after release. */
+    private var listenId: Long? = null
+    private var chunker: AudioChunker? = null
+    private val listening = MutableStateFlow(false)
+    private val transcribing = MutableStateFlow(false)
+
+    /** Sentences waiting to be spoken, in order; one coroutine speaks them. */
+    private var speech = Channel<String>(Channel.UNLIMITED)
+    private var speaker: Job? = null
+    private val talking = MutableStateFlow(false)
+
     /** True for a few seconds after an error, a refusal or a question back (SPEC-avatar-states.md). */
     private val confused = MutableStateFlow(false)
     private var confusedJob: Job? = null
@@ -106,10 +133,10 @@ class ChatViewModel(
      * Bibi's state for this chat: thinking until the first word, speaking while words arrive,
      * confused for [CONFUSED_MS] after something went wrong or Bibi had to ask, else idle.
      */
-    val mood: StateFlow<BibiMood> = combine(streaming, confused) { text, puzzled ->
+    val mood: StateFlow<BibiMood> = combine(streaming, confused, transcribing, talking) { text, puzzled, hearing, voiceOut ->
         when {
-            text != null && text.isEmpty() -> BibiMood.THINKING
-            text != null -> BibiMood.SPEAKING
+            hearing || (text != null && text.isEmpty()) -> BibiMood.THINKING
+            text != null || voiceOut -> BibiMood.SPEAKING
             puzzled -> BibiMood.CONFUSED
             else -> BibiMood.IDLE
         }
@@ -137,6 +164,8 @@ class ChatViewModel(
             notice,
         ) { (messages, text, streamingText), banner, request, note ->
             ChatUiState(messages, text, streamingText, banner, request?.summary, note)
+        }.combine(combine(voice?.ready ?: flowOf(false), listening, voice?.speakReplies ?: flowOf(false), ::Triple)) { ui, (ready, mic, aloud) ->
+            ui.copy(voiceReady = ready, listening = mic, speakReplies = aloud)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
 
     init {
@@ -150,7 +179,17 @@ class ChatViewModel(
         when (intent) {
             is ChatIntent.Edit -> input.value = intent.text.take(MAX_INPUT_CHARS)
             ChatIntent.Send -> send()
-            ChatIntent.Stop -> client.stop()
+            ChatIntent.Stop -> {
+                client.stop()
+                silence()
+            }
+            ChatIntent.MicDown -> micDown()
+            ChatIntent.MicUp -> micUp()
+            ChatIntent.ToggleSpeaker -> voice?.let { v ->
+                val on = !v.speakReplies.value
+                v.setSpeakReplies(on)
+                if (!on) silence()
+            }
             ChatIntent.Clear -> if (streaming.value == null) {
                 pending.value?.let { answer(it, UserResponse.CANCEL, say = false) }
                 viewModelScope.launch {
@@ -197,6 +236,75 @@ class ChatViewModel(
         TurnPlan.Chat -> null
         is TurnPlan.Ask -> plan.question.also { puzzle() }
         is TurnPlan.Act -> describe(a, a.runner.submit(plan.call))
+    }
+
+    private fun micDown() {
+        val v = voice ?: return
+        if (!state.value.canTalk || listenId != null) return
+        silence()
+        val id = client.startListening()
+        val c = AudioChunker { client.sendAudio(id, it) }
+        // The recorder delivers on its own thread; the chunker is used only there until stop().
+        if (!v.audio.start { c.add(it) }) return
+        listenId = id
+        chunker = c
+        listening.value = true
+    }
+
+    private fun micUp() {
+        val v = voice ?: return
+        val id = listenId ?: return
+        v.audio.stop() // returns after the recorder thread has finished
+        chunker?.flush()
+        listenId = null
+        chunker = null
+        listening.value = false
+        transcribing.value = true
+        viewModelScope.launch {
+            val heard = try {
+                client.finishListening(id)
+            } finally {
+                transcribing.value = false
+            }
+            if (heard.isNullOrBlank()) {
+                showNotice(v.notHeard)
+                puzzle()
+            } else {
+                input.value = heard.take(MAX_INPUT_CHARS)
+                send()
+            }
+        }
+    }
+
+    /** Queues one sentence to speak; one coroutine speaks them in order. Markdown marks aren't read out. */
+    private fun say(raw: String) {
+        val sentence = raw.replace(MARKDOWN, "").trim()
+        if (sentence.none(Char::isLetterOrDigit)) return
+        if (speaker?.isActive != true) {
+            val queue = speech
+            speaker = viewModelScope.launch {
+                for (line in queue) {
+                    talking.value = true
+                    try {
+                        client.speak(line)
+                    } finally {
+                        talking.value = !queue.isEmpty
+                    }
+                }
+            }
+        }
+        speech.trySend(sentence)
+    }
+
+    /** Stops speaking and drops what was queued. */
+    private fun silence() {
+        if (speaker == null && !talking.value) return
+        speech.close()
+        speech = Channel(Channel.UNLIMITED)
+        speaker?.cancel()
+        speaker = null
+        talking.value = false
+        client.stopSpeaking()
     }
 
     /** Bibi looks puzzled for a moment. */
@@ -250,12 +358,22 @@ class ChatViewModel(
         input.value = ""
         streaming.value = ""
         summaries?.onUserActivity()
+        val aloud = voice?.speakReplies?.value == true
+        val sentences = SentenceSplitter()
+        var streamed = false
         viewModelScope.launch {
             try {
                 sendMessage(text).collect { event ->
-                    if (event is ReplyEvent.Token) streaming.update { it.orEmpty() + event.text }
+                    if (event is ReplyEvent.Token) {
+                        streaming.update { it.orEmpty() + event.text }
+                        streamed = true
+                        if (aloud) sentences.add(event.text).forEach(::say)
+                    }
                     if (event is ReplyEvent.Error) puzzle()
+                    // An action or memory reply arrives whole, without tokens.
+                    if (aloud && event is ReplyEvent.Done && !streamed) say(event.fullText)
                 }
+                if (aloud) sentences.finish()?.let(::say)
             } finally {
                 streaming.value = null
                 summaries?.onTurnDone()
@@ -266,5 +384,6 @@ class ChatViewModel(
     private companion object {
         const val NOTICE_MS = 3_000L
         const val CONFUSED_MS = 3_000L
+        val MARKDOWN = Regex("[*_#`]")
     }
 }

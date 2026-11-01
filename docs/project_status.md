@@ -65,6 +65,7 @@ Notes on the vivo Y17s:
 - Spike JVM suites pass locally (S2 summary ALL PASS, S3 ALL PASS, S4 213 checks ALL PASS) using the workaround in open item 13. S2, S3 and S4 build with `./gradlew assembleDebug` (AGP/Gradle 9.1.0, JDK 17).
 
 ## Decisions
+- 2026-11-01 — Merged manifest permissions after P2 Tasks 11 and 14: RECORD_AUDIO (asked on first mic press, used only while held) and, from WorkManager, WAKE_LOCK and RECEIVE_BOOT_COMPLETED (normal, no prompt); still no INTERNET — Owner pre-approval of P2 merges — #82, #85
 - 2026-11-01 — The app is built for arm64-v8a only: the test phones are arm64 and the native AI libraries otherwise add three ABIs (debug APK 359 MB → 126 MB); Play's AAB would split by ABI anyway — Build size — #84
 - 2026-11-01 — sherpa-onnx 2.0.1 comes in as a local AAR in git-ignored `libs/` (not on Maven), the file S3 measured; the build fails with download instructions when it is missing — SPEC-voice.md — #84
 - 2026-11-01 — WorkManager 2.11.2 added for the daily memory retention job (charging + idle); it builds with compileSdk 36 / AGP 9.0.1 — Approved plan (SPEC-memory.md) — #82
@@ -122,6 +123,8 @@ Notes on the vivo Y17s:
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
 
 ## Last session stopping point
+2026-11-01 ~07:00: P2 Task 14 (#85) built on `feature/85-push-to-talk`: `AudioChunker`, `SentenceSplitter`, `ChatVoice`, `AudioRecordSource` (16 kHz float, VOICE_RECOGNITION, only while held); ChatViewModel MicDown/MicUp (transcript sent as the message; mic off while Bibi writes; "I didn't catch that" when nothing was heard), ToggleSpeaker and sentence-by-sentence speech (markdown marks stripped, Stop silences, action replies spoken whole); "Hold to talk" and "Read aloud" in the chat; RECORD_AUDIO asked on first press after a one-line explainer. 10 new tests. On the vivo: explainer then the system dialog; a 3 s silent hold → "I didn't catch that" (first press also loaded Parakeet, 12.5 s); Read aloud spoke a 3-sentence answer in order (Piper first load 10.4 s); portrait and landscape; a header layout bug fixed (title squeezed by the new button). Real speech into the mic is for the owner to try. Next: Task 15 (#86) voice in the floating card (microphone FGS type).
+
 2026-11-01 ~06:50: P2 Task 13 (#84) built on `feature/84-voice-pack`: `VoicePack` (7 files, sizes and SHA-256 from the S3 copies), `VoicePackRepository` (folder import, per-file SHA-256, the two tokens.txt told apart by folder), `UriTreeVoiceSource` (OpenDocumentTree, no permission), a "Voice (optional)" section on the model screen; sherpa-onnx 2.0.1 AAR from git-ignored `libs/` in `ai:inference-litert` (AGP accepts it), app built for arm64 only (APK 359 → 126 MB); `ParakeetStt`/`PiperTts` on a voice thread in `:inference`, loaded on first use and released after 2 idle minutes; protocol SET_VOICE/STT_START/STT_CHUNK/STT_END/SPEAK/SPEAK_STOP/TRANSCRIPT/SPOKEN with Base64 PCM16; client voice API; debug "Transcribe test clip" / "Speak test". On the vivo: import of the 697 MB pack in about 10 s; S3 clip1 → "Set a timer for ten minutes." (Parakeet load 12.0 s, 4.4 s audio in 1.5 s, warm the same); Piper load 7.7 s, a 55-char sentence spoken in 5.8 s (owner heard it); after 2 idle minutes `:inference` PSS 1,320 → 435 MB. The staged copy `Download/bibi-voice` (697 MB) can be deleted. Next: Task 14 (#85) push-to-talk and spoken replies in the chat (adds RECORD_AUDIO).
 
 2026-11-01 ~06:25: P2 Task 12 (#83) checked on the vivo and merged: floating Bibi and the chat header show thinking (while routing / before the first word), speaking (while streaming), confused for about 3 s after "set an alarm" asked back, then idle; portrait and landscape. Calm frame rate not re-measured (frame timing unchanged). Next: Task 13 (#84) voice pack import and sherpa-onnx engines.
@@ -184,6 +187,6 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-1. Claude: Task 14 (#85) push-to-talk and spoken replies in the chat screen (adds RECORD_AUDIO).
+1. Owner: try Hold to talk with your voice in the app chat. Claude: Task 15 (#86) voice in the floating card.
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).

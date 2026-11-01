@@ -44,7 +44,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 ### Phase 4: Bibi's states and voice
 - [x] **Task 12 (#83): Avatar states.** Acceptance: SPEC-avatar-states. **M**
 - [x] **Task 13 (#84): Voice pack import + sherpa-onnx engines.** **M**
-- [ ] **Task 14 (#85): Push-to-talk + spoken replies in the chat screen.** **M**
+- [x] **Task 14 (#85): Push-to-talk + spoken replies in the chat screen.** **M**
 - [ ] **Task 15 (#86): Voice in the floating card.** **M**
 
 ### Checkpoint E3: voice

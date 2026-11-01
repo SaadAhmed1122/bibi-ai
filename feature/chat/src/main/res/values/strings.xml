@@ -47,6 +47,14 @@
     <string name="memory_blocked_card">I won\'t keep that: it looks like a card number. Card numbers are never stored.</string>
     <string name="memory_blocked_password">I won\'t keep that: it looks like a password or PIN. Those are never stored.</string>
     <string name="memory_blocked_id">I won\'t keep that: it looks like an ID number. Those are never stored.</string>
+    <string name="voice_hold_to_talk">Hold to talk</string>
+    <string name="voice_listening">Listening… release to send</string>
+    <string name="voice_read_aloud_on">Read aloud: on</string>
+    <string name="voice_read_aloud_off">Read aloud: off</string>
+    <string name="voice_not_heard">I didn\'t catch that. Hold the button while you speak.</string>
+    <string name="voice_mic_why">Bibi uses the microphone only while you hold the talk button. What you say is turned into text on this phone and never recorded or sent anywhere.</string>
+    <string name="voice_mic_continue">Continue</string>
+    <string name="voice_mic_not_now">Not now</string>
     <string name="voice_title">Voice (optional)</string>
     <string name="voice_missing">To talk with Bibi and hear its answers, it needs the voice pack: the Parakeet speech-to-text and Piper voice folders (about 730 MB). Put both folders in one folder on the phone, then choose that folder here.</string>
     <string name="voice_choose">Choose voice folder</string>
