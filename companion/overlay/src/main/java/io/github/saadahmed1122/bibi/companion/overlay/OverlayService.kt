@@ -29,7 +29,8 @@ import kotlinx.coroutines.launch
  * Foreground service (type `specialUse`) that shows Bibi over other apps (SPEC-overlay.md), ported
  * from spike S1 without its measurement code.
  *
- * Tapping Bibi opens or closes the chat card ([ChatCardWindow]). The notification offers
+ * Tapping Bibi starts a spoken conversation ([TalkWindow], #118); a long-press opens the chat card
+ * ([ChatCardWindow]). The notification offers
  * Hide/Show, Open chat (the app) and Turn off. Hide removes the windows but keeps the service. `START_NOT_STICKY`: if the system kills the process, Bibi comes back the next time the
  * app starts the service, instead of S1's restart dance around Android 15's background-start rules.
  */
@@ -41,6 +42,8 @@ class OverlayService : Service() {
     private var screenOn = true
     private val cardOwner = OverlayLifecycleOwner()
     private val card by lazy { ChatCardWindow(this, windowManager, cardOwner, application as ChatCardHost) }
+    private val talk by lazy { TalkWindow(this, windowManager, cardOwner, application as ChatCardHost, ::bibiBounds, ::openCard) }
+    private var bibiParams: WindowManager.LayoutParams? = null
 
     /** Follows Bibi's mood for the floating view; cancelled in onDestroy. */
     private val scope = MainScope()
@@ -94,6 +97,7 @@ class OverlayService : Service() {
                 }
             }
             ACTION_HIDE -> {
+                talk.close()
                 card.close()
                 controller.hide()
                 refreshNotification()
@@ -116,6 +120,7 @@ class OverlayService : Service() {
             v.post {
                 v.clampToScreen()
                 card.relayout()
+                talk.relayout()
             }
         }
     }
@@ -140,8 +145,12 @@ class OverlayService : Service() {
             context = this,
             windowManager = windowManager,
             params = params,
-            onMoved = { x, y -> prefs.edit().putInt(KEY_X, x).putInt(KEY_Y, y).apply() },
-            onTap = ::toggleCard,
+            onMoved = { x, y ->
+                prefs.edit().putInt(KEY_X, x).putInt(KEY_Y, y).apply()
+                talk.relayout()
+            },
+            onTap = ::onBibiTap,
+            onLongPress = ::openCard,
         )
         v.calm = prefs.getBoolean(KEY_CALM, false)
         v.mood = (application as ChatCardHost).bibiMood.value
@@ -151,6 +160,7 @@ class OverlayService : Service() {
             return false // permission revoked or no token
         }
         view = v
+        bibiParams = params
         v.setRunning(screenOn)
         return true
     }
@@ -166,11 +176,31 @@ class OverlayService : Service() {
         }
     }
 
-    private fun toggleCard() {
-        if (card.isShown) card.close() else card.show()
+    /**
+     * Tap (#118): closes whatever is open; otherwise starts a spoken conversation. Without the mic
+     * permission the card opens instead (its mic button sends you to the app to grant it).
+     */
+    private fun onBibiTap() {
+        when {
+            card.isShown -> card.close()
+            talk.isShown -> talk.close()
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED -> card.show()
+            else -> talk.show()
+        }
+    }
+
+    /** Long-press, "open chat", or talking isn't possible: the typed chat card. */
+    private fun openCard() {
+        talk.close()
+        card.show()
+    }
+
+    private fun bibiBounds(): android.graphics.Rect? = bibiParams?.takeIf { view != null }?.let {
+        android.graphics.Rect(it.x, it.y, it.x + it.width, it.y + it.height)
     }
 
     private fun stopEverything() {
+        talk.close()
         card.close()
         controller.stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -181,6 +211,7 @@ class OverlayService : Service() {
         running = false
         scope.cancel()
         unregisterReceiver(screenReceiver)
+        talk.close()
         card.close()
         cardOwner.destroy()
         controller.stop()

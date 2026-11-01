@@ -23,6 +23,8 @@ class ChatVoice(
     val speakReplies: StateFlow<Boolean>,
     val setSpeakReplies: (Boolean) -> Unit,
     val notHeard: String,
+    /** Numbers only (loudness, timings), never what was said: for tuning tap-to-talk on a phone. */
+    val log: (String) -> Unit = {},
 )
 
 /** Groups recorded samples into [size]-sample chunks (0.5 s at 16 kHz) for the binder. */

@@ -14,6 +14,7 @@ import io.github.saadahmed1122.bibi.core.common.crash.ExitInfoCollector
 import io.github.saadahmed1122.bibi.core.common.crash.PlatformExitInfoSource
 import io.github.saadahmed1122.bibi.core.common.crash.PrefsLastSeenStore
 import io.github.saadahmed1122.bibi.feature.chat.ChatCardRoute
+import io.github.saadahmed1122.bibi.feature.chat.TalkRoute
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.concurrent.thread
 
@@ -59,5 +60,11 @@ class BibiApplication : Application(), ChatCardHost {
             },
             onClose = onClose,
         )
+    }
+
+    /** Tap-to-talk over other apps (#118). Same ViewModel as the card: both windows share one store. */
+    @Composable
+    override fun TalkContent(onOpenChat: () -> Unit, onEnd: () -> Unit) {
+        TalkRoute(viewModel = viewModel { container.chatViewModel() }, onOpenChat = onOpenChat, onEnd = onEnd)
     }
 }
