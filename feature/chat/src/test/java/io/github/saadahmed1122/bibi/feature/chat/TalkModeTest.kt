@@ -26,7 +26,7 @@ class TalkModeTest {
     /** 0.1 s pieces at a constant loudness. */
     private fun tenths(level: Float, n: Int) = List(n) { FloatArray(1_600) { i -> if (i % 2 == 0) level else -level } }
 
-    private val utterance = tenths(0.004f, 3) + tenths(0.05f, 8) + tenths(0.004f, 10)
+    private val utterance = tenths(0.004f, 3) + tenths(0.05f, 8) + tenths(0.004f, 12)
     private val silence = tenths(0.004f, 80)
 
     /**

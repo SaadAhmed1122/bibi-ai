@@ -19,8 +19,8 @@ class EndpointerTest {
         val e = Endpointer()
         assertEquals(emptyList<Endpointer.Event>(), e.feed(quiet, 5))
         assertEquals(listOf(Endpointer.Event.SpeechStarted), e.feed(voice, 10))
-        // 0.8 s of quiet isn't enough; the 9th tenth ends it.
-        assertEquals(emptyList<Endpointer.Event>(), e.feed(quiet, 8))
+        // 1.0 s of quiet isn't enough; the 11th tenth ends it.
+        assertEquals(emptyList<Endpointer.Event>(), e.feed(quiet, 10))
         assertEquals(listOf(Endpointer.Event.SpeechEnded), e.feed(quiet, 1))
     }
 
@@ -31,7 +31,17 @@ class EndpointerTest {
         e.feed(voice, 5)
         assertEquals(emptyList<Endpointer.Event>(), e.feed(quiet, 5))
         assertEquals(emptyList<Endpointer.Event>(), e.feed(voice, 5))
-        assertEquals(listOf(Endpointer.Event.SpeechEnded), e.feed(quiet, 9))
+        assertEquals(listOf(Endpointer.Event.SpeechEnded), e.feed(quiet, 11))
+    }
+
+    @Test
+    fun softSyllablesInsideASentenceStillCountAsSpeech() {
+        // Measured on the vivo: words at ~0.02 with softer parts around 0.008, under the 0.012 start bar.
+        val e = Endpointer()
+        e.feed(quiet, 3)
+        assertEquals(listOf(Endpointer.Event.SpeechStarted), e.feed(0.02f, 3))
+        assertEquals(emptyList<Endpointer.Event>(), (1..4).flatMap { e.feed(0.008f, 6) + e.feed(0.02f, 2) })
+        assertEquals(listOf(Endpointer.Event.SpeechEnded), e.feed(quiet, 11))
     }
 
     @Test
