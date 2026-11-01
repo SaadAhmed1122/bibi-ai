@@ -35,8 +35,7 @@ TESTING.md                  owner's on-phone test checklist (all spikes)
 .claude/settings.json       agent-skills plugin, MCP approval, graphify hooks
 .claude/skills/             graphify + Strix skills (pinned in skills-lock.json)
 .claude/agents/             project subagents (see §11)
-.claude-plugin/             marketplace listing the repo's plugins
-plugins/agent-board/        Agents pane + toasts for subagent activity
+.claude-plugin/, plugins/  marketplace + agent-board (Agents pane, subagent toasts)
 reference/
   Pip_PRD_Final.md          source PRD; Part 0 is binding
   Pip_Spike_Tracker.xlsx    spike measurements (source of truth for results)
@@ -44,11 +43,9 @@ docs/
   architecture.md           processes, modules, data flows, scheduler
   changelog.md              Keep a Changelog
   project_status.md         phase, milestones, spikes, open items, decisions
-  design/bibi-character-gemini.md  character brief + Gemini image prompts
-  design/codex-design-prompts.md   prompts to turn the art into vector assets + UI
-  tooling.md                setup and when-to-use for agent tools
+  design/                   character brief, Gemini and Codex art prompts
   linkedin/posts.md         LinkedIn log of test findings (+ media/ charts); first-post.md = first post + answer guide
-  local-setup.md            same setup on your laptop; resuming from phone/cloud
+  tooling.md, local-setup.md  agent tools; same setup on a laptop or cloud
   release.md                owner checklist: upload key, bundleRelease, Play internal track
   play-console.md           Play Console answers (Data safety, FGS, permissions) + PRD 0.9 checklist
   privacy-policy.md         privacy policy (same text in the app; owner hosts it)

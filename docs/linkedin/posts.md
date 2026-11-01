@@ -29,6 +29,15 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Small-model habits you have to design around
+- **Test:** chat and voice on the vivo while finishing P2.
+- **Numbers:**
+  - A 1B model on greedy decoding repeated "Jones-Smith" until its **256-token** limit, about **35 s** of nonsense. A **40-line** check now stops a reply at the third identical repeat.
+  - "Close the flashlight" turned the light **on**: the rules knew "off", "kill" and "shut", not "close". The speech model also writes a spoken "off" as "**of**".
+  - Asked "tell me about my sister" with nothing saved, it invented one ("Emily"). Memory notes help only when they exist.
+- **Lesson:** guard rails around a small model are cheap code, and they're where most of the reliability comes from.
+- Source: #107.
+
 ### 2026-11-01: The Play Store paperwork for an offline AI app
 - **Test:** going through Google Play's policy checklist for Bibi before the closed test.
 - **Numbers:**
