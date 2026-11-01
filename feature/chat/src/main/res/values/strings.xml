@@ -77,4 +77,11 @@
     <string name="router_remove">Remove action model</string>
     <string name="model_invalid_read">The file couldn\'t be read. Try again, or copy it to the phone first.</string>
     <string name="chat_close">Close</string>
+    <string name="talk_listening">Listening…</string>
+    <string name="talk_hearing">I\'m listening</string>
+    <string name="talk_thinking">Thinking…</string>
+    <string name="talk_speaking">Speaking</string>
+    <string name="talk_ended">Tap Bibi to talk again</string>
+    <string name="talk_stop">Stop talking</string>
+    <string name="talk_open_chat">Open the chat</string>
 </resources>

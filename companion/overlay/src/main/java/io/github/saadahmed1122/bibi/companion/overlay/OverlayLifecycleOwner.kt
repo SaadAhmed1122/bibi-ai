@@ -16,7 +16,8 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 /**
  * What an Activity gives Compose, for a window owned by a service (docs/architecture.md): a
  * lifecycle, a ViewModel store and a saved-state registry. It lives as long as the service, so the
- * chat card's ViewModel (and its model connection) survives closing and reopening the card.
+ * chat's ViewModel (and its model connection) survives closing and reopening the card, and the
+ * card and the talk bubble share it.
  * Main thread only.
  */
 internal class OverlayLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
@@ -39,9 +40,13 @@ internal class OverlayLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, Save
         view.setViewTreeSavedStateRegistryOwner(this)
     }
 
-    /** RESUMED while the card is on screen, CREATED while it is closed. */
+    /** Windows on screen that use this owner (the chat card and the talk bubble). */
+    private var shown = 0
+
+    /** RESUMED while any of its windows is on screen, CREATED while none is. Calls come in pairs. */
     fun setVisible(visible: Boolean) {
-        registry.currentState = if (visible) Lifecycle.State.RESUMED else Lifecycle.State.CREATED
+        shown = (shown + if (visible) 1 else -1).coerceAtLeast(0)
+        registry.currentState = if (shown > 0) Lifecycle.State.RESUMED else Lifecycle.State.CREATED
     }
 
     fun destroy() {

@@ -28,14 +28,19 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** What blocks sending, shown above the input. */
 enum class ChatBanner { ImportModel, Loading, Restarting, Error }
+
+/** Where a tap-to-talk conversation is (#118): waiting for speech, hearing it, working out the answer, saying it. */
+enum class TalkPhase { LISTENING, HEARING, THINKING, SPEAKING }
 
 /**
  * [streamingText] is non-null while Bibi is answering; [pendingAction] is the open confirmation
@@ -54,9 +59,11 @@ data class ChatUiState(
     val speakReplies: Boolean = false,
     /** Safe mode (FR-076): no actions, no memory writes; shown as a label. */
     val safeMode: Boolean = false,
+    /** A tap-to-talk conversation in progress (#118), or null. */
+    val talk: TalkPhase? = null,
 ) {
-    /** Push-to-talk is offered: voice ready, and not while Bibi writes (memory check, #72). */
-    val canTalk: Boolean get() = voiceReady && banner == null && !generating && pendingAction == null
+    /** Push-to-talk is offered: voice ready, and not while Bibi writes (memory check, #72) or talks. */
+    val canTalk: Boolean get() = voiceReady && banner == null && !generating && pendingAction == null && talk == null
     val generating: Boolean get() = streamingText != null
     val canSend: Boolean get() = banner == null && !generating && pendingAction == null && input.isNotBlank()
     val canClear: Boolean get() = !generating && messages.isNotEmpty()
@@ -77,6 +84,10 @@ sealed interface ChatIntent {
 
     /** "Read answers aloud" on or off. */
     data object ToggleSpeaker : ChatIntent
+
+    /** Tap-to-talk (#118): one tap starts a spoken conversation; [StopTalk] ends it. */
+    data object StartTalk : ChatIntent
+    data object StopTalk : ChatIntent
 
     /** Safe mode on or off (the floating card's header switch). */
     data object ToggleSafeMode : ChatIntent
@@ -134,6 +145,14 @@ class ChatViewModel(
     private var speaker: Job? = null
     private val talking = MutableStateFlow(false)
 
+    /** The tap-to-talk conversation (#118) and its loop. */
+    private val talk = MutableStateFlow<TalkPhase?>(null)
+    private var talkJob: Job? = null
+    private val openChatRequests = Channel<Unit>(Channel.CONFLATED)
+
+    /** Emits when the chat should open instead: "open chat" was said, or talking isn't possible. */
+    val openChat: Flow<Unit> = openChatRequests.receiveAsFlow()
+
     /** True for a few seconds after an error, a refusal or a question back (SPEC-avatar-states.md). */
     private val confused = MutableStateFlow(false)
     private var confusedJob: Job? = null
@@ -142,7 +161,7 @@ class ChatViewModel(
      * Bibi's state for this chat: thinking until the first word, speaking while words arrive,
      * confused for [CONFUSED_MS] after something went wrong or Bibi had to ask, else idle.
      */
-    val mood: StateFlow<BibiMood> = combine(streaming, confused, transcribing, talking) { text, puzzled, hearing, voiceOut ->
+    val mood: StateFlow<BibiMood> = combine(streaming, confused, combine(transcribing, talk) { t, phase -> t || phase == TalkPhase.THINKING }, talking) { text, puzzled, hearing, voiceOut ->
         when {
             hearing || (text != null && text.isEmpty()) -> BibiMood.THINKING
             text != null || voiceOut -> BibiMood.SPEAKING
@@ -175,7 +194,9 @@ class ChatViewModel(
             ChatUiState(messages, text, streamingText, banner, request?.summary, note)
         }.combine(combine(voice?.ready ?: flowOf(false), listening, voice?.speakReplies ?: flowOf(false), ::Triple)) { ui, (ready, mic, aloud) ->
             ui.copy(voiceReady = ready, listening = mic, speakReplies = aloud)
-        }.combine(safeMode ?: flowOf(false)) { ui, safe -> ui.copy(safeMode = safe) }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
+        }.combine(safeMode ?: flowOf(false)) { ui, safe -> ui.copy(safeMode = safe) }
+            .combine(combine(talk, talking) { phase, voiceOut -> if (phase == TalkPhase.THINKING && voiceOut) TalkPhase.SPEAKING else phase }) { ui, phase -> ui.copy(talk = phase) }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, ChatUiState())
 
     init {
         viewModelScope.launch {
@@ -193,6 +214,8 @@ class ChatViewModel(
                 silence()
             }
             ChatIntent.ToggleSafeMode -> safeMode?.let { setSafeMode(!it.value) }
+            ChatIntent.StartTalk -> startTalk()
+            ChatIntent.StopTalk -> stopTalk()
             ChatIntent.MicDown -> micDown()
             ChatIntent.MicUp -> micUp()
             ChatIntent.ToggleSpeaker -> voice?.let { v ->
@@ -295,6 +318,92 @@ class ChatViewModel(
         }
     }
 
+    /**
+     * Tap-to-talk (#118): listen until a pause, answer aloud, listen again; ends on [TalkCommand.END],
+     * [Endpointer.Event.NoSpeech] or [stopTalk]. The mic is never on while Bibi speaks.
+     */
+    private fun startTalk() {
+        val v = voice
+        if (v == null || !state.value.voiceReady || banner.value != null) {
+            openChatRequests.trySend(Unit)
+            return
+        }
+        if (talkJob?.isActive == true || listenId != null) return
+        silence()
+        talkJob = viewModelScope.launch {
+            try {
+                while (true) {
+                    talk.value = TalkPhase.LISTENING
+                    val heard = hear(v) ?: break
+                    if (heard.isBlank()) continue
+                    when (TalkCommand.parse(heard)) {
+                        TalkCommand.OPEN_CHAT -> {
+                            openChatRequests.trySend(Unit)
+                            break
+                        }
+                        TalkCommand.END -> break
+                        null -> Unit
+                    }
+                    input.value = heard.take(MAX_INPUT_CHARS)
+                    val reply = send(aloud = true) ?: break
+                    reply.join()
+                    talking.first { !it }
+                }
+            } finally {
+                talk.value = null
+            }
+        }
+    }
+
+    private fun stopTalk() {
+        talkJob?.cancel()
+        talkJob = null
+        if (streaming.value != null) client.stop()
+        silence()
+    }
+
+    /**
+     * One spoken turn: what was said, or null when nothing was (or the mic wouldn't start). The
+     * recognizer gets the speech plus [PRE_ROLL] pieces from just before it started.
+     */
+    private suspend fun hear(v: ChatVoice): String? {
+        val events = Channel<Endpointer.Event>(Channel.UNLIMITED)
+        val id = client.startListening()
+        val chunker = AudioChunker { client.sendAudio(id, it) }
+        val endpointer = Endpointer()
+        val preRoll = ArrayDeque<FloatArray>()
+        var started = false
+        // Recorder thread only, until stop() returns.
+        val onChunk: (FloatArray) -> Unit = { samples ->
+            val event = endpointer.add(samples)
+            if (event == Endpointer.Event.SpeechStarted) {
+                started = true
+                preRoll.forEach { chunker.add(it) }
+                preRoll.clear()
+            }
+            if (started) chunker.add(samples) else {
+                preRoll.addLast(samples)
+                if (preRoll.size > PRE_ROLL) preRoll.removeFirst()
+            }
+            if (event != null) events.trySend(event)
+        }
+        if (!v.audio.start(onChunk)) return null
+        try {
+            var event = events.receive()
+            if (event == Endpointer.Event.SpeechStarted) {
+                talk.value = TalkPhase.HEARING
+                event = events.receive()
+            }
+            v.audio.stop()
+            chunker.flush()
+            talk.value = TalkPhase.THINKING
+            val text = client.finishListening(id)
+            return if (event == Endpointer.Event.NoSpeech) null else text.orEmpty()
+        } finally {
+            v.audio.stop()
+        }
+    }
+
     /** Queues one sentence to speak; one coroutine speaks them in order. Markdown marks aren't read out. */
     private fun say(raw: String) {
         val sentence = raw.replace(MARKDOWN, "").trim()
@@ -370,17 +479,17 @@ class ChatViewModel(
         viewModelScope.launch { history.insert(Message(0, Message.Role.BIBI, text, System.currentTimeMillis(), Message.Status.DONE)) }
     }
 
-    private fun send() {
+    /** Sends the input; returns the reply's job, or null when nothing was sent. [aloud] forces speaking. */
+    private fun send(aloud: Boolean = voice?.speakReplies?.value == true): Job? {
         // Checked on the sources, not on [state], which may not have caught up with the last Edit.
         val text = input.value
-        if (banner.value != null || streaming.value != null || text.isBlank()) return
+        if (banner.value != null || streaming.value != null || text.isBlank()) return null
         input.value = ""
         streaming.value = ""
         summaries?.onUserActivity()
-        val aloud = voice?.speakReplies?.value == true
         val sentences = SentenceSplitter()
         var streamed = false
-        viewModelScope.launch {
+        return viewModelScope.launch {
             try {
                 sendMessage(text).collect { event ->
                     if (event is ReplyEvent.Token) {
@@ -404,5 +513,8 @@ class ChatViewModel(
         const val NOTICE_MS = 3_000L
         const val CONFUSED_MS = 3_000L
         val MARKDOWN = Regex("[*_#`]")
+
+        /** 0.3 s of audio from before speech was noticed, so the first word isn't clipped. */
+        const val PRE_ROLL = 3
     }
 }

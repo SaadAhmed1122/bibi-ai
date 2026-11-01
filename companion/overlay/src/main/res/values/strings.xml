@@ -6,6 +6,6 @@
     <string name="overlay_show">Show Bibi</string>
     <string name="overlay_open_chat">Open chat</string>
     <string name="overlay_stop">Turn off</string>
-    <string name="overlay_bibi_description">Bibi, your companion. Double-tap to chat.</string>
-    <string name="overlay_bibi_description_state">Bibi, your companion. %1$s Double-tap to chat.</string>
+    <string name="overlay_bibi_description">Bibi, your companion. Double-tap to talk; double-tap and hold to type.</string>
+    <string name="overlay_bibi_description_state">Bibi, your companion. %1$s Double-tap to talk; double-tap and hold to type.</string>
 </resources>

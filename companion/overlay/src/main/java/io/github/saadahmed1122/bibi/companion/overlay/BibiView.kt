@@ -41,6 +41,7 @@ class BibiView(
     private val params: WindowManager.LayoutParams,
     private val onMoved: (x: Int, y: Int) -> Unit,
     private val onTap: () -> Unit,
+    private val onLongPress: () -> Unit = {},
 ) : View(context), Choreographer.FrameCallback {
 
     /** One 288 px frame per state, decoded once (about 330 KB each). */
@@ -80,6 +81,10 @@ class BibiView(
     init {
         contentDescription = context.getString(R.string.overlay_bibi_description_state, context.getString(BibiMood.IDLE.description))
         scheduleNextBlink(startNanos)
+        setOnLongClickListener {
+            onLongPress()
+            true
+        }
     }
 
     fun setRunning(run: Boolean) {
@@ -148,6 +153,8 @@ class BibiView(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                longPressed = false
+                postDelayed(longPress, ViewConfiguration.getLongPressTimeout().toLong())
                 snapAnimator?.cancel()
                 downRawX = event.rawX
                 downRawY = event.rawY
@@ -158,17 +165,33 @@ class BibiView(
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.rawX - downRawX
                 val dy = event.rawY - downRawY
-                if (!dragging && (abs(dx) > touchSlop || abs(dy) > touchSlop)) dragging = true
+                if (!dragging && (abs(dx) > touchSlop || abs(dy) > touchSlop)) {
+                    dragging = true
+                    removeCallbacks(longPress)
+                }
                 if (dragging) {
                     params.x = downX + dx.toInt()
                     params.y = downY + dy.toInt()
                     moveWindow()
                 }
             }
-            MotionEvent.ACTION_UP -> if (dragging) snapToEdge() else performClick()
-            MotionEvent.ACTION_CANCEL -> if (dragging) snapToEdge()
+            MotionEvent.ACTION_UP -> {
+                removeCallbacks(longPress)
+                if (dragging) snapToEdge() else if (!longPressed) performClick()
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                removeCallbacks(longPress)
+                if (dragging) snapToEdge()
+            }
         }
         return true
+    }
+
+    /** Held still for the long-press time: TalkBack's long-press action ends up here too. */
+    private var longPressed = false
+    private val longPress = Runnable {
+        longPressed = true
+        performLongClick()
     }
 
     override fun performClick(): Boolean {
