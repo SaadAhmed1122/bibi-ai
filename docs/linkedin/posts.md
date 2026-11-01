@@ -34,7 +34,7 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 - **Numbers:**
   - The mic opens in **80–120 ms**. Speech peaked at **0.058** loudness against a room at **0.001–0.002**.
   - Per turn: transcription **1.1 s**, first word of the answer **1.5–1.7 s**. The first turn also waits for the speech model to load (**13–19 s**) and the voice (**9 s**).
-  - **5 runs to get it right:** the speech detector calibrated on the speaker's own voice, and the first words were sent before Bibi's AI process had connected, so they were lost. A one-line loudness log found both.
+  - **8 runs to get two clean turns:** the chat opened instead while the model loaded, a sentence was cut short, the speech detector calibrated on the speaker's own voice, and the first words were sent before Bibi's AI process had connected, so they were lost. A one-line loudness log found both.
   - Gemma 3 1B answered "what is 2 plus 2?" with **"That's six!"** A 1B model is a conversation partner, not a calculator.
 - **Lesson:** log the numbers (loudness, timings), never the words. That was enough to debug a voice feature without recording anyone.
 - Image: `media/tap-to-talk.png`. Source: #118.
