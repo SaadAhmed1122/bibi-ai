@@ -29,6 +29,17 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: The Play Store paperwork for an offline AI app
+- **Test:** going through Google Play's policy checklist for Bibi before the closed test.
+- **Numbers:**
+  - **10** policy items: **7** green, **2** amber, **1** for the account owner.
+  - **0** data collected or shared: the app has no internet permission at all, so the Data safety form is short.
+  - **2** foreground-service types to justify (floating character, microphone), each with a video.
+  - **12** testers for **14** days before a new personal account can go public.
+  - Ships **3** model files that a store reviewer can't easily get (585 MB, 165 MB, 730 MB). That's the real blocker, not the code.
+- **Lesson:** an offline AI app trades privacy paperwork for distribution paperwork. Nothing to declare about data, a lot to explain about big files.
+- Source: #89.
+
 ### 2026-11-01: From Material defaults to a designed app
 - **Test:** the new design on the vivo, every screen in portrait and landscape.
 - **Numbers:**
