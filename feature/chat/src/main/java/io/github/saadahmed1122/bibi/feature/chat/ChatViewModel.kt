@@ -324,8 +324,7 @@ class ChatViewModel(
      */
     private fun startTalk() {
         val v = voice
-        // A model still loading is fine: Bibi listens meanwhile and answers once it's ready.
-        if (v == null || !state.value.voiceReady || banner.value == ChatBanner.ImportModel || banner.value == ChatBanner.Error) {
+        if (v == null) {
             openChatRequests.trySend(Unit)
             return
         }
@@ -333,6 +332,13 @@ class ChatViewModel(
         silence()
         talkJob = viewModelScope.launch {
             try {
+                // Read the sources, not [state]: a chat created for this tap has no state out yet.
+                // A model still loading is fine: Bibi listens meanwhile and answers once it's ready.
+                val blocked = banner.value == ChatBanner.ImportModel || banner.value == ChatBanner.Error
+                if (!v.ready.first() || blocked) {
+                    openChatRequests.trySend(Unit)
+                    return@launch
+                }
                 while (true) {
                     talk.value = TalkPhase.LISTENING
                     val heard = hear(v) ?: break

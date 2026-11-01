@@ -141,6 +141,26 @@ class TalkModeTest {
     }
 
     @Test
+    fun aTapRightAfterTheChatIsCreatedStillTalks() = runTest {
+        // The talk window starts the conversation in the same moment it creates the chat, before
+        // the first state is out (found on the vivo after an install).
+        val client = FakeInferenceClient().apply { transcriptResult = "bye" }
+        val audio = ScriptedAudio(listOf(utterance))
+        val vm = ChatViewModel(
+            client, history, model,
+            voice = ChatVoice(audio, ready, aloud, { aloud.value = it }, notHeard = "not heard"),
+            scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+        )
+        var opened = 0
+        backgroundScope.launch { vm.openChat.collect { opened++ } }
+        vm.onIntent(ChatIntent.StartTalk)
+        advanceUntilIdle()
+        runCurrent()
+        assertEquals(0, opened)
+        assertEquals(1, audio.starts)
+    }
+
+    @Test
     fun stopTalkTurnsTheMicOff() = runTest {
         // A recorder that hasn't heard anything yet keeps the conversation waiting.
         val audio = ScriptedAudio(listOf(tenths(0.004f, 5)))
