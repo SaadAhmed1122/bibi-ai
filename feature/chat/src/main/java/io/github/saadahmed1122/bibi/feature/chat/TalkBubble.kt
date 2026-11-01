@@ -62,8 +62,8 @@ import io.github.saadahmed1122.bibi.core.designsystem.R as DsR
 @Composable
 fun TalkRoute(viewModel: ChatViewModel, onOpenChat: () -> Unit, onEnd: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    // Only this conversation's messages: everything after what was already in the history.
-    val firstNew = remember { viewModel.state.value.messages.size }
+    // Only this conversation's messages. By time, not by count: the history may still be loading.
+    val startedAt = remember { System.currentTimeMillis() }
     var started by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { viewModel.openChat.collect { onOpenChat() } }
     DisposableEffect(Unit) {
@@ -78,7 +78,7 @@ fun TalkRoute(viewModel: ChatViewModel, onOpenChat: () -> Unit, onEnd: () -> Uni
             onEnd()
         }
     }
-    val exchange = state.messages.drop(firstNew)
+    val exchange = state.messages.filter { it.createdAt >= startedAt }
     TalkBubble(
         phase = state.talk,
         said = exchange.lastOrNull { it.role == Message.Role.USER }?.text,

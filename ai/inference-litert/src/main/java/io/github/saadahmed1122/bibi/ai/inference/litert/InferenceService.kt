@@ -293,7 +293,8 @@ class InferenceService : Service() {
 
     /** Voice thread. */
     private fun transcribe(requestId: Long, dir: String, chunks: List<FloatArray>) {
-        val result = try {
+        // Tap-to-talk ends a quiet turn with no audio (#118): nothing to decode (Parakeet throws on 0 frames).
+        val result = if (chunks.all { it.isEmpty() }) ProtocolMessage.Transcript(requestId, "") else try {
             val samples = FloatArray(chunks.sumOf { it.size }).also { out ->
                 var at = 0
                 for (c in chunks) { c.copyInto(out, at); at += c.size }
