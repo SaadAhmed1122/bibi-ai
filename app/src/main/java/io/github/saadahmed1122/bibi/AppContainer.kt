@@ -26,9 +26,11 @@ import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
 import io.github.saadahmed1122.bibi.domain.usecase.Recall
 import io.github.saadahmed1122.bibi.domain.usecase.Remember
 import io.github.saadahmed1122.bibi.domain.usecase.VoicePackRepository
+import io.github.saadahmed1122.bibi.feature.chat.AudioRecordSource
 import io.github.saadahmed1122.bibi.feature.chat.ChatActions
 import io.github.saadahmed1122.bibi.feature.chat.ChatMemory
 import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
+import io.github.saadahmed1122.bibi.feature.chat.ChatVoice
 import io.github.saadahmed1122.bibi.feature.chat.PlanTurn
 import io.github.saadahmed1122.bibi.feature.chat.ResourceActionTexts
 import io.github.saadahmed1122.bibi.feature.chat.ResourceMemoryTexts
@@ -102,16 +104,35 @@ class AppContainer(context: Context) {
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext))
         val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory))
         val key = Any()
+        val chatVoice = ChatVoice(
+            audio = AudioRecordSource(),
+            ready = voicePack.state.map { it is ModelState.Ready },
+            speakReplies = speakReplies,
+            setSpeakReplies = ::setSpeakReplies,
+            notHeard = appContext.getString(io.github.saadahmed1122.bibi.feature.chat.R.string.voice_not_heard),
+        )
         return ChatViewModel(
             inference, chatHistory, models.state,
             onModelReady = setConnected, actions = chatActions, memory = chatMemory, summaries = summaries,
             onMood = { reportMood(key, it) },
+            voice = chatVoice,
         ).apply {
             addCloseable {
                 setConnected(false)
                 reportMood(key, null)
             }
         }
+    }
+
+    private val prefs by lazy { appContext.getSharedPreferences("app", Context.MODE_PRIVATE) }
+    private val _speakReplies by lazy { MutableStateFlow(prefs.getBoolean(KEY_SPEAK_REPLIES, false)) }
+
+    /** "Read answers aloud" (SPEC-voice.md), off by default, shared by the app chat and the floating card. */
+    val speakReplies: StateFlow<Boolean> get() = _speakReplies
+
+    private fun setSpeakReplies(on: Boolean) {
+        _speakReplies.value = on
+        prefs.edit().putBoolean(KEY_SPEAK_REPLIES, on).apply()
     }
 
     private val moods = HashMap<Any, BibiMood>()
@@ -213,5 +234,6 @@ class AppContainer(context: Context) {
         const val KEY_PERSONA = "persona"
         const val KEY_LAST_SUMMARIZED = "last_summarized_message_id"
         const val KEY_RETENTION = "memory_retention"
+        const val KEY_SPEAK_REPLIES = "speak_replies"
     }
 }

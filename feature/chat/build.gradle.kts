@@ -21,6 +21,9 @@ dependencies {
     implementation(project(":core:designsystem"))
     api(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // Microphone permission request and check (push-to-talk); both already in the app.
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }
