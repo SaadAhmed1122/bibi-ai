@@ -44,12 +44,18 @@ fun ModelImportRoute(
     modifier: Modifier = Modifier,
     router: ModelImportViewModel? = null,
     onPickRouter: () -> Unit = {},
+    voice: VoicePackViewModel? = null,
+    onPickVoice: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ModelImportScreen(state, onPick, viewModel::cancel, viewModel::remove, onOpenChat, onBack, modifier) {
         if (router != null) {
             val routerState by router.state.collectAsStateWithLifecycle()
             RouterModelSection(routerState, onPickRouter, router::cancel, router::remove)
+        }
+        if (voice != null) {
+            val voiceState by voice.state.collectAsStateWithLifecycle()
+            VoicePackSection(voiceState, onPickVoice, voice::cancel, voice::remove)
         }
     }
 }
@@ -144,6 +150,39 @@ fun RouterModelSection(
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
                 OutlinedButton(onClick = onPick) { Text(stringResource(R.string.model_choose_other)) }
+            }
+        }
+    }
+}
+
+/** The optional voice pack (SPEC-voice.md): Parakeet and Piper, picked as a folder. */
+@Composable
+fun VoicePackSection(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        HorizontalDivider()
+        Text(stringResource(R.string.voice_title), style = MaterialTheme.typography.titleMedium)
+        when (state) {
+            ModelState.Missing -> {
+                Text(stringResource(R.string.voice_missing))
+                OutlinedButton(onClick = onPick) { Text(stringResource(R.string.voice_choose)) }
+            }
+            is ModelState.Importing -> {
+                Text(stringResource(R.string.model_importing, (state.progress * 100).toInt()), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
+                OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.model_cancel)) }
+            }
+            is ModelState.Ready -> {
+                Text(stringResource(R.string.voice_ready))
+                OutlinedButton(onClick = onRemove) { Text(stringResource(R.string.voice_remove)) }
+            }
+            is ModelState.Invalid -> {
+                val message = when {
+                    state.reason.startsWith("missing:") -> stringResource(R.string.voice_invalid_missing, state.reason.removePrefix("missing:"))
+                    state.reason == "checksum" || state.reason == "size" -> stringResource(R.string.voice_invalid_file)
+                    else -> stringResource(R.string.model_invalid_read)
+                }
+                Text(message, color = MaterialTheme.colorScheme.error)
+                OutlinedButton(onClick = onPick) { Text(stringResource(R.string.voice_choose)) }
             }
         }
     }

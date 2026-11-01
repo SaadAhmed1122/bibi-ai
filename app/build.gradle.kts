@@ -15,6 +15,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0-p1"
+        // 64-bit ARM only: the test phones (vivo Y17s, Galaxy A23) are arm64, and the native AI
+        // libraries (LiteRT-LM, MediaPipe, sherpa-onnx) otherwise add three more ABIs (APK 359 MB).
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     // Upload key from ~/.gradle/gradle.properties (docs/release.md); never in the repo. Without

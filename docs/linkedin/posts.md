@@ -29,6 +29,16 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: Bibi can hear and speak (and forgets the voice when it's quiet)
+- **Test:** the voice models running inside the app's AI process on the vivo, next to the chat model.
+- **Numbers:**
+  - A recorded "Set a timer for ten minutes" came back **word for word** in **1.5 s** for 4.4 s of audio. Loading the 650 MB speech model takes **12 s**, so it starts loading the moment you press the mic.
+  - Speaking a 55-character sentence took **5.8 s**, including playback.
+  - After **2 quiet minutes** the voice models are released and the AI process drops from **1,320 MB to 435 MB**.
+  - Limiting the native libraries to 64-bit ARM shrank the test app from **359 MB to 126 MB**.
+- **Lesson:** on a 6 GB phone, the best memory is the memory you give back.
+- Source: #84.
+
 ### 2026-11-01: Bibi gets a face for each moment
 - **Test:** floating Bibi and the chat header during real chats on the vivo, in portrait and landscape.
 - **What you see:**

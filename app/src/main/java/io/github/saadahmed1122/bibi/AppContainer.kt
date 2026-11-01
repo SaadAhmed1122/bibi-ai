@@ -25,6 +25,7 @@ import io.github.saadahmed1122.bibi.domain.usecase.MemoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ModelRepository
 import io.github.saadahmed1122.bibi.domain.usecase.Recall
 import io.github.saadahmed1122.bibi.domain.usecase.Remember
+import io.github.saadahmed1122.bibi.domain.usecase.VoicePackRepository
 import io.github.saadahmed1122.bibi.feature.chat.ChatActions
 import io.github.saadahmed1122.bibi.feature.chat.ChatMemory
 import io.github.saadahmed1122.bibi.feature.chat.ChatViewModel
@@ -70,6 +71,9 @@ class AppContainer(context: Context) {
         )
     }
 
+    /** The optional voice pack (SPEC-voice.md) in app-private storage; `:inference` reads it there. */
+    val voicePack: VoicePackRepository by lazy { VoicePackRepository(File(appContext.filesDir, "voice")) }
+
     /** Lazy, so the `:inference` process (which never asks for it) creates no client. */
     val inference: MessengerInferenceClient by lazy {
         MessengerInferenceClient(
@@ -78,6 +82,7 @@ class AppContainer(context: Context) {
             routerPath = { (routerModel.state.value as? ModelState.Ready)?.path },
             persona = { persona.current.value },
             memoryNotes = { pinnedNotes },
+            voiceDir = { (voicePack.state.value as? ModelState.Ready)?.path.orEmpty() },
         )
     }
 

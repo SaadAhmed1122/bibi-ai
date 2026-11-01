@@ -99,6 +99,31 @@ class FakeInferenceClient(
         return summaryResult
     }
 
+    /** What [finishListening] answers; audio sent goes to [heard]; spoken texts to [spokenTexts]. */
+    var transcriptResult: String? = null
+    val heard = mutableListOf<FloatArray>()
+    val spokenTexts = mutableListOf<String>()
+    var stopSpeakingCount = 0
+        private set
+    private var nextListen = 1L
+
+    override fun startListening(): Long = nextListen++
+
+    override fun sendAudio(id: Long, samples: FloatArray) {
+        heard += samples
+    }
+
+    override suspend fun finishListening(id: Long): String? = transcriptResult
+
+    override suspend fun speak(text: String): Boolean {
+        spokenTexts += text
+        return true
+    }
+
+    override fun stopSpeaking() {
+        stopSpeakingCount++
+    }
+
     override suspend fun route(text: String): RouteResult {
         routedTexts += text
         return routeResult

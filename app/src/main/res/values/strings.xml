@@ -40,4 +40,6 @@
     <string name="llm_debug_stop">Stop</string>
     <string name="llm_debug_route">Route</string>
     <string name="llm_debug_summarize">Summarize now</string>
+    <string name="llm_debug_voice_clip">Transcribe test clip</string>
+    <string name="llm_debug_speak">Speak test</string>
 </resources>

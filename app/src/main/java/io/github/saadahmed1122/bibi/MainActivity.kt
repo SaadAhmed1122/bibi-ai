@@ -30,6 +30,7 @@ import io.github.saadahmed1122.bibi.domain.usecase.MemoryExport
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
+import io.github.saadahmed1122.bibi.feature.chat.VoicePackViewModel
 import io.github.saadahmed1122.bibi.feature.memory.MemoryRoute
 import io.github.saadahmed1122.bibi.feature.memory.MemoryViewModel
 import io.github.saadahmed1122.bibi.feature.onboarding.OnboardingScreen
@@ -128,6 +129,14 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(routerState) {
                             (routerState as? ModelState.Ready)?.let { container.inference.loadRouter(it.path) }
                         }
+                        val voice = viewModel(key = "voice") { VoicePackViewModel(container.voicePack) }
+                        val voicePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+                            if (tree != null) voice.import(UriTreeVoiceSource(contentResolver, tree))
+                        }
+                        val voiceState by voice.state.collectAsStateWithLifecycle()
+                        LaunchedEffect(voiceState) {
+                            container.inference.setVoiceDir((voiceState as? ModelState.Ready)?.path.orEmpty())
+                        }
                         ModelImportRoute(
                             viewModel = importer,
                             // The .litertlm type has no registered MIME type, so allow any file.
@@ -136,6 +145,8 @@ class MainActivity : ComponentActivity() {
                             onBack = goHome,
                             router = router,
                             onPickRouter = { routerPicker.launch(arrayOf("*/*")) },
+                            voice = voice,
+                            onPickVoice = { voicePicker.launch(null) },
                         )
                     }
                     Screen.Settings -> SettingsRoute(container.persona, onBack = goHome)

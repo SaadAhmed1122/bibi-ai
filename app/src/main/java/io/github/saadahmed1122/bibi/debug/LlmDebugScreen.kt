@@ -28,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,6 +69,7 @@ fun LlmDebugRoute(
     var generating by remember { mutableStateOf(false) }
     var turn by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     LlmDebugScreen(
         state = state,
@@ -123,6 +125,32 @@ fun LlmDebugRoute(
                 }
             }
         },
+        onVoiceClip = {
+            scope.launch {
+                val clip = java.io.File(context.filesDir, "debug/clip1.wav")
+                outcome = if (!clip.isFile) {
+                    "voice: put a 16 kHz mono WAV at files/debug/clip1.wav"
+                } else {
+                    val bytes = clip.readBytes()
+                    val samples = FloatArray((bytes.size - 44) / 2) { i ->
+                        ((bytes[44 + 2 * i].toInt() and 0xFF) or (bytes[45 + 2 * i].toInt() shl 8)).toShort() / 32767f
+                    }
+                    val t0 = SystemClock.elapsedRealtime()
+                    val id = client.startListening()
+                    samples.toList().chunked(8_000).forEach { client.sendAudio(id, it.toFloatArray()) }
+                    val sent = SystemClock.elapsedRealtime()
+                    val text = client.finishListening(id)
+                    "heard: \"$text\" (${samples.size / 16} ms of audio, sent in ${sent - t0} ms, answer ${SystemClock.elapsedRealtime() - sent} ms)"
+                }
+            }
+        },
+        onSpeak = {
+            scope.launch {
+                val t0 = SystemClock.elapsedRealtime()
+                val ok = client.speak("Timer started for five minutes. Is there anything else?")
+                outcome = "speak: ${if (ok) "played" else "failed"}, ${SystemClock.elapsedRealtime() - t0} ms"
+            }
+        },
         onSummarize = summaries?.let { s ->
             {
                 scope.launch {
@@ -156,6 +184,8 @@ fun LlmDebugScreen(
     modifier: Modifier = Modifier,
     onRoute: () -> Unit = {},
     onSummarize: (() -> Unit)? = null,
+    onVoiceClip: (() -> Unit)? = null,
+    onSpeak: (() -> Unit)? = null,
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
@@ -177,6 +207,8 @@ fun LlmDebugScreen(
                 OutlinedButton(onClick = onStop, enabled = generating) { Text(stringResource(R.string.llm_debug_stop)) }
                 OutlinedButton(onClick = onRoute) { Text(stringResource(R.string.llm_debug_route)) }
                 onSummarize?.let { OutlinedButton(onClick = it) { Text(stringResource(R.string.llm_debug_summarize)) } }
+                onVoiceClip?.let { OutlinedButton(onClick = it) { Text(stringResource(R.string.llm_debug_voice_clip)) } }
+                onSpeak?.let { OutlinedButton(onClick = it) { Text(stringResource(R.string.llm_debug_speak)) } }
                 TextButton(onClick = onBack) { Text(stringResource(R.string.back)) }
             }
             if (outcome.isNotEmpty()) Text(outcome, style = MaterialTheme.typography.labelLarge)

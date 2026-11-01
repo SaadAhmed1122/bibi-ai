@@ -29,6 +29,18 @@ sealed interface ProtocolMessage {
     /** Asks for a short summary of [transcript] (SPEC-memory.md); answered by [Summary]. */
     data class Summarize(val requestId: Long, val transcript: String) : ProtocolMessage
 
+    /** Where the imported voice pack lives (SPEC-voice.md); "" when there is none. Sent at bind. */
+    data class SetVoice(val dir: String) : ProtocolMessage
+
+    /** Push-to-talk: start listening (loads the recognizer if needed), then audio, then the end. */
+    data class SttStart(val requestId: Long) : ProtocolMessage
+    data class SttChunk(val requestId: Long, val pcm: String) : ProtocolMessage
+    data class SttEnd(val requestId: Long) : ProtocolMessage
+
+    /** Speak [text] aloud in `:inference`; answered by [Spoken]. [SpeakStop] stops and drops the queue. */
+    data class Speak(val requestId: Long, val text: String) : ProtocolMessage
+    data object SpeakStop : ProtocolMessage
+
     /** Pinned memory notes for the system prompt (SPEC-memory.md); "" for none. Applies at the next conversation open. */
     data class SetMemory(val notes: String) : ProtocolMessage
 
@@ -40,6 +52,12 @@ sealed interface ProtocolMessage {
      * current request, e.g. tokens still in flight from a stopped one.
      */
     data class Reply(val requestId: Long, val event: ReplyEvent) : ProtocolMessage
+
+    /** What the recognizer heard for [SttEnd], or null with [reason]. */
+    data class Transcript(val requestId: Long, val text: String?, val reason: String = "") : ProtocolMessage
+
+    /** The [Speak] with [requestId] finished (or was stopped / failed: [reason] not empty). */
+    data class Spoken(val requestId: Long, val reason: String = "") : ProtocolMessage
 
     /** The answer to [Summarize]: the summary, or null with [reason] when it couldn't run now. */
     data class Summary(val requestId: Long, val text: String?, val reason: String = "") : ProtocolMessage
@@ -61,6 +79,12 @@ object InferenceProtocol {
     const val MSG_SET_PERSONA = 8
     const val MSG_SET_MEMORY = 9
     const val MSG_SUMMARIZE = 10
+    const val MSG_SET_VOICE = 11
+    const val MSG_STT_START = 12
+    const val MSG_STT_CHUNK = 13
+    const val MSG_STT_END = 14
+    const val MSG_SPEAK = 15
+    const val MSG_SPEAK_STOP = 16
 
     // Service -> client.
     const val MSG_STATE = 101
@@ -70,6 +94,8 @@ object InferenceProtocol {
     const val MSG_ERROR = 105
     const val MSG_ROUTED = 106
     const val MSG_SUMMARY = 107
+    const val MSG_TRANSCRIPT = 108
+    const val MSG_SPOKEN = 109
 
     const val KEY_REQUEST_ID = "request_id"
     const val KEY_TEXT = "text"
@@ -80,6 +106,8 @@ object InferenceProtocol {
     const val KEY_CONFIDENCE = "confidence"
     const val KEY_PERSONA = "persona"
     const val KEY_NOTES = "notes"
+    const val KEY_DIR = "dir"
+    const val KEY_PCM = "pcm"
 
     fun encode(message: ProtocolMessage): Envelope = when (message) {
         ProtocolMessage.Register -> Envelope(MSG_REGISTER, emptyMap())
@@ -91,6 +119,17 @@ object InferenceProtocol {
         is ProtocolMessage.Route -> Envelope(MSG_ROUTE, mapOf(id(message.requestId), KEY_TEXT to message.text))
         is ProtocolMessage.SetPersona -> Envelope(MSG_SET_PERSONA, mapOf(KEY_PERSONA to message.persona))
         is ProtocolMessage.SetMemory -> Envelope(MSG_SET_MEMORY, mapOf(KEY_NOTES to message.notes))
+        is ProtocolMessage.SetVoice -> Envelope(MSG_SET_VOICE, mapOf(KEY_DIR to message.dir))
+        is ProtocolMessage.SttStart -> Envelope(MSG_STT_START, mapOf(id(message.requestId)))
+        is ProtocolMessage.SttChunk -> Envelope(MSG_STT_CHUNK, mapOf(id(message.requestId), KEY_PCM to message.pcm))
+        is ProtocolMessage.SttEnd -> Envelope(MSG_STT_END, mapOf(id(message.requestId)))
+        is ProtocolMessage.Speak -> Envelope(MSG_SPEAK, mapOf(id(message.requestId), KEY_TEXT to message.text))
+        ProtocolMessage.SpeakStop -> Envelope(MSG_SPEAK_STOP, emptyMap())
+        is ProtocolMessage.Transcript -> Envelope(
+            MSG_TRANSCRIPT,
+            if (message.text != null) mapOf(id(message.requestId), KEY_TEXT to message.text) else mapOf(id(message.requestId), KEY_REASON to message.reason),
+        )
+        is ProtocolMessage.Spoken -> Envelope(MSG_SPOKEN, mapOf(id(message.requestId), KEY_REASON to message.reason))
         is ProtocolMessage.Summarize -> Envelope(MSG_SUMMARIZE, mapOf(id(message.requestId), KEY_TEXT to message.transcript))
         is ProtocolMessage.Summary -> Envelope(
             MSG_SUMMARY,
@@ -133,6 +172,20 @@ object InferenceProtocol {
             MSG_ROUTED -> requestId?.let { decodeRouted(it, f) }
             MSG_SET_PERSONA -> f[KEY_PERSONA]?.let { ProtocolMessage.SetPersona(it) }
             MSG_SET_MEMORY -> f[KEY_NOTES]?.let { ProtocolMessage.SetMemory(it) }
+            MSG_SET_VOICE -> f[KEY_DIR]?.let { ProtocolMessage.SetVoice(it) }
+            MSG_STT_START -> requestId?.let { ProtocolMessage.SttStart(it) }
+            MSG_STT_CHUNK -> if (requestId != null && f[KEY_PCM] != null) ProtocolMessage.SttChunk(requestId, f.getValue(KEY_PCM)) else null
+            MSG_STT_END -> requestId?.let { ProtocolMessage.SttEnd(it) }
+            MSG_SPEAK -> if (requestId != null && text != null) ProtocolMessage.Speak(requestId, text) else null
+            MSG_SPEAK_STOP -> ProtocolMessage.SpeakStop
+            MSG_TRANSCRIPT -> requestId?.let { id ->
+                when {
+                    text != null -> ProtocolMessage.Transcript(id, text)
+                    f[KEY_REASON] != null -> ProtocolMessage.Transcript(id, null, f.getValue(KEY_REASON))
+                    else -> null
+                }
+            }
+            MSG_SPOKEN -> if (requestId != null && f[KEY_REASON] != null) ProtocolMessage.Spoken(requestId, f.getValue(KEY_REASON)) else null
             MSG_SUMMARIZE -> if (requestId != null && text != null) ProtocolMessage.Summarize(requestId, text) else null
             MSG_SUMMARY -> requestId?.let { id ->
                 when {
