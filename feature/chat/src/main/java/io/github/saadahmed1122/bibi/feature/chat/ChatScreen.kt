@@ -126,7 +126,7 @@ fun ChatScreen(
             Column(Modifier.widthIn(max = Space.readable).padding(horizontal = Space.l)) {
                 ChatHeader(state, mood, onIntent) {
                     TextButton(onClick = { onIntent(ChatIntent.Clear) }, enabled = state.canClear) {
-                        Text(stringResource(R.string.chat_clear))
+                        Text(stringResource(R.string.chat_clear_short))
                     }
                 }
                 ChatBody(state, onIntent, onOpenModel, Modifier.weight(1f))
