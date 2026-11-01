@@ -63,7 +63,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 ### Checkpoint E4: design
 - [ ] The owner reviews every screen on the phone before the closed-test paperwork.
 
-- [ ] **Task 18 (#89): Play Console notes + 0.9 checklist + version bump.** **S**
+- [x] **Task 18 (#89): Play Console notes + 0.9 checklist + version bump.** **S**
 - [ ] **Task 19 (#90): P2 gate, 1-hour session (owner).** **S**
 
 ### Checkpoint F: P2 done
