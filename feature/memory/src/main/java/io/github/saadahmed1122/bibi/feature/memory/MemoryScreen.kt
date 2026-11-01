@@ -3,23 +3,29 @@ package io.github.saadahmed1122.bibi.feature.memory
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,10 +33,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.saadahmed1122.bibi.core.designsystem.EmptyState
+import io.github.saadahmed1122.bibi.core.designsystem.SecondaryButton
+import io.github.saadahmed1122.bibi.core.designsystem.Space
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
 import io.github.saadahmed1122.bibi.domain.model.MemoryItem
 import io.github.saadahmed1122.bibi.domain.usecase.NeverStore
@@ -62,34 +73,42 @@ fun MemoryScreen(
     onExport: () -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf<MemoryItem?>(null) }
-    Scaffold(modifier = modifier.fillMaxSize()) { padding ->
-        Column(
-            Modifier.padding(padding).consumeWindowInsets(padding).imePadding().padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TextButton(onClick = onBack) { Text(stringResource(R.string.memory_back)) }
-            Text(stringResource(R.string.memory_title), style = MaterialTheme.typography.headlineSmall)
-            Text(stringResource(R.string.memory_intro), style = MaterialTheme.typography.bodyMedium)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RetentionPicker(retention, onRetention, Modifier.weight(1f))
-                TextButton(onClick = onExport) { Text(stringResource(R.string.memory_export)) }
-            }
-            Text(stringResource(R.string.memory_keep_note), style = MaterialTheme.typography.bodySmall)
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = { onIntent(MemoryIntent.Query(it)) },
-                label = { Text(stringResource(R.string.memory_search)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (state.items.isEmpty()) {
-                Text(
-                    stringResource(if (state.query.isBlank()) R.string.memory_empty else R.string.memory_no_match),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(vertical = 24.dp),
-                )
-            }
-            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Scaffold(modifier = modifier.fillMaxSize(), containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(Modifier.padding(padding).consumeWindowInsets(padding).imePadding().fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            // One list: the header scrolls away, so landscape keeps room for the memories.
+            LazyColumn(
+                Modifier.widthIn(max = Space.readable).fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = Space.gutter, vertical = Space.l),
+                verticalArrangement = Arrangement.spacedBy(Space.m),
+            ) {
+                item(key = "header") {
+                    Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
+                        Text(stringResource(R.string.memory_title), style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
+                        Text(stringResource(R.string.memory_intro), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                            RetentionPicker(retention, onRetention, Modifier.weight(1f))
+                            SecondaryButton(stringResource(R.string.memory_export), onClick = onExport)
+                        }
+                        Text(stringResource(R.string.memory_keep_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextField(
+                            value = state.query,
+                            onValueChange = { onIntent(MemoryIntent.Query(it)) },
+                            placeholder = { Text(stringResource(R.string.memory_search)) },
+                            singleLine = true,
+                            shape = CircleShape,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+                if (state.items.isEmpty()) {
+                    item(key = "empty") { EmptyState(stringResource(if (state.query.isBlank()) R.string.memory_empty else R.string.memory_no_match)) }
+                }
                 items(state.items, key = { it.id }) { item ->
                     val draft = state.editing?.takeIf { it.first == item.id }?.second
                     MemoryCard(item, draft, state.blocked.takeIf { draft != null }, onIntent, onDelete = { confirmDelete = item })
@@ -116,8 +135,8 @@ fun MemoryScreen(
 private fun RetentionPicker(retention: Retention, onRetention: (Retention) -> Unit, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
-        TextButton(onClick = { open = true }) {
-            Text(stringResource(R.string.memory_keep_for, stringResource(retentionLabel(retention))))
+        TextButton(onClick = { open = true }, modifier = Modifier.heightIn(min = Space.touch)) {
+            Text(stringResource(R.string.memory_keep_for, stringResource(retentionLabel(retention))), style = MaterialTheme.typography.titleSmall)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             Retention.entries.forEach { r ->
@@ -143,8 +162,8 @@ private fun MemoryCard(
     onIntent: (MemoryIntent) -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             val kind = stringResource(if (item.kind == MemoryItem.Kind.FACT) R.string.memory_kind_fact else R.string.memory_kind_summary)
             val label = if (item.pinned) stringResource(R.string.memory_pinned_label, kind) else kind
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
@@ -184,7 +203,11 @@ private val previewItems = listOf(
 @Composable
 private fun MemoryListPreview() = BibiTheme { MemoryScreen(MemoryUiState(previewItems), {}, {}) }
 
-@Preview
+@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun MemoryListDarkPreview() = BibiTheme { MemoryScreen(MemoryUiState(previewItems), {}, {}) }
+
+@Preview(fontScale = 2f)
 @Composable
 private fun MemoryEmptyPreview() = BibiTheme { MemoryScreen(MemoryUiState(), {}, {}) }
 

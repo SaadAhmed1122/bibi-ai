@@ -85,4 +85,6 @@
     <string name="talk_ended">Tap Bibi to talk again</string>
     <string name="talk_stop">Stop talking</string>
     <string name="talk_open_chat">Open the chat</string>
+    <string name="chat_status">On this phone, offline</string>
+    <string name="model_section_chat">Chat model (needed)</string>
 </resources>

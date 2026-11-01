@@ -3,30 +3,35 @@ package io.github.saadahmed1122.bibi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import io.github.saadahmed1122.bibi.companion.overlay.FloatingState
+import io.github.saadahmed1122.bibi.core.designsystem.BibiAvatar
+import io.github.saadahmed1122.bibi.core.designsystem.BibiCard
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
+import io.github.saadahmed1122.bibi.core.designsystem.BibiScreen
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
+import io.github.saadahmed1122.bibi.core.designsystem.ListRow
+import io.github.saadahmed1122.bibi.core.designsystem.LocalBibiAccents
+import io.github.saadahmed1122.bibi.core.designsystem.PrimaryButton
+import io.github.saadahmed1122.bibi.core.designsystem.SectionHeader
+import io.github.saadahmed1122.bibi.core.designsystem.Space
+import io.github.saadahmed1122.bibi.core.designsystem.SwitchRow
+import io.github.saadahmed1122.bibi.core.designsystem.R as DsR
 
-/** [onOpenCrashLog], [onOpenLlmDebug] and [onOpenActionsDebug] are null in release builds, which hides the debug links. */
+/**
+ * Home: how to reach Bibi, the floating switches and the model. Memory and Settings are in the tab
+ * bar. [onOpenCrashLog], [onOpenLlmDebug] and [onOpenActionsDebug] are null in release builds.
+ */
 @Composable
 fun HomeScreen(
     onOpenChat: () -> Unit,
@@ -41,28 +46,26 @@ fun HomeScreen(
     onExplainerDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenActionsDebug: (() -> Unit)? = null,
-    onOpenSettings: (() -> Unit)? = null,
-    onOpenMemory: (() -> Unit)? = null,
 ) {
-    Scaffold(modifier = modifier.fillMaxSize()) { padding ->
-        Column(Modifier.padding(padding).padding(24.dp).verticalScroll(rememberScrollState())) {
-            Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
-            Text(stringResource(R.string.home_body), style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = onOpenChat) { Text(stringResource(R.string.home_chat)) }
-            SwitchRow(R.string.home_floating, R.string.home_floating_hint, floating.enabled, onFloatingSwitch)
-            SwitchRow(R.string.home_calm, R.string.home_calm_hint, floating.calm, onCalmSwitch)
-            TextButton(onClick = onOpenModel) { Text(stringResource(R.string.home_model)) }
-            if (onOpenMemory != null) TextButton(onClick = onOpenMemory) { Text(stringResource(R.string.home_memory)) }
-            if (onOpenSettings != null) TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.home_settings)) }
-            TextButton(onClick = onOpenTerms) { Text(stringResource(R.string.terms_link)) }
-            if (onOpenCrashLog != null) {
-                TextButton(onClick = onOpenCrashLog) { Text(stringResource(R.string.crash_log_title)) }
-            }
-            if (onOpenLlmDebug != null) {
-                TextButton(onClick = onOpenLlmDebug) { Text(stringResource(R.string.llm_debug_title)) }
-            }
-            if (onOpenActionsDebug != null) {
-                TextButton(onClick = onOpenActionsDebug) { Text(stringResource(R.string.actions_debug_title)) }
+    BibiScreen(title = stringResource(R.string.home_title), modifier = modifier) {
+        Text(stringResource(R.string.home_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Hero(floatingOn = floating.enabled, onOpenChat = onOpenChat)
+        SectionHeader(stringResource(R.string.home_section_floating))
+        BibiCard {
+            SwitchRow(stringResource(R.string.home_floating), floating.enabled, onFloatingSwitch, subtitle = stringResource(R.string.home_floating_hint))
+            SwitchRow(stringResource(R.string.home_calm), floating.calm, onCalmSwitch, subtitle = stringResource(R.string.home_calm_hint))
+        }
+        SectionHeader(stringResource(R.string.home_section_brain))
+        BibiCard {
+            ListRow(stringResource(R.string.home_model), subtitle = stringResource(R.string.home_model_hint), onClick = onOpenModel)
+            ListRow(stringResource(R.string.terms_link), onClick = onOpenTerms)
+        }
+        if (onOpenCrashLog != null || onOpenLlmDebug != null || onOpenActionsDebug != null) {
+            SectionHeader(stringResource(R.string.home_section_debug))
+            BibiCard {
+                onOpenCrashLog?.let { ListRow(stringResource(R.string.crash_log_title), onClick = it) }
+                onOpenLlmDebug?.let { ListRow(stringResource(R.string.llm_debug_title), onClick = it) }
+                onOpenActionsDebug?.let { ListRow(stringResource(R.string.actions_debug_title), onClick = it) }
             }
         }
     }
@@ -77,28 +80,27 @@ fun HomeScreen(
     }
 }
 
-/** A labelled switch; the whole row is one toggle for TalkBack. */
+/** Bibi's card: how to talk to it right now, and the way into the chat. */
 @Composable
-private fun SwitchRow(title: Int, hint: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(hint), style = MaterialTheme.typography.bodySmall)
+private fun Hero(floatingOn: Boolean, onOpenChat: () -> Unit) {
+    val accents = LocalBibiAccents.current
+    Surface(color = accents.hero, contentColor = accents.onHero, shape = MaterialTheme.shapes.extraLarge) {
+        Row(Modifier.padding(Space.xl), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.l)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.l)) {
+                Text(
+                    stringResource(if (floatingOn) R.string.home_hero_floating else R.string.home_hero_app),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                PrimaryButton(stringResource(R.string.home_chat), onClick = onOpenChat, icon = DsR.drawable.ic_chat)
+            }
+            BibiAvatar(BibiMood.IDLE, size = Space.avatarLarge, decorative = true)
         }
-        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
 @Composable
-private fun HomePreview(floating: FloatingState, debug: Boolean = true) {
-    BibiTheme {
+private fun HomePreview(floating: FloatingState, debug: Boolean = true, dark: Boolean = false) {
+    BibiTheme(darkTheme = dark) {
         HomeScreen(
             onOpenChat = {}, onOpenModel = {}, onOpenTerms = {},
             onOpenCrashLog = if (debug) ({}) else null, onOpenLlmDebug = if (debug) ({}) else null,
@@ -113,7 +115,11 @@ private fun HomeScreenDebugPreview() = HomePreview(FloatingState(enabled = true,
 
 @Preview
 @Composable
-private fun HomeScreenReleasePreview() = HomePreview(FloatingState(enabled = false, calm = false), debug = false)
+private fun HomeScreenReleaseDarkPreview() = HomePreview(FloatingState(enabled = false, calm = false), debug = false, dark = true)
+
+@Preview(fontScale = 2f)
+@Composable
+private fun HomeScreenLargeFontPreview() = HomePreview(FloatingState(enabled = true, calm = true), debug = false)
 
 @Preview
 @Composable
