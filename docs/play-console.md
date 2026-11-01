@@ -10,8 +10,8 @@ What to enter in Play Console for Bibi AI, and the PRD 0.9 checklist with eviden
 
 ### App access
 - No login, no account.
-- **Blocker for review [OPEN]:** the chat needs the 585 MB model file, which is side-loaded today (Bibi's model > Choose model file; hosting is open item 6). Without it the app opens, shows Home, Settings, Privacy and Licenses, and the chat says "Import the model to start chatting".
-- Play reviewers and closed testers need either a download link to the file with steps, or in-app download (out of P2 scope). Until one exists, the App access answer must say how to get the model.
+- The chat needs the 585 MB model file, side-loaded from a Google Drive link (owner decision 2026-11-01). Without it the app opens, shows Home, Settings, Privacy and Licenses, and the chat says "Import the model to start chatting".
+- The App access text to paste, with the Drive link, is in [tester-guide.md](tester-guide.md) [OPEN: the link, after the owner uploads].
 
 ### Ads
 No ads.
@@ -96,9 +96,9 @@ Not used: `INTERNET`, SMS, call log, contacts, location, Accessibility, `USE_EXA
 | No SMS, call log, contacts or Accessibility; dial opens the dialer prefilled | Green | Merged manifest above; dial goes through the confirmation card and `ACTION_DIAL` (SPEC-tools.md, P2 Tasks 4–5) |
 | Data safety "no data collected or shared"; crash tooling off | Green | No `INTERNET` (build check), no SDKs, local crash log only, backups off |
 | Privacy policy hosted, on-device processing, what is stored | Amber: hosting | Text in docs/privacy-policy.md and in the app (P2 Task 17); [OPEN] owner hosts it at a public URL |
-| Large downloads declared accurately | Amber | The model is side-loaded (585 MB, plus the optional 165 MB action model and 730 MB voice pack); hosting is open item 6. The listing and App access must say how to get it |
+| Large downloads declared accurately | Amber: link | Side-loaded from the owner's Google Drive (decision 2026-11-01): steps for testers and the App access text in tester-guide.md; the Drive folder carries the Gemma NOTICE, README and terms (docs/model-pack/). Green once the link is in |
 | Account testing requirement | Owner | 12 testers for 14 days for new personal accounts (read 2026-11-01); account type [OPEN] |
 | Model licenses reviewed; licenses screen | Green | Settings > Licenses: Gemma Terms of Use (Gemma 3 1B, EmbeddingGemma), Parakeet CC BY 4.0, Piper amy voice CC BY-SA 4.0, libraries and fonts. No Qwen checkpoint ships. Gemma notice wording is still [VERIFY] (#34) |
 | In-app report of problematic AI output | Green | Long-press a reply > Report this reply (P2 Task 17), in the app and the floating card; Play requires in-app reporting for AI-generated content ([Play Help 13985936](https://support.google.com/googleplay/android-developer/answer/13985936), read 2026-11-01) |
 
-Amber rows don't block the closed-test upload by themselves, but App access needs a working way for reviewers to get the model before review.
+Amber rows don't block the closed-test upload by themselves; App access needs the Drive link before review.
