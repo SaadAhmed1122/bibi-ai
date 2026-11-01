@@ -5,4 +5,5 @@
     <string name="bibi_mood_thinking">Bibi tilts its head with a paw on its chin, thinking.</string>
     <string name="bibi_mood_speaking">Bibi is talking and gesturing with one paw.</string>
     <string name="bibi_mood_confused">Bibi tilts its head, puzzled; something didn\'t work.</string>
+    <string name="ds_back">Back</string>
 </resources>

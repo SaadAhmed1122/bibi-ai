@@ -12,6 +12,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +57,23 @@ import kotlinx.coroutines.withContext
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
 private enum class Screen { Home, Chat, Model, Memory, Settings, Privacy, Terms, Licenses, Policy, CrashLog, LlmDebug, ActionsDebug }
 
+/** The tab a top-level screen belongs to; null for screens opened from one (they show no bar). */
+private val Screen.tab: Tab? get() = when (this) {
+    Screen.Home -> Tab.HOME
+    Screen.Chat -> Tab.CHAT
+    Screen.Memory -> Tab.MEMORY
+    Screen.Settings -> Tab.SETTINGS
+    else -> null
+}
+
+private val Tab.screen: Screen get() = when (this) {
+    Tab.HOME -> Screen.Home
+    Tab.CHAT -> Screen.Chat
+    Tab.MEMORY -> Screen.Memory
+    Tab.SETTINGS -> Screen.Settings
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 class MainActivity : ComponentActivity() {
     /** Set by a tap on floating Bibi or the notification's Open chat ([OverlayService.EXTRA_OPEN_CHAT]). */
     private var openChatRequested by mutableStateOf(false)
@@ -72,6 +100,18 @@ class MainActivity : ComponentActivity() {
                 }
                 val onboarding = viewModel { OnboardingViewModel(container.onboarding) }
                 val onboardingStep by onboarding.step.collectAsStateWithLifecycle()
+                val tab = screen.tab
+                // The bar shows on the four top-level places, not during onboarding or while typing.
+                val showBar = tab != null && onboardingStep == null && !WindowInsets.isImeVisible
+                // Landscape: a rail on the side keeps the little height there is for the screen.
+                val wide = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                Scaffold(
+                    bottomBar = { if (showBar && !wide) AppNavBar(tab, onSelect = { screen = it.screen }) },
+                    contentWindowInsets = WindowInsets(0),
+                ) { barPadding ->
+                Row(Modifier.padding(barPadding).consumeWindowInsets(barPadding)) {
+                if (showBar && wide) AppNavRail(tab, onSelect = { screen = it.screen })
+                Box(Modifier.weight(1f)) {
                 when (screen) {
                     Screen.Home -> onboardingStep?.let { step ->
                         val importer = viewModel { ModelImportViewModel(container.models) }
@@ -199,6 +239,9 @@ class MainActivity : ComponentActivity() {
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome, summaries = container.summaries)
                     Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)
+                }
+                }
+                }
                 }
             }
         }
