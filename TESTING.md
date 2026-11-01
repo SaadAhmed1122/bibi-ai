@@ -206,6 +206,13 @@ Claude's runs on the vivo passed in portrait and landscape: the permission expla
 6. [ ] Turn on **Calm mode**: the animation slows down.
 7. [ ] Note anything odd on issue #44.
 
+## P2 — tap-to-talk over other apps (issue #118)
+- [ ] On the home screen or in any app, tap floating Bibi once. The bubble shows "Waking up…", then "Listening…" and the green mic dot appears.
+- [ ] Ask something, then stop talking. After about 1 s Bibi shows "Thinking…", answers out loud, and the answer stays in the bubble.
+- [ ] Ask a second question without tapping. Then stay quiet: after about 8 s the talk ends and the bubble fades out.
+- [ ] Say "set a timer for two minutes": the timer starts. Say "open chat": the chat card opens. Long-press Bibi: the chat card opens.
+- [ ] Repeat once in landscape.
+
 ## P2 — licenses, privacy policy, report a reply (issue #88)
 - [ ] Settings → Privacy policy and Licenses open and scroll, in portrait and landscape.
 - [ ] Long-press one of Bibi's replies → Report this reply → the share sheet shows the reply; pick an app, or press Back to cancel. From the floating card, the card closes first.

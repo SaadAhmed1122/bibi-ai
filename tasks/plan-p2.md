@@ -56,6 +56,7 @@ Build P2 from [SPEC-P2.md](../SPEC-P2.md) and its seven module specs: the five p
 ### Phase 5b: Design (owner request, 2026-10-31; [SPEC-design.md](../SPEC-design.md))
 - [x] **Task 20 (#93): Design system and navigation.** Starts with 2–3 mood directions (palette, type, Home and Chat mock-ups) as an artifact; the owner picks one. Then `core/designsystem` tokens light/dark, type, components, and the navigation structure.
   - Acceptance: SPEC-design criteria 1–2; app builds with the new theme; debug screens debug-only. **M**
+- [x] **Task 20b (#118): Tap-to-talk floating Bibi.** Owner request 2026-11-01 (decision in project_status.md): Endpointer, TalkCommand, talk loop, reply bubble window, long-press opens the card.
 - [ ] **Task 21 (#94): Screen-by-screen restyle.** Every screen on the new system, with an impeccable audit each.
   - Acceptance: SPEC-design criteria 3–5; before/after on the vivo in portrait and landscape. **L** (one PR per group of screens if it grows)
 

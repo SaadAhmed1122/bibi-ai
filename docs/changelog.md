@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- Tap-to-talk: one tap on floating Bibi starts a spoken conversation over any app. Bibi listens until you pause, answers out loud with the reply in a bubble beside it, then listens again; 8 quiet seconds, a tap or "bye" ends it. Long-press or "open chat" opens the typed chat card (#118).
 - P2 Task 20: Bibi's own design system, "Expressive Tabby": tangerine and violet from the character, very round shapes, Bricolage Grotesque and Figtree fonts, light and dark themes checked for contrast; a tab bar for Home, Chat, Memory and Settings (a side rail in landscape) (#93).
 - P2 Task 17: Settings → Privacy policy and Licenses (every model and library with its license, read offline); "Report this reply" in the long-press menu of Bibi's messages opens the share sheet with the reply, in the app and the floating card (#88).
 - P2 Task 16: Safe mode (chat only: no phone actions, nothing new saved) in Settings and the floating card; a Privacy screen showing what Bibi keeps, with Delete everything (#87).
