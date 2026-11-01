@@ -44,6 +44,8 @@
     <!-- Gemma terms notice -->
     <string name="terms_link">Model: Gemma 3 1B — Gemma Terms of Use</string>
     <string name="terms_title">Gemma Terms of Use</string>
+    <string name="licenses_title">Licenses</string>
+    <string name="policy_title">Privacy policy</string>
     <!-- Debug-only crash log screen -->
     <string name="crash_log_title">Crash log</string>
     <string name="crash_log_crash_now">Crash now</string>

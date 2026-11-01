@@ -42,6 +42,9 @@
     <string name="action_timed_out">I didn\'t hear back, so I didn\'t do it.</string>
     <string name="action_confirm">I need your OK first. Tap Confirm or Cancel.</string>
     <string name="chat_remember">Remember this</string>
+    <string name="chat_report">Report this reply</string>
+    <string name="chat_report_subject">Bibi AI: a reply to report</string>
+    <string name="chat_report_template">Bibi said:\n\n%1$s\n\nWhat was wrong with it (wrong, harmful, rude, other):\n\n</string>
     <string name="memory_saved">Got it, I\'ll remember that.</string>
     <string name="memory_notice_saved">Saved to Bibi\'s memory.</string>
     <string name="memory_blocked_card">I won\'t keep that: it looks like a card number. Card numbers are never stored.</string>

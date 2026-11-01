@@ -1,6 +1,8 @@
 package io.github.saadahmed1122.bibi.feature.chat
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -217,14 +219,21 @@ internal fun ConfirmAction(summary: String, onIntent: (ChatIntent) -> Unit) {
 }
 
 /** [onIntent], when given, adds "Remember this" on a long press of a message. */
+/** [onReported] runs after the share sheet opens: the floating card closes so the sheet isn't hidden under it. */
 @Composable
-internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier, onIntent: ((ChatIntent) -> Unit)? = null) {
+internal fun MessageList(
+    state: ChatUiState,
+    modifier: Modifier = Modifier,
+    onIntent: ((ChatIntent) -> Unit)? = null,
+    onReported: () -> Unit = {},
+) {
     if (state.messages.isEmpty() && !state.generating) {
         Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.chat_empty), style = MaterialTheme.typography.bodyLarge)
         }
         return
     }
+    val context = LocalContext.current
     val listState = rememberLazyListState()
     val count = state.messages.size + if (state.generating) 1 else 0
     // Follow the newest message, including each streamed token.
@@ -240,6 +249,10 @@ internal fun MessageList(state: ChatUiState, modifier: Modifier = Modifier, onIn
                 message.text,
                 message.status,
                 onRemember = onIntent?.let { send -> { send(ChatIntent.RememberMessage(message.text)) } },
+                onReport = if (message.role == Message.Role.BIBI) ({
+                    context.startActivity(reportIntent(context, message.text))
+                    onReported()
+                }) else null,
             )
         }
         if (state.streamingText != null) {
@@ -263,18 +276,20 @@ private fun Bubble(
     status: Message.Status,
     modifier: Modifier = Modifier,
     onRemember: (() -> Unit)? = null,
+    onReport: (() -> Unit)? = null,
 ) {
     val mine = role == Message.Role.USER
     val colors = MaterialTheme.colorScheme
     var menu by remember { mutableStateOf(false) }
     val rememberLabel = stringResource(R.string.chat_remember)
+    val hasMenu = (onRemember != null || onReport != null) && text.isNotBlank()
     Box(modifier.fillMaxWidth(), contentAlignment = if (mine) Alignment.CenterEnd else Alignment.CenterStart) {
         Column(
             Modifier
                 .widthIn(max = 320.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .then(
-                    if (onRemember != null && text.isNotBlank()) {
+                    if (hasMenu) {
                         Modifier.combinedClickable(onClick = {}, onLongClick = { menu = true }, onLongClickLabel = rememberLabel)
                     } else {
                         Modifier
@@ -299,10 +314,23 @@ private fun Bubble(
                 Message.Status.DONE -> Unit
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text(rememberLabel) }, onClick = { menu = false; onRemember?.invoke() })
+                onRemember?.let { DropdownMenuItem(text = { Text(rememberLabel) }, onClick = { menu = false; it() }) }
+                onReport?.let { DropdownMenuItem(text = { Text(stringResource(R.string.chat_report)) }, onClick = { menu = false; it() }) }
             }
         }
     }
+}
+
+/**
+ * "Report this reply" (SPEC-privacy.md): the share sheet with the reply and a short template; the
+ * app sends nothing itself. NEW_TASK because the floating card has no activity behind it.
+ */
+private fun reportIntent(context: Context, reply: String): Intent {
+    val send = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.chat_report_subject))
+        .putExtra(Intent.EXTRA_TEXT, context.getString(R.string.chat_report_template, reply))
+    return Intent.createChooser(send, context.getString(R.string.chat_report)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
 @Composable

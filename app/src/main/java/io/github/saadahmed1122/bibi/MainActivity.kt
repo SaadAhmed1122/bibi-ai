@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
-private enum class Screen { Home, Chat, Model, Memory, Settings, Privacy, Terms, CrashLog, LlmDebug, ActionsDebug }
+private enum class Screen { Home, Chat, Model, Memory, Settings, Privacy, Terms, Licenses, Policy, CrashLog, LlmDebug, ActionsDebug }
 
 class MainActivity : ComponentActivity() {
     /** Set by a tap on floating Bibi or the notification's Open chat ([OverlayService.EXTRA_OPEN_CHAT]). */
@@ -157,6 +157,8 @@ class MainActivity : ComponentActivity() {
                         safeMode = container.safeMode,
                         onSafeMode = container::setSafeMode,
                         onOpenPrivacy = { screen = Screen.Privacy },
+                        onOpenPolicy = { screen = Screen.Policy },
+                        onOpenLicenses = { screen = Screen.Licenses },
                         onBack = goHome,
                     )
                     Screen.Privacy -> {
@@ -191,7 +193,9 @@ class MainActivity : ComponentActivity() {
                             onBack = goHome,
                         )
                     }
-                    Screen.Terms -> TermsRoute(onBack = goHome)
+                    Screen.Terms -> AssetTextRoute(AssetText.GEMMA_TERMS, onBack = goHome)
+                    Screen.Licenses -> AssetTextRoute(AssetText.LICENSES, onBack = { screen = Screen.Settings })
+                    Screen.Policy -> AssetTextRoute(AssetText.PRIVACY_POLICY, onBack = { screen = Screen.Settings })
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome, summaries = container.summaries)
                     Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)

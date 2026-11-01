@@ -68,7 +68,7 @@ fun ChatCard(
                 }
                 TextButton(onClick = onClose) { Text(stringResource(R.string.chat_close)) }
             }
-            MessageList(state, Modifier.weight(1f), onIntent)
+            MessageList(state, Modifier.weight(1f), onIntent, onReported = onClose)
             state.banner?.let { Banner(it, onOpenModel) }
             state.pendingAction?.let { ConfirmAction(it, onIntent) }
             state.notice?.let { Notice(it) }
