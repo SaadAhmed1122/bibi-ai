@@ -340,6 +340,13 @@ class ChatViewModel(
                     openChatRequests.trySend(Unit)
                     return@launch
                 }
+                // The recognizer lives in :inference: listening before it is bound loses the words.
+                val connected = combine(client.state, banner) { engine, b -> engine != EngineState.Unbound || b == ChatBanner.ImportModel || b == ChatBanner.Error }
+                connected.first { it }
+                if (client.state.value == EngineState.Unbound) {
+                    openChatRequests.trySend(Unit)
+                    return@launch
+                }
                 while (true) {
                     val heard = hear(v) ?: break
                     if (heard.isBlank()) continue
@@ -398,7 +405,9 @@ class ChatViewModel(
             }
             if (event != null) events.trySend(event)
         }
+        val t0 = System.currentTimeMillis()
         if (!v.audio.start(onChunk)) return null
+        v.log("talk mic_open_ms=${System.currentTimeMillis() - t0}")
         // Only now: "Listening…" before the mic is open makes people talk into nothing.
         if (talk.value != TalkPhase.HEARING) talk.value = TalkPhase.LISTENING
         try {
@@ -409,6 +418,7 @@ class ChatViewModel(
             }
             v.audio.stop()
             chunker.flush()
+            v.log("talk end=$event after_ms=${System.currentTimeMillis() - t0} peak=${"%.4f".format(endpointer.peak)} noise=${"%.4f".format(endpointer.noiseFloor)}")
             talk.value = TalkPhase.THINKING
             val text = client.finishListening(id)
             return if (event == Endpointer.Event.NoSpeech) null else text.orEmpty()

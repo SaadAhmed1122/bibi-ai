@@ -113,6 +113,7 @@ class AppContainer(context: Context) {
             speakReplies = speakReplies,
             setSpeakReplies = ::setSpeakReplies,
             notHeard = appContext.getString(io.github.saadahmed1122.bibi.feature.chat.R.string.voice_not_heard),
+            log = { android.util.Log.i("BibiTalk", it) },
         )
         return ChatViewModel(
             inference, chatHistory, models.state,

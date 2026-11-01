@@ -21,11 +21,17 @@ class Endpointer(private val rate: Int = 16_000) {
     private var speechStartMs = -1
     private var done = false
 
+    /** Loudest piece so far and the current noise floor, for the tuning log. */
+    var peak = 0f
+        private set
+    val noiseFloor: Float get() = noise
+
     /** Feeds one piece of audio; returns what it changed, if anything. */
     fun add(samples: FloatArray): Event? {
         if (done || samples.isEmpty()) return null
         val ms = samples.size * 1_000 / rate
         val level = rms(samples)
+        peak = maxOf(peak, level)
         elapsedMs += ms
         if (elapsedMs <= CALIBRATE_MS) {
             // The quietest piece: someone may already be talking when the mic opens.

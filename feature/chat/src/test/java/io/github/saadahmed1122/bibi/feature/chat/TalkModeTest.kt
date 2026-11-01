@@ -161,6 +161,22 @@ class TalkModeTest {
     }
 
     @Test
+    fun theMicWaitsForBibisAiProcessToConnect() = runTest {
+        // Found on the vivo: a tap right after the app started recorded before :inference was
+        // bound, so the recognizer answered nothing and the words were lost.
+        val client = FakeInferenceClient(initialState = EngineState.Unbound).apply { transcriptResult = "bye" }
+        val audio = ScriptedAudio(listOf(utterance))
+        val vm = viewModel(client, audio)
+        vm.onIntent(ChatIntent.StartTalk)
+        advanceUntilIdle()
+        assertEquals(0, audio.starts)
+        assertEquals(TalkPhase.THINKING, vm.state.value.talk)
+        client.setState(EngineState.Loading)
+        advanceUntilIdle()
+        assertEquals(1, audio.starts)
+    }
+
+    @Test
     fun stopTalkTurnsTheMicOff() = runTest {
         // A recorder that hasn't heard anything yet keeps the conversation waiting.
         val audio = ScriptedAudio(listOf(tenths(0.004f, 5)))
