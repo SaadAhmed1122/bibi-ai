@@ -29,6 +29,16 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 
 ## Findings (newest first)
 
+### 2026-11-01: "Hey Bibi, wake me up at seven" from any app
+- **Test:** push-to-talk in Bibi's floating chat card over the phone's home screen, on the vivo.
+- **Numbers:**
+  - First try: the recording was **perfect silence** (loudness 0.00000, against 0.0042 room noise inside the app). Android mutes the mic for an app that isn't in front, even with an overlay on screen.
+  - Fix: Bibi's floating service declares the "microphone" type, set while the app is open.
+  - Afterwards: real room noise (0.0047), and a spoken **"Hey BB, can you wake me up at seven?"** turned into **"Alarm set for 07:00."**, all on the phone.
+  - The speech model spelled "Bibi" as "BB", but the request still worked.
+- **Lesson:** Android's privacy rules are silent failures. Measure the signal, not just "no error".
+- Image: `media/card-voice-alarm.png`. Source: #86.
+
 ### 2026-11-01: Hold to talk, hear the answer
 - **Test:** push-to-talk and read-aloud in Bibi's chat on the vivo.
 - **Numbers:**

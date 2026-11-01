@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- P2 Task 15: hold to talk and read aloud in the floating card over any app; the overlay service gains the microphone type so Android doesn't mute it (#86).
 - P2 Task 14: hold to talk in the chat (the microphone is asked for the first time, used only while held, nothing recorded) and "Read aloud", which speaks Bibi's answers sentence by sentence (#85).
 - P2 Task 13: optional voice pack import (Parakeet speech-to-text and Piper voice, folder picker, every file checked) and the voice engines in Bibi's AI process, loaded only when used and released after 2 quiet minutes (#84).
 - P2 Task 12: Bibi shows what it is doing (thinking, speaking, confused for a moment after a problem, idle) on floating Bibi and in the chat headers; TalkBack names the state (#83).
