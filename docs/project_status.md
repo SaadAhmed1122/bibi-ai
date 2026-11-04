@@ -12,8 +12,8 @@ Updated at the end of every session (see CLAUDE.md §6).
 | P0 | Feasibility spikes | S1 and S2 pass, or the 0.5 decision rule is recorded | **Gate met on the vivo Y17s** (not the floor device): S1 PASS (2026-10-31); S2 PASS in chat mode (owner decision 2026-10-30); S3 done; S4 gate PASS. Still open: Galaxy A23 untested. All four spike apps merged to `main` (PRs #10, #12, #13, #14, #19). |
 | P1 | Walking skeleton | Core loop works for 1 hour without a crash; installable from the Play internal track | **Started 2026-10-31** (owner go). Specs merged (PR #30); plan approved (PR #31); tasks are issues #32–#49. Done and merged: Tasks 1–5, 8, 10, 12 (PRs #50–#54, #56, #57, #59); checkpoint A passed on the vivo (Home, no INTERNET, crash log). Tasks 6 and 9 merged (PR #60); checkpoint B passed (10 turns, TTFT 1,255–1,312 ms; owner tried it). Task 7 merged (PR #61). Tasks 11 merged (PR #62); checkpoint C passed. Task 13 merged (PR #63). Task 14 merged (PR #64). Task 15 merged (PR #65). Task 16 merged (PR #66). Tasks 17–18 merged (PRs #67, #68): **code-complete**. Left: the owner's Play internal-track upload and the 1-hour exit gate |
 | P2 | Companion MVP | Closed-test ready; policy checklist (PRD 0.9) green | **Planned 2026-10-31** (owner approved the map): [SPEC-P2.md](../SPEC-P2.md), seven module specs, [tasks/plan-p2.md](../tasks/plan-p2.md); tasks are issues #72–#90, plus design #93–#94 |
-| P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | Not started |
-| P4 | Decision | Write-up published; funding or no-funding decision | Not started |
+| P3 | Closed test | Crash-free sessions ≥ 99% in the core loop; retention signal recorded | **Planned 2026-11-04**: [SPEC-P3.md](../SPEC-P3.md), five module specs, [tasks/plan-p3.md](../tasks/plan-p3.md); issues #126–#134. Testing starts with the owner's closed-test upload |
+| P4 | Decision | Write-up published; funding or no-funding decision | Planned 2026-11-04 (issues #135–#137) |
 
 ## Spike results
 Thresholds from PRD 0.7. Measurements also go in `reference/Pip_Spike_Tracker.xlsx`.
@@ -125,8 +125,12 @@ Notes on the vivo Y17s:
 - 2026-10-28 — Project scaffold created (structure, planning docs, reference PRD). — Owner request.
 - 2026-10-28 — The decision log lives here, in "Decisions", instead of the `DECISIONS.md` named in PRD 0.11. — Owner instruction.
 - 2026-10-28 — vivo Y17s (6 GB, 128 GB, Android 15) added as a test device. The floor device is unchanged until the owner decides (open item 10). — Owner message.
+- 2026-11-04 — P3 scope: email feedback; a tester recruiting plan in P3; "Share usage numbers" stays in production as an optional, user-shared feature; P4 write-up as a LinkedIn article with the repository made public after a secrets and history audit. — Owner answers to SPEC-P3 open questions 1–4. — SPEC-P3.md
+- 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04: P3 planned. Owner answered SPEC-P3's open questions (email feedback; more testers needed; usage numbers kept as an optional production feature; LinkedIn article + public repo after an audit). Written: SPEC-P3.md (answers), SPEC-test-report/feedback/stability/writeup/decision.md, tasks/plan-p3.md; issues #126–#137 and the `p3` label. Next: Task 1 (#126) usage counters, tests first.
+
 2026-11-01 ~16:30: Model delivery decided (Drive link + side-load). Written: docs/tester-guide.md (Drive folder contents for the owner, 5 tester steps, Play App access text), docs/model-pack/NOTICE.txt and README.txt for the Drive folder, play-console.md updated. S1 kill/restart check passed on the vivo (comment on #4). Next: owner uploads the pack to Drive and sends the link; Claude records it in tester-guide.md and play-console.md.
 
 2026-11-01 ~16:20: "Hey BB" prefix (ShortcutParser) and "bye" + up to two short words (TalkCommand) fixed test-first; on the vivo by voice from the laptop: "Hey Bibi, turn off the flashlight." → "Hey BB, …" → "Flashlight off."; "Bye Bibi" ended the talk. Next: owner items below.
@@ -207,6 +211,7 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
+0. Claude: P3 Task 1 (#126) usage counters, then Tasks 2–5, so the first closed-test upload is 0.3.0-p3 with the counters (tasks/plan-p3.md). Owner: the feedback email address (#128).
 1. Owner: Task 19 (#90) 1-hour P2 gate (TESTING.md); host the privacy policy; record the FGS video (docs/play-console.md); decide how testers get the model (open item 6); build 0.2.0-p2 and upload to the closed-test track.
 1. Owner: host `docs/privacy-policy.md` at a public URL (needed for the Play listing).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
