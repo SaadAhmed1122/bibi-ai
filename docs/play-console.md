@@ -5,7 +5,7 @@ What to enter in Play Console for Bibi AI, and the PRD 0.9 checklist with eviden
 ## 1. App content page (Policy > App content)
 
 ### Privacy policy
-- URL: the public copy of [docs/privacy-policy.md](privacy-policy.md). [OPEN: the owner hosts it and pastes the URL here.]
+- URL: **https://saadahmed1122.github.io/bibi-ai-privacy/** (GitHub Pages from the public repo `SaadAhmed1122/bibi-ai-privacy`, live 2026-11-04). It is built from [docs/privacy-policy.md](privacy-policy.md) by `tools/policy-page/build.py`. After a policy change, rebuild it and push `index.html` to that repo.
 - The same text is in the app: Settings > Privacy policy (a test keeps the two identical).
 
 ### App access
