@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** The app's screens; a plain state switch until there are enough screens to need a navigation library. */
-private enum class Screen { Home, Chat, Model, Memory, Settings, Privacy, Terms, Licenses, Policy, CrashLog, LlmDebug, ActionsDebug }
+private enum class Screen { Home, Chat, Model, Memory, Settings, Privacy, Terms, Licenses, Policy, Usage, CrashLog, LlmDebug, ActionsDebug }
 
 /** The tab a top-level screen belongs to; null for screens opened from one (they show no bar). */
 private val Screen.tab: Tab? get() = when (this) {
@@ -197,6 +197,7 @@ class MainActivity : ComponentActivity() {
                         onOpenPrivacy = { screen = Screen.Privacy },
                         onOpenPolicy = { screen = Screen.Policy },
                         onOpenLicenses = { screen = Screen.Licenses },
+                        onOpenUsage = { screen = Screen.Usage },
                     )
                     Screen.Privacy -> {
                         var stored by remember { mutableStateOf<StoredData?>(null) }
@@ -233,6 +234,7 @@ class MainActivity : ComponentActivity() {
                     Screen.Terms -> AssetTextRoute(AssetText.GEMMA_TERMS, onBack = goHome)
                     Screen.Licenses -> AssetTextRoute(AssetText.LICENSES, onBack = { screen = Screen.Settings })
                     Screen.Policy -> AssetTextRoute(AssetText.PRIVACY_POLICY, onBack = { screen = Screen.Settings })
+                    Screen.Usage -> UsageRoute(container.usage, onBack = { screen = Screen.Settings })
                     Screen.CrashLog -> CrashLogRoute(container.crashLog, onBack = goHome)
                     Screen.LlmDebug -> LlmDebugRoute(container.inference, onBack = goHome, summaries = container.summaries)
                     Screen.ActionsDebug -> ActionsDebugRoute(container.actions, container.actionLog, onBack = goHome)

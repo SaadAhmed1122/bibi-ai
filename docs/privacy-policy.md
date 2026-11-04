@@ -1,6 +1,6 @@
 Bibi AI privacy policy
 
-Last updated: 1 November 2026
+Last updated: 4 November 2026
 
 Bibi AI is an AI companion that runs entirely on your phone. This policy explains what the app keeps and what it does not do.
 
@@ -12,6 +12,7 @@ The app has no internet permission. The AI models run on the device. Bibi AI col
 - Memories: short notes Bibi saves about you, or that you ask it to remember. Unpinned memories are deleted after the period you choose in Memory (default 90 days; options from 7 days to forever).
 - An action log of what Bibi did on the phone (for example "set an alarm"), with numbers hidden.
 - A crash log, used only to fix bugs. It stays on the phone unless you share it yourself.
+- Usage numbers: how many times you used the app, on which dates, how many of those times ended in a crash, and how many messages, talks, memories and actions there were. Only numbers and dates, never what you said, typed or saved. They stay on the phone unless you share them yourself.
 - Your settings, and the AI model files you imported.
 All of this sits in the app's private storage. Other apps can't read it.
 
@@ -28,10 +29,10 @@ The app doesn't ask for contacts, SMS, call logs, location or accessibility acce
 5. Your control
 - Settings > Privacy shows what is kept.
 - Memory lets you see, pin, delete and export memories. An export is a file you choose where to save.
-- Delete everything removes chats, memories, both logs and settings. Uninstalling the app removes everything, models included.
+- Delete everything removes chats, memories, both logs, the usage numbers and settings. Uninstalling the app removes everything, models included.
 
 6. Sharing
-The app shares something only when you choose to, for example "Report this reply", which opens your phone's share menu with the reply text. What happens next depends on the app you pick.
+The app shares something only when you choose to, for example "Report this reply", which opens your phone's share menu with the reply text, or "Share usage numbers" in Settings, which shows you the full report before opening the share menu. What happens next depends on the app you pick.
 
 7. Changes
 If this policy changes, the new version will be in the app and at this page, with a new date.

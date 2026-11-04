@@ -223,7 +223,8 @@ Checked by Claude on the vivo 2026-11-04 (debug build; read with `adb shell run-
 - [x] Open the app, Home, wait 35 s, open it again in landscape: 2 sessions. Back within 30 s, or a rotation: still 2.
 - [x] Home → Debug → Crash log → Crash now, then reopen: 3 sessions, 1 crashed session, 1 crash.
 - [x] A talk from floating Bibi counts 1 talk; "remember my cat is called Milo" counts 1 message and 1 memory; the file holds no message text.
-- [ ] Owner: the same on the release build once "Share usage numbers" exists (Task 2, #127).
+- [x] Settings → Share usage numbers shows the whole report (portrait and landscape); Share opens the share sheet. Privacy shows "Usage numbers …, sessions: 4" and the Delete everything text names them (Task 2, #127; checked by Claude 2026-11-04).
+- [ ] Owner: Delete everything on a phone whose data you don't need, then Share usage numbers shows "First use: not used yet" until the next open. Claude didn't run it on the vivo, because it would erase your chats and memories.
 
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.

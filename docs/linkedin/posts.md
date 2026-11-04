@@ -33,7 +33,7 @@ Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actio
 - **Test:** on the vivo Y17s, three sessions and one forced crash.
 - **Numbers:** the phone recorded 3 sessions with 1 crashed, so 2 crash-free. The crash came from Android's own exit records and counted against the session the app died in.
 - **Lesson:** with no `INTERNET` permission, the gate numbers have to be counted on the phone, and the tester chooses to share them. The counter functions take no text, so no message can end up in the report.
-- Image: none (file-only check). Source: `SPEC-test-report.md`, `TESTING.md` "P3 — usage counters".
+- Image: `media/p3-usage-numbers.png` (the report as testers see it before sharing). Source: `SPEC-test-report.md`, `TESTING.md` "P3 — usage counters".
 
 ### 2026-11-01: Small-model habits you have to design around
 - **Test:** chat and voice on the vivo while finishing P2.

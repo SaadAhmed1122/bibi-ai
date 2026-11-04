@@ -36,11 +36,12 @@ fun SettingsRoute(
     onOpenPrivacy: () -> Unit,
     onOpenPolicy: () -> Unit,
     onOpenLicenses: () -> Unit,
+    onOpenUsage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val current by persona.current.collectAsStateWithLifecycle()
     val safe by safeMode.collectAsStateWithLifecycle()
-    SettingsScreen(current, persona::choose, modifier, safe, onSafeMode, onOpenPrivacy, onOpenPolicy, onOpenLicenses)
+    SettingsScreen(current, persona::choose, modifier, safe, onSafeMode, onOpenPrivacy, onOpenPolicy, onOpenLicenses, onOpenUsage)
 }
 
 /** Settings (SPEC-personality.md): persona, Safe mode, and links to Privacy, the policy and licenses (SPEC-privacy.md). A tab: no Back. */
@@ -54,6 +55,7 @@ fun SettingsScreen(
     onOpenPrivacy: () -> Unit = {},
     onOpenPolicy: () -> Unit = {},
     onOpenLicenses: () -> Unit = {},
+    onOpenUsage: () -> Unit = {},
 ) {
     BibiScreen(title = stringResource(R.string.settings_title), modifier = modifier) {
         SectionHeader(stringResource(R.string.settings_personality))
@@ -76,6 +78,7 @@ fun SettingsScreen(
         BibiCard {
             ListRow(stringResource(R.string.policy_title), onClick = onOpenPolicy)
             ListRow(stringResource(R.string.licenses_title), onClick = onOpenLicenses)
+            ListRow(stringResource(R.string.usage_title), onClick = onOpenUsage)
         }
     }
 }

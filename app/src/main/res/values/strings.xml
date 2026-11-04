@@ -17,11 +17,12 @@
     <string name="privacy_memories">Memories: %1$d (kept for %2$s unless pinned)</string>
     <string name="privacy_action_log">Action log: %1$d KB (what Bibi did, numbers hidden)</string>
     <string name="privacy_crash_log">Crash log: %1$d KB</string>
+    <string name="privacy_usage">Usage numbers (numbers and dates only), sessions: %1$d</string>
     <string name="privacy_open_memory">See or export memories</string>
-    <string name="privacy_delete_explain">Delete everything removes your chats, memories, both logs and your settings. The AI models stay; remove them on the model screen.</string>
+    <string name="privacy_delete_explain">Delete everything removes your chats, memories, both logs, the usage numbers and your settings. The AI models stay; remove them on the model screen.</string>
     <string name="privacy_delete">Delete everything</string>
     <string name="privacy_delete_title">Delete everything?</string>
-    <string name="privacy_delete_confirm">Your chats, memories, logs and settings will be deleted. This can\'t be undone.</string>
+    <string name="privacy_delete_confirm">Your chats, memories, logs, usage numbers and settings will be deleted. This can\'t be undone.</string>
     <string name="privacy_cancel">Cancel</string>
     <string name="privacy_deleted">Everything was deleted.</string>
     <string name="settings_title">Settings</string>
@@ -74,6 +75,9 @@
     <string name="home_model_hint">The AI model, phone actions and voice</string>
     <string name="settings_section_safety">Safety and privacy</string>
     <string name="settings_section_about">About</string>
+    <string name="usage_title">Share usage numbers</string>
+    <string name="usage_explain">This is everything in the report: numbers and dates only, never what you said, typed or saved. It leaves the phone only if you share it. Testers: please send it on day 7 and day 14.</string>
+    <string name="usage_share">Share</string>
     <string name="privacy_section_stored">What Bibi keeps</string>
     <string name="privacy_section_delete">Start fresh</string>
 </resources>

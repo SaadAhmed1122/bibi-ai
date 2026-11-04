@@ -180,6 +180,7 @@ class AppContainer(context: Context) {
         memories = memory.count(),
         actionLogBytes = actionLog.read().toByteArray().size.toLong(),
         crashLogBytes = crashLog.read().toByteArray().size.toLong(),
+        usageSessions = usage.snapshot().sessions,
     )
 
     /** Delete everything (SPEC-privacy.md): chats, memories, logs, settings; a fresh conversation. Models stay. Main thread. */
