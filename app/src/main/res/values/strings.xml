@@ -78,6 +78,9 @@
     <string name="usage_title">Share usage numbers</string>
     <string name="usage_explain">This is everything in the report: numbers and dates only, never what you said, typed or saved. It leaves the phone only if you share it. Testers: please send it on day 7 and day 14.</string>
     <string name="usage_share">Share</string>
+    <string name="crash_share_title">Share crash log</string>
+    <string name="crash_share_explain">If Bibi crashed or froze, this log helps fix it. It holds the time, the app version and the technical error, not your chats or memories. It leaves the phone only if you share it.</string>
+    <string name="crash_share_empty">No crashes recorded. Nothing to share.</string>
     <string name="feedback_title">Send feedback</string>
     <string name="feedback_address" translatable="false">swdeveloper.sa@gmail.com</string>
     <string name="feedback_no_email_app">No email app found. Please write to %1$s</string>
