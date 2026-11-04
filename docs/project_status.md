@@ -129,6 +129,8 @@ Notes on the vivo Y17s:
 - 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04: P3 Phase 1 code-complete. Tasks 1–4 merged (PRs #139–#142). Task 5 (#130): versionCode 3 / 0.3.0-p3, play-console.md (Data safety notes for usage numbers and Send feedback, version), TESTING.md Checkpoint F owner list. Claude's part of Checkpoint F is done on the vivo. Next: owner items in TESTING.md "Checkpoint F", then the closed test runs; Claude does Task 6 (#131) report tool meanwhile.
+
 2026-11-04: Task 4 merged (PR #141). Task 3 (#128) on `feature/128-send-feedback`: Settings > Send feedback (FeedbackEmail mailto, 3 JVM tests; ActivityNotFoundException → toast with the address). On the vivo: Gmail opens prefilled; row in both orientations. Next: Task 5 (#130) 0.3.0-p3 release check.
 
 2026-11-04: Task 2 merged (PR #140). Task 4 (#129): docs/tester-invite.md (who can test, recruiting plan for 14 testers, the invite with week 1/2 tries, day-7/14 reminders, LinkedIn call for testers). Waiting on the owner to approve the texts. Next: Task 3 (#128) once the owner gives the feedback email; then Task 5 (#130) 0.3.0-p3 release check.
@@ -219,8 +221,8 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-0. Claude: P3 Tasks 2–5 (#127–#130), so the first closed-test upload is 0.3.0-p3 with the counters (tasks/plan-p3.md). 
-1. Owner: Task 19 (#90) 1-hour P2 gate (TESTING.md); host the privacy policy; record the FGS video (docs/play-console.md); decide how testers get the model (open item 6); build 0.2.0-p2 and upload to the closed-test track.
+0. Owner: Checkpoint F (TESTING.md): the P2 items, then sign and upload **0.3.0-p3** (not 0.2.0-p2) to the closed-test track, send docs/tester-invite.md, post the LinkedIn call. Claude: Task 6 (#131) report tool; Task 7 (#132) needs your choice on a release "Share crash log".
+1. Owner: Task 19 (#90) 1-hour P2 gate (TESTING.md); host the privacy policy; record the FGS video (docs/play-console.md); (model delivery decided: Drive link, open item 6). The closed-test upload is now 0.3.0-p3 (item 0).
 1. Owner: host `docs/privacy-policy.md` at a public URL (needed for the Play listing).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).
