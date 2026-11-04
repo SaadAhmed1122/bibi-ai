@@ -236,7 +236,8 @@ Owner, before uploading:
 - [ ] The P2 items first: the 1-hour P2 gate (#90), the FGS video, the Drive link (docs/tester-guide.md).
 - [ ] Build and sign 0.3.0-p3 (docs/release.md), install it and open Settings → Share usage numbers: it says "App version: 0.3.0-p3".
 - [ ] Play Console: recheck Data safety against docs/play-console.md (usage numbers and Send feedback are user-initiated sharing [VERIFY]).
-- [ ] Upload to the closed-test track, then send docs/tester-invite.md to the testers.
+- [x] Uploaded and sent for review on Closed testing – Alpha (2026-11-04).
+- [ ] When review passes: send docs/tester-invite.md to the testers and post the LinkedIn call.
 
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
