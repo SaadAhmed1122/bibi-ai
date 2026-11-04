@@ -1,6 +1,6 @@
 # Bibi AI closed test: getting the model
 
-For testers and Play's reviewers. The model isn't inside the app (it's 585 MB), so it comes from a Google Drive link. Decision 2026-11-01, open item 6.
+For testers and Play's reviewers. The invite, weekly plan and recruiting plan are in [tester-invite.md](tester-invite.md). The model isn't inside the app (it's 585 MB), so it comes from a Google Drive link. Decision 2026-11-01, open item 6.
 
 **Drive link:** [OPEN: the owner pastes the folder link after uploading; sharing "Anyone with the link: Viewer".]
 
