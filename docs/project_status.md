@@ -129,6 +129,8 @@ Notes on the vivo Y17s:
 - 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04 ~23:30: Task 7 (#132): Settings > About > Share crash log in release builds (newest 60k characters, shown in full, then the share sheet); version 0.3.1-p3 (code 4). Checked on the vivo. It surfaced a real :inference native crash (SIGSEGV, 22:33 local, rss 785 MB) on 0.3.0-p3: issue #150, no backtrace. Next: reproduce #150; owner uploads 0.3.1-p3 to the closed track after review of 0.3.0-p3; Task 10 (#135) audit.
+
 2026-11-04 ~23:30: **0.3.0-p3 (code 3) sent for review on Play's Closed testing – Alpha track** (owner: signed upload, FGS video link, content rating; testers from the email list "Personal Testers"; 177 countries). P3 test window starts when review passes and testers opt in. Next: owner sends docs/tester-invite.md and posts the LinkedIn call; Claude: Task 7 (#132) per the owner's choice, then Task 10 (#135) public-release audit while the test runs.
 
 2026-11-04 ~23:20: Owner uploaded the signed build. FGS demo video made (`docs/play-store/bibi-fgs-demo.mp4`: turn on, notification, tap-to-talk with the mic, card hold-to-talk, Turn off; spoken by the Mac's `say` next to the phone). FGS declaration form filled except the two video links. Next: owner uploads the video and sends the link; Claude pastes it and saves. Content rating is still the owner's.

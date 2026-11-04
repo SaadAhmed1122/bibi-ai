@@ -38,11 +38,12 @@ fun SettingsRoute(
     onOpenLicenses: () -> Unit,
     onOpenUsage: () -> Unit,
     onSendFeedback: () -> Unit,
+    onShareCrashLog: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val current by persona.current.collectAsStateWithLifecycle()
     val safe by safeMode.collectAsStateWithLifecycle()
-    SettingsScreen(current, persona::choose, modifier, safe, onSafeMode, onOpenPrivacy, onOpenPolicy, onOpenLicenses, onOpenUsage, onSendFeedback)
+    SettingsScreen(current, persona::choose, modifier, safe, onSafeMode, onOpenPrivacy, onOpenPolicy, onOpenLicenses, onOpenUsage, onSendFeedback, onShareCrashLog)
 }
 
 /** Settings (SPEC-personality.md): persona, Safe mode, and links to Privacy, the policy and licenses (SPEC-privacy.md). A tab: no Back. */
@@ -58,6 +59,7 @@ fun SettingsScreen(
     onOpenLicenses: () -> Unit = {},
     onOpenUsage: () -> Unit = {},
     onSendFeedback: () -> Unit = {},
+    onShareCrashLog: () -> Unit = {},
 ) {
     BibiScreen(title = stringResource(R.string.settings_title), modifier = modifier) {
         SectionHeader(stringResource(R.string.settings_personality))
@@ -82,6 +84,7 @@ fun SettingsScreen(
             ListRow(stringResource(R.string.licenses_title), onClick = onOpenLicenses)
             ListRow(stringResource(R.string.feedback_title), onClick = onSendFeedback)
             ListRow(stringResource(R.string.usage_title), onClick = onOpenUsage)
+            ListRow(stringResource(R.string.crash_share_title), onClick = onShareCrashLog)
         }
     }
 }

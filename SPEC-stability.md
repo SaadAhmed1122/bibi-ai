@@ -12,7 +12,7 @@ The testers' reports turn into the gate numbers, and their bugs turn into fixed 
   - day-7+ use;
   - the feature counts.
   Testers are identified only as T1…Tn.
-- **Triage:** each tester email or report with a problem becomes a GitHub issue labeled `p3` (plus `bug` or `enhancement`), with no tester name or email in it. Crashes come with the crash-log text if the tester shares it from the debug screen [OPEN: the debug screen isn't in release builds; decide whether release gets a "Share crash log"].
+- **Triage:** each tester email or report with a problem becomes a GitHub issue labeled `p3` (plus `bug` or `enhancement`), with no tester name or email in it. Crashes come with the crash-log text if the tester shares it from the debug screen Testers share it from Settings > About > Share crash log (owner, 2026-11-04; built in #132, 0.3.1-p3).
 - **Fix builds:** versions 0.3.x, one PR per issue, built and checked the same way as P2 builds. The owner signs and uploads each one.
 - **Weekly status:** one line in `docs/project_status.md` each week: testers active, reports received, crash-free % so far, open `p3` bugs.
 

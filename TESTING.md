@@ -239,6 +239,10 @@ Owner, before uploading:
 - [x] Uploaded and sent for review on Closed testing – Alpha (2026-11-04).
 - [ ] When review passes: send docs/tester-invite.md to the testers and post the LinkedIn call.
 
+## P3 — Share crash log (issue #132)
+- [x] Settings → Share crash log shows the header (version, phone, Android) and the log; Share opens the chooser (vivo, 2026-11-04).
+- [ ] Owner (optional): on a phone with no crashes it says "No crashes recorded".
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 
