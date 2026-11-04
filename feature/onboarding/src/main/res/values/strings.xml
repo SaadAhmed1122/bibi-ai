@@ -5,7 +5,7 @@
     <string name="onb_next">Next</string>
     <string name="onb_back">Back</string>
     <string name="onb_model_title">My AI model</string>
-    <string name="onb_model_body">To think, I need the model file %1$s (about 585 MB). Copy it to the phone, then choose it here. It is checked before use and never leaves the phone.</string>
+    <string name="onb_model_body">To think, I need the model file %1$s (about 585 MB). Download it once in your browser, then choose it here. It is checked before use and never leaves the phone.</string>
     <string name="onb_model_choose">Choose model file</string>
     <string name="onb_model_importing">Copying and checking… %1$d%%</string>
     <string name="onb_model_cancel">Cancel</string>

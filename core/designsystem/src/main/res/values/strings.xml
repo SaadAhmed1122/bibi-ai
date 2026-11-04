@@ -6,4 +6,7 @@
     <string name="bibi_mood_speaking">Bibi is talking and gesturing with one paw.</string>
     <string name="bibi_mood_confused">Bibi tilts its head, puzzled; something didn\'t work.</string>
     <string name="ds_back">Back</string>
+    <string name="model_download">Download the model (browser)</string>
+    <!-- The closed-test model file on the owner's Google Drive (docs/tester-guide.md). One place for the app. -->
+    <string name="model_download_url" translatable="false">https://drive.google.com/file/d/15wvoZqcN9h5qh8eJ9qJZMrGdc3qoy4Rd/view?usp=sharing</string>
 </resources>

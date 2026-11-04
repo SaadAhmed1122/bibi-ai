@@ -18,7 +18,7 @@
     <string name="chat_banner_error">Bibi\'s model stopped working. Close and reopen the app.</string>
     <!-- Model screen -->
     <string name="model_title">Bibi\'s model</string>
-    <string name="model_missing">Bibi needs its AI model on this phone: the file %1$s (about 585 MB). Copy it to the phone, then choose it here. It is checked before use and never leaves the phone.</string>
+    <string name="model_missing">Bibi needs its AI model on this phone: the file %1$s (about 585 MB). Download it once in your browser, then choose it here. It is checked before use and never leaves the phone.</string>
     <string name="model_choose">Choose model file</string>
     <string name="model_choose_other">Choose another file</string>
     <string name="model_importing">Copying and checking the model… %1$d%%</string>

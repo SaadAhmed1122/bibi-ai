@@ -22,6 +22,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import io.github.saadahmed1122.bibi.core.designsystem.R as DsR
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -131,8 +133,15 @@ private fun Body(text: String) {
 
 @Composable
 private fun ModelPart(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+    val modelUrl = stringResource(DsR.string.model_download_url)
+    // Opens the browser; Bibi itself has no internet permission. No browser: nothing happens.
+    val download = @Composable { SecondaryButton(stringResource(DsR.string.model_download), onClick = { runCatching { uriHandler.openUri(modelUrl) } }) }
     when (state) {
-        ModelState.Missing -> PrimaryButton(stringResource(R.string.onb_model_choose), onClick = onPick)
+        ModelState.Missing -> {
+            PrimaryButton(stringResource(R.string.onb_model_choose), onClick = onPick)
+            download()
+        }
         is ModelState.Importing -> {
             Text(stringResource(R.string.onb_model_importing, (state.progress * 100).toInt()))
             LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
@@ -142,6 +151,7 @@ private fun ModelPart(state: ModelState, onPick: () -> Unit, onCancel: () -> Uni
         is ModelState.Invalid -> {
             Text(stringResource(R.string.onb_model_invalid, ModelFile.NAME), color = MaterialTheme.colorScheme.error)
             PrimaryButton(stringResource(R.string.onb_model_choose), onClick = onPick)
+            download()
         }
     }
 }

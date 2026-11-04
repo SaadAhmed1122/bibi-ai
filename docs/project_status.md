@@ -48,7 +48,7 @@ Notes on the vivo Y17s:
 | 4 | Second test phone (6–8 GB) | vivo Y17s available (6 GB, Helio G85, Android 15). It covers the 6 GB RAM case, but not a recent chip. | Partly resolved |
 | 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
 | 5 | Final app name | **Bibi AI** chosen (2026-10-28). Web check done; similar "Bibi" products exist (see brainstorm.md). Formal trademark, Play listing, and domain checks still needed. | Partly resolved [VERIFY] |
-| 6 | Model pack hosting | Closed test: owner's Google Drive link + the in-app file picker (owner, 2026-11-01); steps in docs/tester-guide.md; Drive link [OPEN] | In-app download deferred past P2 |
+| 6 | Model pack hosting | Closed test: owner's Google Drive link + the in-app file picker (owner, 2026-11-01); steps in docs/tester-guide.md; Drive link set 2026-11-04 (chat model) | In-app download deferred past P2 |
 | 7 | `reference/Pip_Spike_Tracker.xlsx` not supplied at scaffold time | Add the file to `reference/` unchanged. The file is still not in `reference/` (checked 2026-10-30); S1–S4 numbers live in the spikes' `results/RESULTS.md` files instead. | Open |
 | 8 | Dial action: "Safe" in PRD 0.8, SENSITIVE in §16.3 | Treat as Sensitive (confirmation card) | Resolved 2026-10-31: Sensitive (owner) |
 | 9 | MVP memory search: keyword only, or semantic too | FTS5 keyword first | Open |
@@ -129,6 +129,8 @@ Notes on the vivo Y17s:
 - 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04 ~23:00: Play Console set up in the owner's browser (details in docs/play-console.md "Status"). Store media in `docs/play-store/`. App: adaptive launcher icon (there was none), "Download the model (browser)" button with the owner's Drive link on the first-run and model screens. Left for the owner: Content rating (IARC terms), FGS declaration video, signed 0.3.0-p3 upload, closed-test track and testers. Note: the account "sa.tech" already has apps in production; check whether the 12-testers-for-14-days rule applies to it [VERIFY in Play Console].
+
 2026-11-04: Privacy policy hosted at https://saadahmed1122.github.io/bibi-ai-privacy/ (new public repo `SaadAhmed1122/bibi-ai-privacy`, GitHub Pages; built by `tools/policy-page/build.py`). Play Console in the owner's browser (saadahmedrajput99@gmail.com) showed "Creating a developer account": no developer account exists on that Google account yet. The owner creates it (fee, identity check, agreements); then Claude creates the app and fills App content from docs/play-console.md.
 
 2026-11-04: Task 5 merged (PR #143). Task 6 (#131): `tools/p3-report/p3_report.py` (stdlib; 8 tests: `python3 -I tools/p3-report/test_p3_report.py`) turns reports saved as `tools/p3-report/reports/T<n>-….txt` (git-ignored) into docs/p3-results.md (gate %, retention, by phone, per tester, skipped files). Next: Task 7 (#132) owner choice; Tasks 8–9 run during the closed test.

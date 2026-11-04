@@ -2,7 +2,7 @@
 
 For testers and Play's reviewers. The invite, weekly plan and recruiting plan are in [tester-invite.md](tester-invite.md). The model isn't inside the app (it's 585 MB), so it comes from a Google Drive link. Decision 2026-11-01, open item 6.
 
-**Drive link:** [OPEN: the owner pastes the folder link after uploading; sharing "Anyone with the link: Viewer".]
+**Drive link (chat model):** https://drive.google.com/file/d/15wvoZqcN9h5qh8eJ9qJZMrGdc3qoy4Rd/view?usp=sharing (owner, 2026-11-04). The app's "Download the model (browser)" button on the first-run and model screens opens the same link (`core/designsystem` string `model_download_url`). Voice and action files: [OPEN: not on Drive yet].
 
 ## Owner: what goes in the Drive folder
 Folder name `Bibi model pack`:
