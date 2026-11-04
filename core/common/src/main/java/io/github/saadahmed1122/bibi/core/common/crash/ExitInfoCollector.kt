@@ -44,6 +44,8 @@ class ExitInfoCollector(
     private val source: ExitInfoSource,
     private val store: LastSeenStore,
     private val writer: CrashLogWriter,
+    /** Each new logged exit, e.g. for the usage counters (SPEC-test-report.md). */
+    private val onExit: (ExitRecord) -> Unit = {},
 ) {
     /** Returns the number of records written. */
     fun collect(): Int {
@@ -52,7 +54,10 @@ class ExitInfoCollector(
         if (fresh.isEmpty()) return 0
         // The system can return the same exit twice (vivo Y17s, #55): log each one once.
         val logged = fresh.filter { it.reason != null }.distinct().sortedBy { it.timestampMillis }
-        logged.forEach { writer.writeExit(it.timestampMillis, it.processName, it.reason!!.name, it.description) }
+        logged.forEach {
+            writer.writeExit(it.timestampMillis, it.processName, it.reason!!.name, it.description)
+            onExit(it)
+        }
         store.lastSeenMillis = fresh.maxOf { it.timestampMillis }
         return logged.size
     }

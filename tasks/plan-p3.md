@@ -15,7 +15,7 @@ Build P3 and P4 from [SPEC-P3.md](../SPEC-P3.md) and its five module specs. The 
 ## Task list
 
 ### Phase 1: The closed-test build
-- [ ] **Task 1 (#126): Usage counters** (SPEC-test-report criterion 1, tests first). Session tracker, crash attribution, active days, feature counts, store. **M**
+- [x] **Task 1 (#126): Usage counters** (SPEC-test-report criterion 1, tests first). Session tracker, crash attribution, active days, feature counts, store. **M**
 - [ ] **Task 2 (#127): Share usage numbers + privacy** (SPEC-test-report criteria 2–3). About screen entry with preview, share sheet, Privacy screen line, Delete everything step, policy text in the app and `docs/privacy-policy.md`. **M**
 - [ ] **Task 3 (#128): Send feedback** (SPEC-feedback criteria 1–2). Mailto with prefilled body; the address string is [OPEN] until the owner gives it. **S**
 - [ ] **Task 4 (#129): Tester invite + recruiting plan** (SPEC-feedback criterion 3). `docs/tester-invite.md`, LinkedIn call for testers in docs/linkedin/posts.md. **S**

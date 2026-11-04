@@ -40,6 +40,18 @@ class ExitInfoCollectorTest {
     }
 
     @Test
+    fun reportsEachNewLoggedExitOnceInOrder() {
+        val exits = listOf(exit(3, ExitReason.ANR), exit(1, ExitReason.CRASH), exit(1, ExitReason.CRASH), exit(2, null))
+        val seen = mutableListOf<Long>()
+        val store = FakeStore()
+
+        ExitInfoCollector({ exits }, store, writer) { seen += it.timestampMillis }.collect()
+        ExitInfoCollector({ exits }, store, writer) { seen += it.timestampMillis }.collect()
+
+        assertEquals(listOf(1L, 3L), seen)
+    }
+
+    @Test
     fun skipsRecordsAlreadySeenAndStoresTheNewestTimestamp() {
         val store = FakeStore(lastSeenMillis = 20)
         val exits = listOf(exit(30, ExitReason.ANR), exit(10, ExitReason.CRASH), exit(20, ExitReason.CRASH))
