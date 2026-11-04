@@ -129,6 +129,8 @@ Notes on the vivo Y17s:
 - 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04: P3 Task 1 (#126) done on `feature/126-usage-counters`: `core:common` `usage` package (UsageTracker, UsageData, FileUsageStore, UsageReport; 21 JVM tests plus 1 ExitInfoCollector test), wired in the app (MainActivity onStart/onStop, the floating card and talk windows, user messages, saved memories, actions that ran, exits from ExitInfoCollector; Delete everything clears them). Checked on the vivo in portrait and landscape: 3 sessions + forced crash → 2 crash-free; talk, message and memory counted; no text in the file; no INTERNET (TESTING.md). Next: Task 2 (#127) Share usage numbers screen + Privacy line + policy text.
+
 2026-11-04: P3 planned. Owner answered SPEC-P3's open questions (email feedback; more testers needed; usage numbers kept as an optional production feature; LinkedIn article + public repo after an audit). Written: SPEC-P3.md (answers), SPEC-test-report/feedback/stability/writeup/decision.md, tasks/plan-p3.md; issues #126–#137 and the `p3` label. Next: Task 1 (#126) usage counters, tests first.
 
 2026-11-01 ~16:30: Model delivery decided (Drive link + side-load). Written: docs/tester-guide.md (Drive folder contents for the owner, 5 tester steps, Play App access text), docs/model-pack/NOTICE.txt and README.txt for the Drive folder, play-console.md updated. S1 kill/restart check passed on the vivo (comment on #4). Next: owner uploads the pack to Drive and sends the link; Claude records it in tester-guide.md and play-console.md.
@@ -211,7 +213,7 @@ Notes on the vivo Y17s:
 GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (S1), #5 (S2), #8 (S4) open; #6, #7 closed. Milestones P0–P4 exist. No branches deleted (owner's choice).
 
 ## Next step
-0. Claude: P3 Task 1 (#126) usage counters, then Tasks 2–5, so the first closed-test upload is 0.3.0-p3 with the counters (tasks/plan-p3.md). Owner: the feedback email address (#128).
+0. Claude: P3 Tasks 2–5 (#127–#130), so the first closed-test upload is 0.3.0-p3 with the counters (tasks/plan-p3.md). Owner: the feedback email address (#128).
 1. Owner: Task 19 (#90) 1-hour P2 gate (TESTING.md); host the privacy policy; record the FGS video (docs/play-console.md); decide how testers get the model (open item 6); build 0.2.0-p2 and upload to the closed-test track.
 1. Owner: host `docs/privacy-policy.md` at a public URL (needed for the Play listing).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.

@@ -218,6 +218,13 @@ Claude's runs on the vivo passed in portrait and landscape: the permission expla
 - [ ] Long-press one of Bibi's replies → Report this reply → the share sheet shows the reply; pick an app, or press Back to cancel. From the floating card, the card closes first.
 - [ ] Host `docs/privacy-policy.md` at a public URL for the Play listing.
 
+## P3 — usage counters (issue #126)
+Checked by Claude on the vivo 2026-11-04 (debug build; read with `adb shell run-as io.github.saadahmed1122.bibi cat files/usage/usage.txt`).
+- [x] Open the app, Home, wait 35 s, open it again in landscape: 2 sessions. Back within 30 s, or a rotation: still 2.
+- [x] Home → Debug → Crash log → Crash now, then reopen: 3 sessions, 1 crashed session, 1 crash.
+- [x] A talk from floating Bibi counts 1 talk; "remember my cat is called Milo" counts 1 message and 1 memory; the file holds no message text.
+- [ ] Owner: the same on the release build once "Share usage numbers" exists (Task 2, #127).
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 

@@ -17,6 +17,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- Usage counters for the closed test (#126): sessions, crash-free sessions (crashes and ANRs of either process, from the system's exit records; low-memory kills counted apart), active days, and counts of messages, talks, saved memories and actions. Numbers and dates only, kept on the phone; Delete everything clears them.
 - P3/P4 plan: SPEC-P3.md with the owner's answers, module specs (test-report, feedback, stability, writeup, decision), tasks/plan-p3.md and issues #126–#137.
 - Closed-test model delivery: `docs/tester-guide.md` (how testers and Play reviewers get the model from a Google Drive link, and the App access text) and `docs/model-pack/` (the Gemma NOTICE and a README for the Drive folder).
 - P2 Task 18: `docs/play-console.md` with the Data safety answers, the foreground-service declarations (special use and microphone) with a video checklist, every permission with its reason, and the PRD 0.9 checklist with evidence; version 0.2.0-p2 (code 2) (#89).

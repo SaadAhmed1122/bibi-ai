@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.saadahmed1122.bibi.companion.overlay.ChatCardHost
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
@@ -13,6 +14,7 @@ import io.github.saadahmed1122.bibi.core.common.crash.CrashHandler
 import io.github.saadahmed1122.bibi.core.common.crash.ExitInfoCollector
 import io.github.saadahmed1122.bibi.core.common.crash.PlatformExitInfoSource
 import io.github.saadahmed1122.bibi.core.common.crash.PrefsLastSeenStore
+import io.github.saadahmed1122.bibi.core.common.usage.Feature
 import io.github.saadahmed1122.bibi.feature.chat.ChatCardRoute
 import io.github.saadahmed1122.bibi.feature.chat.TalkRoute
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +37,7 @@ class BibiApplication : Application(), ChatCardHost {
             source = PlatformExitInfoSource(getSystemService(ActivityManager::class.java), packageName),
             store = PrefsLastSeenStore(getSharedPreferences("crash_log", MODE_PRIVATE)),
             writer = container.crashLog,
+            onExit = { exit -> exit.reason?.let { container.usage.recordExit(exit.timestampMillis, it) } },
         )
         // One-shot read of past exits; the binder call and file I/O stay off the main thread.
         thread(name = "exit-info") { collector.collect() }
@@ -48,6 +51,7 @@ class BibiApplication : Application(), ChatCardHost {
     @Composable
     override fun ChatCardContent(onClose: () -> Unit) {
         val viewModel = viewModel { container.chatViewModel() }
+        UsageSession()
         ChatCardRoute(
             viewModel = viewModel,
             onOpenModel = {
@@ -65,6 +69,17 @@ class BibiApplication : Application(), ChatCardHost {
     /** Tap-to-talk over other apps (#118). Same ViewModel as the card: both windows share one store. */
     @Composable
     override fun TalkContent(onOpenChat: () -> Unit, onEnd: () -> Unit) {
+        UsageSession(Feature.TALK)
         TalkRoute(viewModel = viewModel { container.chatViewModel() }, onOpenChat = onOpenChat, onEnd = onEnd)
+    }
+
+    /** A usage session (SPEC-test-report.md) while a floating window is shown; [feature] is counted once. */
+    @Composable
+    private fun UsageSession(feature: Feature? = null) {
+        DisposableEffect(Unit) {
+            container.usage.begin()
+            feature?.let(container.usage::count)
+            onDispose { container.usage.end() }
+        }
     }
 }

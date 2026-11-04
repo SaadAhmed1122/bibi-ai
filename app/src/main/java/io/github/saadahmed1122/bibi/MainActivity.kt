@@ -277,6 +277,17 @@ class MainActivity : ComponentActivity() {
         if (intent.getBooleanExtra(OverlayService.EXTRA_OPEN_CHAT, false)) openChatRequested = true
     }
 
+    // A usage session (SPEC-test-report.md) runs while the app is on screen.
+    override fun onStart() {
+        super.onStart()
+        (application as BibiApplication).container.usage.begin()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        (application as BibiApplication).container.usage.end()
+    }
+
     override fun onResume() {
         super.onResume()
         // Picks up the notification's Turn off, and brings floating Bibi back after a process kill.

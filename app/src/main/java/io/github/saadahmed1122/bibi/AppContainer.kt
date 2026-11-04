@@ -9,13 +9,19 @@ import io.github.saadahmed1122.bibi.ai.inference.litert.MessengerInferenceClient
 import io.github.saadahmed1122.bibi.companion.overlay.FloatingToggle
 import io.github.saadahmed1122.bibi.companion.overlay.OverlayService
 import io.github.saadahmed1122.bibi.core.common.crash.CrashLogWriter
+import io.github.saadahmed1122.bibi.core.common.usage.Feature
+import io.github.saadahmed1122.bibi.core.common.usage.FileUsageStore
+import io.github.saadahmed1122.bibi.core.common.usage.UsageTracker
 import io.github.saadahmed1122.bibi.core.database.RoomChatHistoryRepository
 import io.github.saadahmed1122.bibi.core.database.RoomMemoryRepository
 import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
+import io.github.saadahmed1122.bibi.core.tools.ActionOutcome
 import io.github.saadahmed1122.bibi.core.tools.ActionRunner
 import io.github.saadahmed1122.bibi.core.tools.AppResolver
 import io.github.saadahmed1122.bibi.core.tools.PermissionEngine
 import io.github.saadahmed1122.bibi.core.tools.ToolAuditLog
+import io.github.saadahmed1122.bibi.domain.model.MemoryItem
+import io.github.saadahmed1122.bibi.domain.model.Message
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.ApplyRetention
@@ -49,6 +55,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.File
+import java.time.ZoneId
 
 /** Hand-wired app dependencies (SPEC-app-shell.md: wiring by hand). One per process. */
 class AppContainer(context: Context) {
@@ -58,6 +65,27 @@ class AppContainer(context: Context) {
         file = File(context.filesDir, "crash/crash.log"),
         appVersion = BuildConfig.VERSION_NAME,
     )
+
+    /** Usage counters for the closed test (SPEC-test-report.md): numbers and dates only. Main process. */
+    val usage: UsageTracker by lazy {
+        UsageTracker(FileUsageStore(File(appContext.filesDir, "usage/usage.txt")), System::currentTimeMillis, ZoneId::systemDefault)
+    }
+
+    /** The chat history, counting each message the user sends. */
+    private val countedHistory: ChatHistoryRepository by lazy {
+        object : ChatHistoryRepository by chatHistory {
+            override suspend fun insert(message: Message): Long =
+                chatHistory.insert(message).also { if (message.role == Message.Role.USER) usage.count(Feature.MESSAGE) }
+        }
+    }
+
+    /** Memory as "remember this" sees it, counting each saved fact. */
+    private val countedMemory: MemoryRepository by lazy {
+        object : MemoryRepository by memory {
+            override suspend fun add(kind: MemoryItem.Kind, text: String, now: Long): Long =
+                memory.add(kind, text, now).also { usage.count(Feature.MEMORY) }
+        }
+    }
 
     /** The imported model in app-private storage; the `:inference` process (same app) reads it there. */
     val models: ModelRepository by lazy { ModelRepository(File(appContext.filesDir, "models")) }
@@ -105,7 +133,7 @@ class AppContainer(context: Context) {
             }
         }
         val chatActions = ChatActions(PlanTurn(inference) { appResolver }::invoke, actions, ResourceActionTexts(appContext)) { !safeMode.value }
-        val chatMemory = ChatMemory(Remember(memory), ResourceMemoryTexts(appContext), Recall(memory)) { !safeMode.value }
+        val chatMemory = ChatMemory(Remember(countedMemory), ResourceMemoryTexts(appContext), Recall(memory)) { !safeMode.value }
         val key = Any()
         val chatVoice = ChatVoice(
             audio = AudioRecordSource(),
@@ -116,7 +144,7 @@ class AppContainer(context: Context) {
             log = { android.util.Log.i("BibiTalk", it) },
         )
         return ChatViewModel(
-            inference, chatHistory, models.state,
+            inference, countedHistory, models.state,
             onModelReady = setConnected, actions = chatActions, memory = chatMemory, summaries = summaries,
             onMood = { reportMood(key, it) },
             voice = chatVoice,
@@ -161,6 +189,7 @@ class AppContainer(context: Context) {
             { memory.deleteAll() },
             { actionLog.clear() },
             { crashLog.clear() },
+            { usage.clear() },
             {
                 // Settings back to their defaults; the first-run flag and Floating Bibi stay.
                 persona.choose(Persona.FRIENDLY)
@@ -207,7 +236,7 @@ class AppContainer(context: Context) {
         ActionRunner(
             engine = PermissionEngine(nowMs = SystemClock::elapsedRealtime),
             audit = actionLog,
-            execute = executor::execute,
+            execute = { call -> executor.execute(call).also { if (it is ActionOutcome.Done) usage.countAction(call.tool) } },
             deviceLocked = { appContext.getSystemService(KeyguardManager::class.java).isDeviceLocked },
             // Safe mode is also the Permission Engine's kill switch, behind the chat's own check.
             actionsEnabled = { !safeMode.value },
