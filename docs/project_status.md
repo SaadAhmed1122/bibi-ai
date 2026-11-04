@@ -129,6 +129,8 @@ Notes on the vivo Y17s:
 - 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04 ~23:20: Owner uploaded the signed build. FGS demo video made (`docs/play-store/bibi-fgs-demo.mp4`: turn on, notification, tap-to-talk with the mic, card hold-to-talk, Turn off; spoken by the Mac's `say` next to the phone). FGS declaration form filled except the two video links. Next: owner uploads the video and sends the link; Claude pastes it and saves. Content rating is still the owner's.
+
 2026-11-04 ~23:00: Play Console set up in the owner's browser (details in docs/play-console.md "Status"). Store media in `docs/play-store/`. App: adaptive launcher icon (there was none), "Download the model (browser)" button with the owner's Drive link on the first-run and model screens. Left for the owner: Content rating (IARC terms), FGS declaration video, signed 0.3.0-p3 upload, closed-test track and testers. Note: the account "sa.tech" already has apps in production; check whether the 12-testers-for-14-days rule applies to it [VERIFY in Play Console].
 
 2026-11-04: Privacy policy hosted at https://saadahmed1122.github.io/bibi-ai-privacy/ (new public repo `SaadAhmed1122/bibi-ai-privacy`, GitHub Pages; built by `tools/policy-page/build.py`). Play Console in the owner's browser (saadahmedrajput99@gmail.com) showed "Creating a developer account": no developer account exists on that Google account yet. The owner creates it (fee, identity check, agreements); then Claude creates the app and fills App content from docs/play-console.md.

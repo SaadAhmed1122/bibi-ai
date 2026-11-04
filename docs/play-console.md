@@ -59,6 +59,7 @@ The service is `OverlayService`, typed `specialUse|microphone` in the manifest. 
   - The type is added only when the user has granted the microphone permission and the app is in front.
 - **If deferred:** the user's speech isn't heard; the bubble keeps showing "Waking up…" and the user can type instead.
 - **If interrupted:** the current spoken turn is lost; the user taps again.
+- **Video:** `docs/play-store/bibi-fgs-demo.mp4` (2:17, recorded on the vivo 2026-11-04 with the five steps captioned; other apps' notifications and quick settings blurred). Link in Play: [OPEN: owner uploads it and pastes the link]. Both descriptions are typed into the form ("Other" task for each type).
 - **Video checklist** (one video covers both types; unlisted YouTube link):
   1. In the app, turn on Floating Bibi and allow "Display over other apps".
   2. Show the persistent notification.
