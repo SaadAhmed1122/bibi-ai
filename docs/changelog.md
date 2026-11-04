@@ -17,6 +17,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Added
+- Settings > Send feedback (#128): opens the email app with the app version, phone and three short questions filled in.
 - Closed-test invite and recruiting plan (`docs/tester-invite.md`, #129): who can test, the invite with what to try each week, day-7 and day-14 reminders, and a LinkedIn call for testers.
 - Settings > Share usage numbers (#127): shows the whole report (numbers and dates only), then opens the share sheet. The Privacy screen lists the usage numbers, Delete everything removes them, and the privacy policy describes them.
 - Usage counters for the closed test (#126): sessions, crash-free sessions (crashes and ANRs of either process, from the system's exit records; low-memory kills counted apart), active days, and counts of messages, talks, saved memories and actions. Numbers and dates only, kept on the phone; Delete everything clears them.

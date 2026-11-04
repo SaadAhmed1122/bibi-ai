@@ -47,7 +47,7 @@ Why this order: the counters must be in the build testers install on day 1, or t
 - **Public material** (write-up, case study) shows no tester data beyond aggregate numbers, and no personal data in screenshots.
 
 ## Owner answers (2026-11-04)
-1. **Feedback channel:** email. The address is [OPEN]; it is set in one string resource, not in this spec.
+1. **Feedback channel:** email, to swdeveloper.sa@gmail.com (owner, 2026-11-04), set in one string resource.
 2. **Testers:** some lined up, more needed. `feedback` includes a recruiting plan (invite text and a LinkedIn call for testers).
 3. **Test report after the closed test:** kept in production as an optional "Share usage numbers".
 4. **Write-up venue:** a LinkedIn article, and the GitHub repository made public as the portfolio, after a secrets and history audit.

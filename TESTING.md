@@ -226,6 +226,10 @@ Checked by Claude on the vivo 2026-11-04 (debug build; read with `adb shell run-
 - [x] Settings → Share usage numbers shows the whole report (portrait and landscape); Share opens the share sheet. Privacy shows "Usage numbers …, sessions: 4" and the Delete everything text names them (Task 2, #127; checked by Claude 2026-11-04).
 - [ ] Owner: Delete everything on a phone whose data you don't need, then Share usage numbers shows "First use: not used yet" until the next open. Claude didn't run it on the vivo, because it would erase your chats and memories.
 
+## P3 — Send feedback (issue #128)
+- [x] Settings → Send feedback opens Gmail with To swdeveloper.sa@gmail.com, subject "Bibi AI feedback <version>", version, phone and three prompts (vivo, 2026-11-04). The row shows in portrait and landscape.
+- [ ] Owner (optional): on a phone with no email app, the tap shows "No email app found. Please write to …". Not checked: the vivo has Gmail.
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 

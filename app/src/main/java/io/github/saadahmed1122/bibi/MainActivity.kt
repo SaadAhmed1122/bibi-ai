@@ -2,7 +2,9 @@ package io.github.saadahmed1122.bibi
 
 import android.Manifest
 import android.content.Intent
+import android.content.ActivityNotFoundException
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -198,6 +200,7 @@ class MainActivity : ComponentActivity() {
                         onOpenPolicy = { screen = Screen.Policy },
                         onOpenLicenses = { screen = Screen.Licenses },
                         onOpenUsage = { screen = Screen.Usage },
+                        onSendFeedback = ::sendFeedback,
                     )
                     Screen.Privacy -> {
                         var stored by remember { mutableStateOf<StoredData?>(null) }
@@ -271,6 +274,17 @@ class MainActivity : ComponentActivity() {
                 getString(io.github.saadahmed1122.bibi.feature.memory.R.string.memory_export_failed)
             }
             Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** Settings > Send feedback (SPEC-feedback.md): the email app with a prefilled template. */
+    private fun sendFeedback() {
+        val address = getString(R.string.feedback_address)
+        val mailto = FeedbackEmail.mailto(address, BuildConfig.VERSION_NAME, Build.MODEL, Build.VERSION.RELEASE)
+        try {
+            startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse(mailto)))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, getString(R.string.feedback_no_email_app, address), Toast.LENGTH_LONG).show()
         }
     }
 
