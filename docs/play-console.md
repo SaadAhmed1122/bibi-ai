@@ -27,12 +27,12 @@ No ads.
 - **Data collected:** none. **Data shared:** none.
 - **Why that's true:**
   - The app has no `INTERNET` permission. A build check enforces this, and the merged release manifest has none.
-  - There are no analytics, ads or crash-reporting SDKs. The crash log is a local file.
+  - There are no analytics, ads or crash-reporting SDKs. The crash log and the usage numbers (counts and dates, 0.3.0-p3) are local files.
   - Backups are off (`android:allowBackup="false"`).
 - **Security practices:**
   - "Data is encrypted in transit": not applicable, since nothing is transmitted.
   - "You can request that data be deleted": Settings > Privacy and your data > Delete everything; uninstalling removes everything.
-- **User-initiated sharing:** "Report this reply" and memory Export open the system share sheet or file picker, so the user picks the destination. Play treats data the user chooses to send through another app as not collected by this app [VERIFY against the Data safety help page on the day].
+- **User-initiated sharing:** "Report this reply", "Share usage numbers" (shown in full first) and memory Export open the system share sheet or file picker, and "Send feedback" opens the user's own email app with the app version and phone model filled in. The user picks the destination and sends it; the app transmits nothing. Play treats data the user chooses to send through another app as not collected by this app [VERIFY against the Data safety help page on the day].
 
 ### Foreground service declaration
 The service is `OverlayService`, typed `specialUse|microphone` in the manifest. Declare both types. For each type, Play asks for a description, the user impact if the task is deferred or interrupted, and a video link ([Play Help 13392821](https://support.google.com/googleplay/android-developer/answer/13392821)).
@@ -82,7 +82,7 @@ Not used: `INTERNET`, SMS, call log, contacts, location, Accessibility, `USE_EXA
 - Screenshots: `docs/linkedin/media/design-expressive-tabby.png` and `tap-to-talk.png` are free of personal data. Play wants phone screenshots at listed sizes [VERIFY sizes on the day].
 
 ## 4. Release and testing track
-- Version for this build: `versionCode 2`, `versionName 0.2.0-p2` (app/build.gradle.kts).
+- Version for this build: `versionCode 3`, `versionName 0.3.0-p3` (app/build.gradle.kts). It is the first closed-test build: it holds the usage counters, so testers' first 14 days are measured (Decision 2026-11-04).
 - **Closed test:** personal developer accounts created after 13 Nov 2023 need a closed test with at least 12 testers opted in continuously for 14 days before applying for production ([Play Help 14151465](https://support.google.com/googleplay/android-developer/answer/14151465), read 2026-11-01). [OPEN: account type, from PRD 0.9.]
 - Build, sign and upload: [docs/release.md](release.md).
 

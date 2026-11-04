@@ -19,7 +19,7 @@ Build P3 and P4 from [SPEC-P3.md](../SPEC-P3.md) and its five module specs. The 
 - [x] **Task 2 (#127): Share usage numbers + privacy** (SPEC-test-report criteria 2–3). About screen entry with preview, share sheet, Privacy screen line, Delete everything step, policy text in the app and `docs/privacy-policy.md`. **M**
 - [x] **Task 3 (#128): Send feedback** (SPEC-feedback criteria 1–2). Mailto with prefilled body to the owner's address. **S**
 - [x] **Task 4 (#129): Tester invite + recruiting plan** (SPEC-feedback criterion 3). `docs/tester-invite.md`, LinkedIn call for testers in docs/linkedin/posts.md. **S**
-- [ ] **Task 5 (#130): 0.3.0-p3 release check.** Version bump, `play-console.md` and the Data safety answers rechecked for the new counters, TESTING.md steps for the counters. **S**
+- [x] **Task 5 (#130): 0.3.0-p3 release check.** Version bump, `play-console.md` and the Data safety answers rechecked for the new counters, TESTING.md steps for the counters. **S**
 
 ### Checkpoint F: closed-test build ready
 - [ ] On the vivo, both orientations: three sessions and a forced crash give the right numbers; share and feedback work; no `INTERNET` permission. The owner tries it, then signs and uploads 0.3.0-p3 to the closed-test track.

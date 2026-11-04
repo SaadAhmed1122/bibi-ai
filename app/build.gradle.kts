@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.saadahmed1122.bibi"
         minSdk = 34
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0-p2"
+        versionCode = 3
+        versionName = "0.3.0-p3"
         // 64-bit ARM only: the test phones (vivo Y17s, Galaxy A23) are arm64, and the native AI
         // libraries (LiteRT-LM, MediaPipe, sherpa-onnx) otherwise add three more ABIs (APK 359 MB).
         ndk { abiFilters += "arm64-v8a" }

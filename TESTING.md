@@ -230,6 +230,14 @@ Checked by Claude on the vivo 2026-11-04 (debug build; read with `adb shell run-
 - [x] Settings → Send feedback opens Gmail with To swdeveloper.sa@gmail.com, subject "Bibi AI feedback <version>", version, phone and three prompts (vivo, 2026-11-04). The row shows in portrait and landscape.
 - [ ] Owner (optional): on a phone with no email app, the tap shows "No email app found. Please write to …". Not checked: the vivo has Gmail.
 
+## P3 — Checkpoint F: the 0.3.0-p3 closed-test build (issue #130)
+Claude checked on the vivo (debug build, 2026-11-04): counters, Share usage numbers, Send feedback, both orientations; the release manifest is `0.3.0-p3` / code 3 with the same permissions as P2 and no `INTERNET`.
+Owner, before uploading:
+- [ ] The P2 items first: the 1-hour P2 gate (#90), the hosted privacy policy (now dated 4 November 2026: update the hosted copy), the FGS video, the Drive link (docs/tester-guide.md).
+- [ ] Build and sign 0.3.0-p3 (docs/release.md), install it and open Settings → Share usage numbers: it says "App version: 0.3.0-p3".
+- [ ] Play Console: recheck Data safety against docs/play-console.md (usage numbers and Send feedback are user-initiated sharing [VERIFY]).
+- [ ] Upload to the closed-test track, then send docs/tester-invite.md to the testers.
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 

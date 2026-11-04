@@ -16,6 +16,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - After Stop or Clear chat, the inference service reports Loading while it reopens the conversation (~7 s), so Send is blocked and the chat shows "Bibi is getting ready again…" (#37).
 - Crash log: an exit the system reports twice is now logged once (#55).
 
+### Changed
+- Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
+
 ### Added
 - Settings > Send feedback (#128): opens the email app with the app version, phone and three short questions filled in.
 - Closed-test invite and recruiting plan (`docs/tester-invite.md`, #129): who can test, the invite with what to try each week, day-7 and day-14 reminders, and a LinkedIn call for testers.
