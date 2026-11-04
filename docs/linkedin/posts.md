@@ -25,6 +25,9 @@ A running log of Bibi AI's tests, written for LinkedIn: plain words, real number
 
 Suggested images, in this order: `media/s2-first-word-time.png`, `media/s4-actions-right.png`, `media/s3-voice-speed.png`, `media/s1-battery-cost.png`.
 
+## Call for testers (draft, P3)
+The post asking for 12–14 closed-test testers is in [../tester-invite.md](../tester-invite.md#linkedin-call-for-testers-draft). Post it once the closed-test opt-in link exists.
+
 ---
 
 ## Findings (newest first)
