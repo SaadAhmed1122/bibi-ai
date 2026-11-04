@@ -6,7 +6,7 @@ Shared rules: [SPEC-P3.md](SPEC-P3.md). PRD 0.6 P3: feedback and stability fixes
 The testers' reports turn into the gate numbers, and their bugs turn into fixed 0.3.x builds.
 
 ## Scope
-- **Report tool (`tools/p3-report/`):** a small script with no dependencies beyond the standard library. It reads the pasted usage-number reports (one file per report, kept out of git in `tools/p3-report/reports/`). It keeps the latest report per tester and writes `docs/p3-results.md` with:
+- **Report tool (`tools/p3-report/`, built 2026-11-04; usage in the script's docstring):** a small script with no dependencies beyond the standard library. It reads the pasted usage-number reports (one file per report, kept out of git in `tools/p3-report/reports/`). It keeps the latest report per tester and writes `docs/p3-results.md` with:
   - crash-free sessions ÷ sessions overall and per phone model;
   - the active-days distribution;
   - day-7+ use;

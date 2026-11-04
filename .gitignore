@@ -103,3 +103,6 @@ plugins/*/.claude-plugin/types/
 
 # sherpa-onnx AAR (not on Maven; downloaded once, see SPEC-voice.md)
 /libs/*.aar
+
+# P3 tester reports (personal to testers; only docs/p3-results.md is committed)
+tools/p3-report/reports/

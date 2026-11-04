@@ -25,7 +25,7 @@ Build P3 and P4 from [SPEC-P3.md](../SPEC-P3.md) and its five module specs. The 
 - [ ] On the vivo, both orientations: three sessions and a forced crash give the right numbers; share and feedback work; no `INTERNET` permission. The owner tries it, then signs and uploads 0.3.0-p3 to the closed-test track.
 
 ### Phase 2: Closed test (14+ days with ≥ 12 testers opted in)
-- [ ] **Task 6 (#131): Report tool** (SPEC-stability criterion 1). **S**
+- [x] **Task 6 (#131): Report tool** (SPEC-stability criterion 1). **S**
 - [ ] **Task 7 (#132): Release crash-log share decision.** Owner picks: add "Share crash log" to release builds, or rely on tester descriptions. Built only if chosen. **S**
 - [ ] **Task 8 (#133): Triage and 0.3.x fixes.** Rolling; each bug is its own `p3` issue. A weekly status line goes in `docs/project_status.md`.
 - [ ] **Task 9 (#134): P3 gate results** (SPEC-stability criteria 2–3). `docs/p3-results.md` and a Decision line.
