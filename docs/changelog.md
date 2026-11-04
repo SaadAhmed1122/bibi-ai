@@ -17,6 +17,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Changed
+- 0.3.0-p3 sent for review on Google Play's closed-testing track (2026-11-04).
 - Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
 
 ### Added
