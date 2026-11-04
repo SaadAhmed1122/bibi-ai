@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import io.github.saadahmed1122.bibi.core.designsystem.R as DsR
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -44,7 +46,11 @@ fun ModelImportRoute(
     onPickVoice: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ModelImportScreen(state, onPick, viewModel::cancel, viewModel::remove, onOpenChat, onBack, modifier) {
+    val uriHandler = LocalUriHandler.current
+    val modelUrl = stringResource(DsR.string.model_download_url)
+    // Opens the browser; Bibi itself has no internet permission (SPEC-model-import.md). No browser: nothing happens.
+    val onDownload = { runCatching { uriHandler.openUri(modelUrl) }; Unit }
+    ModelImportScreen(state, onPick, viewModel::cancel, viewModel::remove, onOpenChat, onBack, modifier, onDownload = onDownload) {
         if (router != null) {
             val routerState by router.state.collectAsStateWithLifecycle()
             RouterModelSection(routerState, onPickRouter, router::cancel, router::remove)
@@ -65,6 +71,7 @@ fun ModelImportScreen(
     onOpenChat: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onDownload: () -> Unit = {},
     extra: @Composable ColumnScope.() -> Unit = {},
 ) {
     BibiScreen(title = stringResource(R.string.model_title), modifier = modifier, onBack = onBack) {
@@ -73,6 +80,7 @@ fun ModelImportScreen(
             ModelState.Missing -> {
                 Text(stringResource(R.string.model_missing, ModelFile.NAME), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 PrimaryButton(stringResource(R.string.model_choose), onClick = onPick)
+                SecondaryButton(stringResource(DsR.string.model_download), onClick = onDownload)
             }
             is ModelState.Importing -> {
                 val percent = (state.progress * 100).toInt()
@@ -96,6 +104,7 @@ fun ModelImportScreen(
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
                 PrimaryButton(stringResource(R.string.model_choose_other), onClick = onPick)
+                SecondaryButton(stringResource(DsR.string.model_download), onClick = onDownload)
             }
         }
         }

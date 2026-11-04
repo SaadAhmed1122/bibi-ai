@@ -20,6 +20,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
 
 ### Added
+- App icon: Bibi's face on purple (adaptive icon); before, Android showed its default icon.
+- "Download the model (browser)" on the first-run and model screens opens the model's download page; the app itself still has no internet permission.
+- Play Store listing graphics in `docs/play-store/` (icon, feature graphic, five captioned screenshots).
 - Hosted privacy policy: https://saadahmed1122.github.io/bibi-ai-privacy/, built from docs/privacy-policy.md by `tools/policy-page/build.py`.
 - `tools/p3-report/`: combines the testers' shared usage numbers into `docs/p3-results.md`: crash-free %, retention, by phone (#131).
 - Settings > Send feedback (#128): opens the email app with the app version, phone and three short questions filled in.
