@@ -20,6 +20,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
 
 ### Added
+- Hosted privacy policy: https://saadahmed1122.github.io/bibi-ai-privacy/, built from docs/privacy-policy.md by `tools/policy-page/build.py`.
 - `tools/p3-report/`: combines the testers' shared usage numbers into `docs/p3-results.md`: crash-free %, retention, by phone (#131).
 - Settings > Send feedback (#128): opens the email app with the app version, phone and three short questions filled in.
 - Closed-test invite and recruiting plan (`docs/tester-invite.md`, #129): who can test, the invite with what to try each week, day-7 and day-14 reminders, and a LinkedIn call for testers.

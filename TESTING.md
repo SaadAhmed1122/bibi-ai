@@ -216,7 +216,7 @@ Claude's runs on the vivo passed in portrait and landscape: the permission expla
 ## P2 — licenses, privacy policy, report a reply (issue #88)
 - [ ] Settings → Privacy policy and Licenses open and scroll, in portrait and landscape.
 - [ ] Long-press one of Bibi's replies → Report this reply → the share sheet shows the reply; pick an app, or press Back to cancel. From the floating card, the card closes first.
-- [ ] Host `docs/privacy-policy.md` at a public URL for the Play listing.
+- [x] Privacy policy hosted at https://saadahmed1122.github.io/bibi-ai-privacy/ (2026-11-04).
 
 ## P3 — usage counters (issue #126)
 Checked by Claude on the vivo 2026-11-04 (debug build; read with `adb shell run-as io.github.saadahmed1122.bibi cat files/usage/usage.txt`).
@@ -233,7 +233,7 @@ Checked by Claude on the vivo 2026-11-04 (debug build; read with `adb shell run-
 ## P3 — Checkpoint F: the 0.3.0-p3 closed-test build (issue #130)
 Claude checked on the vivo (debug build, 2026-11-04): counters, Share usage numbers, Send feedback, both orientations; the release manifest is `0.3.0-p3` / code 3 with the same permissions as P2 and no `INTERNET`.
 Owner, before uploading:
-- [ ] The P2 items first: the 1-hour P2 gate (#90), the hosted privacy policy (now dated 4 November 2026: update the hosted copy), the FGS video, the Drive link (docs/tester-guide.md).
+- [ ] The P2 items first: the 1-hour P2 gate (#90), the FGS video, the Drive link (docs/tester-guide.md).
 - [ ] Build and sign 0.3.0-p3 (docs/release.md), install it and open Settings → Share usage numbers: it says "App version: 0.3.0-p3".
 - [ ] Play Console: recheck Data safety against docs/play-console.md (usage numbers and Send feedback are user-initiated sharing [VERIFY]).
 - [ ] Upload to the closed-test track, then send docs/tester-invite.md to the testers.

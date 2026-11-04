@@ -44,7 +44,7 @@ Notes on the vivo Y17s:
 |---|---|---|---|
 | 1 | Galaxy A23 RAM variant | Assume 4 GB | Open [VERIFY] |
 | 2 | Galaxy A23 Android version | Assume 14+. If lower, the A23 can't run the app (minSdk 34). | Open [VERIFY] |
-| 3 | Play account type (personal or organization) | Personal → plan a closed test with about 12 testers for about 14 days [VERIFY] | Open |
+| 3 | Play account type (personal or organization) | Personal → plan a closed test with about 12 testers for about 14 days [VERIFY]. 2026-11-04: no developer account yet on the owner's signed-in Google account. | Open |
 | 4 | Second test phone (6–8 GB) | vivo Y17s available (6 GB, Helio G85, Android 15). It covers the 6 GB RAM case, but not a recent chip. | Partly resolved |
 | 10 | Is the Galaxy A23 physically available, and which phone is the S1/S2 floor device? | Keep the A23 as the floor per PRD 0.4. Run spikes on the vivo Y17s too, labeled by device. | Open — owner to confirm |
 | 5 | Final app name | **Bibi AI** chosen (2026-10-28). Web check done; similar "Bibi" products exist (see brainstorm.md). Formal trademark, Play listing, and domain checks still needed. | Partly resolved [VERIFY] |
@@ -129,6 +129,8 @@ Notes on the vivo Y17s:
 - 2026-11-04 — The first closed-test upload should be 0.3.0-p3 with the usage counters, not 0.2.0-p2, so the testers' first 14 days can be measured. — Claude recommendation, pending owner. — tasks/plan-p3.md
 
 ## Last session stopping point
+2026-11-04: Privacy policy hosted at https://saadahmed1122.github.io/bibi-ai-privacy/ (new public repo `SaadAhmed1122/bibi-ai-privacy`, GitHub Pages; built by `tools/policy-page/build.py`). Play Console in the owner's browser (saadahmedrajput99@gmail.com) showed "Creating a developer account": no developer account exists on that Google account yet. The owner creates it (fee, identity check, agreements); then Claude creates the app and fills App content from docs/play-console.md.
+
 2026-11-04: Task 5 merged (PR #143). Task 6 (#131): `tools/p3-report/p3_report.py` (stdlib; 8 tests: `python3 -I tools/p3-report/test_p3_report.py`) turns reports saved as `tools/p3-report/reports/T<n>-….txt` (git-ignored) into docs/p3-results.md (gate %, retention, by phone, per tester, skipped files). Next: Task 7 (#132) owner choice; Tasks 8–9 run during the closed test.
 
 2026-11-04: P3 Phase 1 code-complete. Tasks 1–4 merged (PRs #139–#142). Task 5 (#130): versionCode 3 / 0.3.0-p3, play-console.md (Data safety notes for usage numbers and Send feedback, version), TESTING.md Checkpoint F owner list. Claude's part of Checkpoint F is done on the vivo. Next: owner items in TESTING.md "Checkpoint F", then the closed test runs; Claude does Task 6 (#131) report tool meanwhile.
@@ -224,7 +226,6 @@ GitHub: PRs #12–#25 merged; #3 (ImgBot) closed unmerged; #26 open. Issues #4 (
 
 ## Next step
 0. Owner: Checkpoint F (TESTING.md): the P2 items, then sign and upload **0.3.0-p3** (not 0.2.0-p2) to the closed-test track, send docs/tester-invite.md, post the LinkedIn call. Claude: Task 7 (#132) needs your choice on a release "Share crash log".
-1. Owner: Task 19 (#90) 1-hour P2 gate (TESTING.md); host the privacy policy; record the FGS video (docs/play-console.md); (model delivery decided: Drive link, open item 6). The closed-test upload is now 0.3.0-p3 (item 0).
-1. Owner: host `docs/privacy-policy.md` at a public URL (needed for the Play listing).
+1. Owner: Task 19 (#90) 1-hour P2 gate (TESTING.md); record the FGS video (docs/play-console.md); (model delivery decided: Drive link, open item 6). The closed-test upload is now 0.3.0-p3 (item 0).
 2. Owner: Play upload key and internal track (docs/release.md; uninstall the debug-key build first), Checkpoint D, and the 1-hour P1 exit gate (TESTING.md); Claude records it in docs/p1-gate.md.
 3. Optional: S1 kill/restart check (#4); Galaxy A23 (open item 10).
