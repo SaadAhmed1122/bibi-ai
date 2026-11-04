@@ -28,4 +28,5 @@ data class StoredData(
     val memories: Int,
     val actionLogBytes: Long,
     val crashLogBytes: Long,
+    val usageSessions: Int = 0,
 )

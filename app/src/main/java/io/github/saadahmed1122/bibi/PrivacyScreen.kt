@@ -49,6 +49,7 @@ fun PrivacyScreen(
                 ListRow(stringResource(R.string.privacy_memories, stored.memories, retentionLabel))
                 ListRow(stringResource(R.string.privacy_action_log, kb(stored.actionLogBytes)))
                 ListRow(stringResource(R.string.privacy_crash_log, kb(stored.crashLogBytes)))
+                ListRow(stringResource(R.string.privacy_usage, stored.usageSessions))
             }
             ListRow(stringResource(R.string.privacy_open_memory), onClick = onOpenMemory)
         }
@@ -79,12 +80,12 @@ private fun kb(bytes: Long): Long = (bytes + 1023) / 1024
 @Preview
 @Composable
 private fun PrivacyPreview() = BibiTheme {
-    PrivacyScreen(StoredData(211, 4, 2_300, 9_100), "3 months", {}, {}, {})
+    PrivacyScreen(StoredData(211, 4, 2_300, 9_100, 12), "3 months", {}, {}, {})
 }
 
 @Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PrivacyDarkPreview() = BibiTheme { PrivacyScreen(StoredData(211, 4, 2_300, 9_100), "3 months", {}, {}, {}) }
+private fun PrivacyDarkPreview() = BibiTheme { PrivacyScreen(StoredData(211, 4, 2_300, 9_100, 12), "3 months", {}, {}, {}) }
 
 @Preview(fontScale = 2f)
 @Composable
