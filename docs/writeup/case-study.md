@@ -68,4 +68,4 @@ All are free of personal data (checked in [docs/public-release-audit.md](../publ
 | Secret refused | `docs/linkedin/media/remember-this.png` |
 | Charts | `docs/linkedin/media/s1-battery-cost.png`, `s2-first-word-time.png`, `s3-voice-speed.png`, `s4-actions-right.png`, `p2-sharing-the-cpu.png` |
 
-Demo video plan: [demo-video.md](demo-video.md).
+Demo video: [docs/linkedin/media/bibi-demo.mp4](../linkedin/media/bibi-demo.mp4) (130 s); plan and notes in [demo-video.md](demo-video.md).

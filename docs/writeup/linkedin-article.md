@@ -4,7 +4,7 @@ P4 Task 11 (#136), [SPEC-writeup.md](../../SPEC-writeup.md) criterion 2. The own
 
 **Rules for this draft:** every number has a source in the table at the end. The P1 1-hour gate and the P3 closed-test numbers (crash-free sessions, retention) haven't been measured yet ([p1-gate.md](../p1-gate.md), [p3-results.md](../p3-results.md)), so the article leaves them out. Add them, with their sources, if the article goes out after the closed test.
 
-Suggested images, in order: `docs/play-store/feature-1024x500.png` (cover), `docs/linkedin/media/s2-first-word-time.png`, `s4-actions-right.png`, `p2-sharing-the-cpu.png`, `privacy-dashboard.png`.
+Attach the demo video `docs/linkedin/media/bibi-demo.mp4` (130 s, no sound) as the first media item. Suggested images, in order: `docs/play-store/feature-1024x500.png` (cover), `docs/linkedin/media/s2-first-word-time.png`, `s4-actions-right.png`, `p2-sharing-the-cpu.png`, `privacy-dashboard.png`.
 
 ---
 

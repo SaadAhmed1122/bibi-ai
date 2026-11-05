@@ -32,6 +32,8 @@ All numbers are from a vivo Y17s (6 GB RAM, Helio G85, Android 15). Each links t
 | Battery cost of the floating character | +28 mA at 12 fps (about 0.5 %/h), +12 mA in Calm mode | [S1 results](spikes/s1-overlay/results/RESULTS.md) |
 | Four models sharing the phone | Memory fits (≥ 1.6 GB free, no kills); the CPU doesn't (speech to text 0.32 → 0.74) | [P2 memory check](docs/measurements/2026-10-31-p2-memory-check/RESULTS.md) |
 
+A 130-second demo (no sound): [docs/linkedin/media/bibi-demo.mp4](docs/linkedin/media/bibi-demo.mp4).
+
 The full log of findings, including what didn't work, is in [docs/linkedin/posts.md](docs/linkedin/posts.md).
 
 ## Architecture
@@ -85,7 +87,7 @@ Needs JDK 17 and the Android SDK (compileSdk 36). The app's minSdk is 32. The bu
 Release signing reads the `BIBI_UPLOAD_*` values from `~/.gradle/gradle.properties` ([docs/release.md](docs/release.md)). The names are listed in [.env.example](.env.example).
 
 ## Get the model
-The models aren't in the app or in this repository. The chat model is `gemma3-1b-it-int4.litertlm` (584,417,280 bytes), a LiteRT-LM build of Gemma 3 1B. It's published by the LiteRT community on Hugging Face after you accept the Gemma Terms of Use [VERIFY: exact repository link]. Copy it to the phone, then in Bibi tap **Choose model file**. The app copies the file and checks its SHA-256. Closed testers get a download link instead ([docs/tester-guide.md](docs/tester-guide.md)), and the optional action and voice files are listed there too.
+The models aren't in the app or in this repository. The chat model is `gemma3-1b-it-int4.litertlm` (584,417,280 bytes), a LiteRT-LM build of Gemma 3 1B. Download it from [litert-community/Gemma3-1B-IT](https://huggingface.co/litert-community/Gemma3-1B-IT/blob/main/gemma3-1b-it-int4.litertlm) on Hugging Face. The model is gated: log in and accept the Gemma Terms of Use first. Copy it to the phone, then in Bibi tap **Choose model file**. The app copies the file and checks its SHA-256. Closed testers get a download link instead ([docs/tester-guide.md](docs/tester-guide.md)), and the optional action and voice files are listed there too.
 
 Gemma is provided under and subject to the [Gemma Terms of Use](https://ai.google.dev/gemma/terms). Every model and library credit is in [app/src/main/assets/licenses.txt](app/src/main/assets/licenses.txt), which is also the in-app Licenses screen.
 
