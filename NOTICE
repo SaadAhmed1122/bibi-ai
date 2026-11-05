@@ -1,0 +1,14 @@
+Bibi AI
+Copyright 2026 Saad Ahmed
+
+This product's source code is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Not covered by that license (all rights reserved by Saad Ahmed):
+- the name "Bibi AI" and the Bibi character;
+- the Bibi character art and app icon: docs/design/character/, docs/play-store/, and the
+  character and launcher drawables under app/, companion/overlay/ and core/designsystem/ res folders.
+
+Third-party components keep their own licenses: the fonts in core/designsystem/src/main/res/font/
+(SIL Open Font License 1.1, texts in licenses/fonts/), and the models and libraries listed in
+app/src/main/assets/licenses.txt. The AI models are not part of this repository; Gemma is provided
+under and subject to the Gemma Terms of Use (https://ai.google.dev/gemma/terms).

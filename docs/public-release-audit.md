@@ -27,7 +27,7 @@ P4 Task 10 (#135), [SPEC-writeup.md](../SPEC-writeup.md) criterion 1. Audit run 
 | 11 | Licenses | The repo ships the font files `bricolage_grotesque.ttf` and `figtree.ttf` (SIL OFL 1.1). The OFL asks for the copyright notice and license to go with the fonts. The app's `licenses.txt` names them, but the repo had no license text. | Added the official OFL files from `google/fonts` in `licenses/fonts/` | Resolved |
 | 12 | Licenses | Vendored tooling: the three Strix skills come from `usestrix/strix` (Apache-2.0, checked with the GitHub API) and are pinned in `skills-lock.json`. The `graphify` skill comes from `Graphify-Labs/graphify` (Apache-2.0, checked with the GitHub API). `plugins/agent-board` is the owner's own. | None needed; both upstreams allow redistribution | Resolved |
 | 13 | Licenses | The character art in `docs/design/character/gemini/` was generated with Google Gemini from the owner's prompts. The vector and app assets were made from it. | Recommend accept; under Google's generative AI terms the user may use outputs [VERIFY current terms] | **Owner decision** |
-| 14 | Licenses | The repository has no `LICENSE` file, so the public code is "all rights reserved" by default. | The license choice is [OPEN] (SPEC-writeup) and goes into the README PR (#136) | **Owner decision** |
+| 14 | Licenses | The repository has no `LICENSE` file, so the public code is "all rights reserved" by default. | Owner chose Apache-2.0 (2026-11-05): `LICENSE`, plus `NOTICE` reserving the name and the character art | Resolved |
 
 ## What the owner decides
 1. Keep the repository public (it already is).
@@ -35,6 +35,6 @@ P4 Task 10 (#135), [SPEC-writeup.md](../SPEC-writeup.md) criterion 1. Audit run 
 3. Finding 6: keep the Drive model link public or limit it to testers.
 4. Finding 7: confirm the memory facts in the screenshots are made up.
 5. Finding 13: accept the Gemini-generated art.
-6. Finding 14: pick a code license (for example Apache-2.0 or MIT), or none.
+6. Finding 14: done, Apache-2.0 (2026-11-05).
 
 No technical items are open. The second scan with gitleaks or trufflehog is advised, not required.
