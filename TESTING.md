@@ -243,6 +243,10 @@ Owner, before uploading:
 - [x] Settings → Share crash log shows the header (version, phone, Android) and the log; Share opens the chooser (vivo, 2026-11-04).
 - [ ] Owner (optional): on a phone with no crashes it says "No crashes recorded".
 
+## P3 — AI process crash after a long freeze (issue #150)
+- [x] Fixed build on the vivo (2026-11-05): the log shows `router waited_ms=…` then `router load_ms=…`, so the action model loads only after the chat model. "it is dark in here, give me some light" turned the light on (landscape), "flashlight off" turned it off and a chat question got an answer (portrait).
+- [ ] Owner, over the next days: leave Floating Bibi on, use the phone normally, and send Settings > About > Share crash log if Bibi ever stops answering. The crash needed Android to freeze the AI process for minutes or hours mid-load, so it can't be forced on demand.
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 

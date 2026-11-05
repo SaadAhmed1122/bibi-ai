@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Fixed
+- Bibi's AI process could crash (native SIGSEGV in LiteRT-LM `createConversation`) when Android thawed it after a long freeze in the middle of loading: the chat model and the action model finished loading at the same moment. The action model now loads only after the chat model (#150).
 - Spoken "Hey Bibi, …" works for phone actions even though the speech recognizer writes "Bibi" as "BB", and "Bye Bibi" ends a tap-to-talk conversation however the name comes out ("Bye BB", "Bye B D.").
 - Gemma 3 1B could repeat a phrase until the answer limit ("Sara-Marie-Jones-Smith-Jones-Smith-…", about 35 s). The reply now stops at the first repeat and keeps one copy (#107).
 - "Close the flashlight" and the spoken "off the flashlight" (which the speech recognizer writes as "Of the flashlight") turned the light on; they now turn it off.

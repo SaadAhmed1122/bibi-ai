@@ -22,7 +22,9 @@ import io.github.saadahmed1122.bibi.ai.inference.api.RouteResult
 import io.github.saadahmed1122.bibi.ai.inference.api.toEnvelope
 import io.github.saadahmed1122.bibi.ai.inference.api.toMessage
 import java.io.File
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Runs the LLM in the `:inference` process (manifest `android:process`), bound with a
@@ -94,6 +96,13 @@ class InferenceService : Service() {
 
     /** Engine thread only. */
     private lateinit var systemPrompt: String
+
+    /**
+     * Opened when the chat model's first load ends (loaded or failed). The router waits for it, so
+     * LiteRT-LM and MediaPipe never initialize at the same time: two native crashes (#150) were
+     * Gemma's createConversation running right after a concurrent router load.
+     */
+    private val chatLoadSettled = CountDownLatch(1)
 
     override fun onBind(intent: Intent): IBinder = messenger.binder
 
@@ -235,6 +244,8 @@ class InferenceService : Service() {
             engine = null
             setState(EngineState.Failed("${e.javaClass.simpleName}: ${e.message}"))
             main.post { loadedPath = null }
+        } finally {
+            chatLoadSettled.countDown()
         }
     }
 
@@ -253,6 +264,9 @@ class InferenceService : Service() {
     private fun loadRouter(path: String) {
         try {
             require(File(path).isFile) { "router model not found: $path" }
+            val w0 = SystemClock.elapsedRealtime()
+            val settled = chatLoadSettled.await(ROUTER_WAIT_S, TimeUnit.SECONDS)
+            Log.i(TAG, "router waited_ms=${SystemClock.elapsedRealtime() - w0} chat_settled=$settled")
             val t0 = SystemClock.elapsedRealtime()
             router = DecisionRouter(this).also { it.load(path) }
             Log.i(TAG, "router load_ms=${SystemClock.elapsedRealtime() - t0}")
@@ -497,6 +511,9 @@ class InferenceService : Service() {
 
         /** Voice models leave memory after 2 idle minutes (SPEC-voice.md). */
         const val VOICE_IDLE_MS = 120_000L
+
+        /** Longest wait for the chat model before the router loads anyway (a normal load takes about 11 s). */
+        const val ROUTER_WAIT_S = 120L
         const val REASON_CANCELLED = "cancelled by a new message"
         const val SUMMARY_ASSET = "summary_instruction.txt"
 
