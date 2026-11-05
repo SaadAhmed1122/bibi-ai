@@ -17,10 +17,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Crash log: an exit the system reports twice is now logged once (#55).
 
 ### Changed
+- Removed the owner's personal email address and home-folder paths from `docs/project_status.md` (#135).
 - 0.3.0-p3 sent for review on Google Play's closed-testing track (2026-11-04).
 - Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
 
 ### Added
+- Public-release audit (#135): `docs/public-release-audit.md`; SIL OFL 1.1 texts for the bundled fonts in `licenses/fonts/`.
 - Settings > Share crash log (#132): testers can send the local crash log (shown in full first) through the share sheet. Version 0.3.1-p3.
 - App icon: Bibi's face on purple (adaptive icon); before, Android showed its default icon.
 - "Download the model (browser)" on the first-run and model screens opens the model's download page; the app itself still has no internet permission.
