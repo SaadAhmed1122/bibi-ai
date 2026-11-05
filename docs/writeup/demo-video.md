@@ -2,7 +2,21 @@
 
 P4 Task 11 (#136), SPEC-writeup portfolio package. A 75–90 s screen recording of the vivo Y17s for LinkedIn and the portfolio. The owner records it; the existing Play FGS video (`docs/play-store/bibi-fgs-demo.mp4`) shows the recording setup works.
 
-## Before recording
+## Recorded take (2026-11-05)
+**File:** [docs/linkedin/media/bibi-demo.mp4](../linkedin/media/bibi-demo.mp4) (130 s, 720×1612, 2.8 MB, no sound).
+
+It was recorded by Claude over adb on the vivo, with airplane mode and Do Not Disturb on. The spoken questions came from the Mac's `say` voice next to the phone; `screenrecord` keeps no audio. Captions come from the storyboard, set in Bricolage Grotesque.
+
+Changes from the storyboard:
+- The Memory tab scene (7) was dropped. That list holds summaries of the owner's real chats, and deleting them for a video isn't acceptable. Scene 6 already shows remembering and refusing a secret.
+- The timer scene shows Bibi's "Timer started for 5 min." bubble. The Clock app starts the timer in the background.
+
+What it shows, in order: drag and snap → tap-to-talk "Give me one tip for better sleep" (heard, answered, spoken) → "Set a timer for five minutes" → "call 0123 456 789", confirmation card, Cancel → "remember that my cat is called Milo" saved, "remember that my password is hunter2" refused → Privacy screen → end card.
+
+Left on the phone afterwards: the test memory "my cat is called Milo" and the demo chat. Delete them in Memory and Chat > Clear if you don't want them.
+
+To make a version with sound, record a voice-over from the script below over the same file.
+
 - Airplane mode **on**, and keep it visible in the status bar: it proves the "offline" claim on camera.
 - Do Not Disturb on, so no notifications appear. Use a clean home screen with no personal apps or widgets in view.
 - Use only made-up content: "my cat is called Milo", "I love jasmine tea". No real names, numbers or places.

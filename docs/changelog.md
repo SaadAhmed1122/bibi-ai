@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
 
 ### Added
+- Demo video `docs/linkedin/media/bibi-demo.mp4` (130 s, recorded on the vivo in airplane mode) and the verified model link in the README (#136).
 - Public README, LinkedIn article draft, case study and demo-video storyboard in `docs/writeup/` (#136).
 - Public-release audit (#135): `docs/public-release-audit.md`; SIL OFL 1.1 texts for the bundled fonts in `licenses/fonts/`.
 - Settings > Share crash log (#132): testers can send the local crash log (shown in full first) through the share sheet. Version 0.3.1-p3.
