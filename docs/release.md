@@ -25,6 +25,7 @@ Owner decision 2026-10-31 (SPEC-release.md): **the owner signs the AAB and uploa
 2. Build: `./gradlew :app:bundleRelease`
 3. Check that it's signed: `jarsigner -verify app/build/outputs/bundle/release/app-release.aab` should print `jar verified.`
 4. Play Console → Testing → **Internal testing** → Create release → upload `app/build/outputs/bundle/release/app-release.aab` → release notes → Save → Review → Roll out.
+   - **Before saving, turn off Automatic protection.** In the release, expand "App bundle enhancements", click the info button next to Automatic protection, and choose **Turn off protection for this release**. To stop it coming back on each upload, switch it off in Test and release → App integrity → Automatic protection. Why: Play's protected build of 0.3.2-p3 (code 4) crashed at launch on a realme RMX3363, Android 13 (`ClassNotFoundException: com.pairip.application.Application`, and Bibi's own classes didn't load either). The same code built by us (debug, and R8 release) ran on that phone (2026-11-05). Bibi has no piracy or paid content to protect.
 5. **Testers:** add your Google account (and anyone else) to the internal testers list, open the opt-in link on the phone, and install from Play.
 
 ## What the release build does
