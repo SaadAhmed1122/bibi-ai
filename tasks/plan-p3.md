@@ -34,7 +34,7 @@ Build P3 and P4 from [SPEC-P3.md](../SPEC-P3.md) and its five module specs. The 
 - [ ] Crash-free sessions ≥ 99 % and the retention signal are recorded, or a dated Decision explains a miss.
 
 ### Phase 3: P4
-- [ ] **Task 10 (#135): Public-release audit** (SPEC-writeup criterion 1). The owner flips the visibility after the audit. **M**
+- [ ] **Task 10 (#135): Public-release audit** (SPEC-writeup criterion 1). The owner flips the visibility after the audit. **M** Audit done 2026-11-05 ([docs/public-release-audit.md](../docs/public-release-audit.md)); the repo was already public; owner decisions open.
 - [ ] **Task 11 (#136): README, LinkedIn article, portfolio package** (SPEC-writeup criteria 2–3). **M**
 - [ ] **Task 12 (#137): Decision memo** (SPEC-decision). It asks the owner for funding criteria first. **S**
 
