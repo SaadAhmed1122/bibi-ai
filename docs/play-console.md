@@ -36,6 +36,7 @@ No ads.
   - The app has no `INTERNET` permission. A build check enforces this, and the merged release manifest has none.
   - There are no analytics, ads or crash-reporting SDKs. The crash log and the usage numbers (counts and dates, 0.3.0-p3) are local files.
   - Backups are off (`android:allowBackup="false"`).
+  - MediaPipe Tasks (the action router) tries to send usage metrics to Google (`play.googleapis.com/log`: device model, app package and version, performance, a per-install ID, per MediaPipe's privacy notice). It has no switch to turn this off. On the vivo the attempt fails with "missing INTERNET permission" (2026-11-05), so nothing is collected. If INTERNET is ever added, this answer and the privacy policy must change first.
 - **Security practices:**
   - "Data is encrypted in transit": not applicable, since nothing is transmitted.
   - "You can request that data be deleted": Settings > Privacy and your data > Delete everything; uninstalling removes everything.

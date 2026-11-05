@@ -32,6 +32,17 @@ The post asking for 12–14 closed-test testers is in [../tester-invite.md](../t
 
 ## Findings (newest first)
 
+### 2026-11-05: The crash that needed a 19-hour nap, and the library that tried to phone home
+- **Test:** chasing a native crash (#150) in Bibi's AI process on the vivo, with Android's own crash archive (`dumpsys dropbox`).
+- **Numbers:**
+  - **2 crashes, 1 signature:** the same null pointer at address 0x459, in the AI runtime, while opening the first conversation.
+  - Both times Android had **frozen the process mid-load**, for **11.7 minutes** and **19.3 hours** (the action model's load "took" 700,488 ms and 69,658,316 ms). On waking, the action model finished **1–8 s** before the chat model crashed.
+  - Freezing it on purpose for 60 s: **0 crashes in 10 tries**. Real phones freeze apps for much longer than a test does.
+  - Fix: the action model waits for the chat model, about **10 s** later on a cold start.
+  - Along the way: MediaPipe's native code tried to send usage metrics to Google. With **no internet permission**, the request failed on the phone, and nothing left.
+- **Lesson:** the phone's own crash archive kept the full backtrace that logcat had lost. And "no internet permission" is a stronger privacy promise than any setting, because it also covers the libraries you didn't write.
+- Source: #150, PR #154; `docs/play-console.md` Data safety.
+
 ### 2026-11-04: Measuring crashes with no internet (P3 usage counters)
 - **Test:** on the vivo Y17s, three sessions and one forced crash.
 - **Numbers:** the phone recorded 3 sessions with 1 crashed, so 2 crash-free. The crash came from Android's own exit records and counted against the session the app died in.

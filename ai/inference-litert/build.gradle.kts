@@ -30,6 +30,10 @@ dependencies {
     // The action router (S4, SPEC-tools.md). Only DecisionRouter.kt imports it. tasks-core pulls in
     // Google datatransport (usage logging, which would add INTERNET); DecisionMaker 1.2.0 never uses
     // it (S4: javap of the AAR, and the S4 app ran without it on the vivo), so it is excluded.
+    // The native MediaPipe library still tries to POST usage metrics to play.googleapis.com/log
+    // through HttpURLConnection; without INTERNET it fails (seen on the vivo 2026-11-05). MediaPipe
+    // has no API to turn this off, so NoInternetPermissionCheck (app/build.gradle.kts) is what keeps
+    // the app silent.
     implementation(libs.mediapipe.tasks.decision) {
         exclude(group = "com.google.android.datatransport")
     }
