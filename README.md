@@ -100,4 +100,4 @@ No `INTERNET` permission, so nothing you say, type or save can leave the phone e
 - Write-up and portfolio material: [docs/writeup/](docs/writeup/)
 
 ## License
-The license for this code hasn't been chosen yet [OPEN: owner]. Until a `LICENSE` file is added, all rights are reserved. Fonts are under the SIL Open Font License 1.1 ([licenses/fonts/](licenses/fonts/)), and the models and libraries keep their own licenses (see `licenses.txt`).
+The source code is licensed under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE) for what isn't covered: the name "Bibi AI", the Bibi character and its art and app icon stay all rights reserved, so please don't reuse them in your own app. The fonts are under the SIL Open Font License 1.1 ([licenses/fonts/](licenses/fonts/)), and the models and libraries keep their own licenses (see `licenses.txt`).

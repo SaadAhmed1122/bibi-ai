@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Version 0.3.0-p3 (versionCode 3), the first closed-test build (#130).
 
 ### Added
+- `LICENSE` (Apache-2.0) and `NOTICE`; the name, character art and app icon are reserved.
 - Demo video `docs/linkedin/media/bibi-demo.mp4` (130 s, recorded on the vivo in airplane mode) and the verified model link in the README (#136).
 - Public README, LinkedIn article draft, case study and demo-video storyboard in `docs/writeup/` (#136).
 - Public-release audit (#135): `docs/public-release-audit.md`; SIL OFL 1.1 texts for the bundled fonts in `licenses/fonts/`.
