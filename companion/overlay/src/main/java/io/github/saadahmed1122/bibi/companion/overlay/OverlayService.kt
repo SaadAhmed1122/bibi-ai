@@ -27,6 +27,7 @@ import android.view.WindowManager
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -105,6 +106,11 @@ class OverlayService : Service() {
         running = true
         windowManager = getSystemService(WindowManager::class.java)
         scope.launch { (application as ChatCardHost).bibiMood.collect { view?.mood = it } }
+        scope.launch {
+            covered.collect { c ->
+                if (c) removeWindow() else if (controller.state == OverlayController.State.Shown && view == null) addWindow()
+            }
+        }
         screenOn = getSystemService(PowerManager::class.java).isInteractive
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel(CHANNEL_ID, getString(R.string.overlay_channel), NotificationManager.IMPORTANCE_LOW),
@@ -178,6 +184,7 @@ class OverlayService : Service() {
     }
 
     private fun addWindow(): Boolean {
+        if (covered.value) return true // added when the app's dialog closes (#169)
         val size = (BIBI_SIZE_DP * resources.displayMetrics.density).toInt()
         val screen = windowManager.currentWindowMetrics.bounds
         val params = WindowManager.LayoutParams(
@@ -332,6 +339,13 @@ class OverlayService : Service() {
         /** Call from the app while it is in front, right after the mic was allowed: Bibi starts listening. */
         fun talkNow(context: Context) {
             context.startForegroundService(Intent(context, OverlayService::class.java).setAction(ACTION_TALK))
+        }
+
+        /** The app's own dialog is up: Bibi steps off screen so it can't cover its buttons (#169). */
+        private val covered = MutableStateFlow(false)
+
+        fun setCovered(value: Boolean) {
+            covered.value = value
         }
 
         private const val ACTION_START = "io.github.saadahmed1122.bibi.overlay.START"
