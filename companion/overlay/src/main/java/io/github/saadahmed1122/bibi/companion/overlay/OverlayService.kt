@@ -145,6 +145,16 @@ class OverlayService : Service() {
                 refreshNotification()
             }
             ACTION_CALM -> view?.calm = prefs.getBoolean(KEY_CALM, false)
+            ACTION_TALK -> {
+                // Sent by the app right after the mic was allowed, while it is still in front: the
+                // only moment Android lets this service add the microphone type (#167).
+                startForeground(NOTIFICATION_ID, notification(), serviceTypes())
+                if (Settings.canDrawOverlays(this) && controller.show()) {
+                    card.close()
+                    talk.show()
+                }
+                refreshNotification()
+            }
             ACTION_TURN_OFF -> {
                 // The notification's Turn off: the app's switch shows off from now on.
                 prefs.edit().putBoolean(KEY_ENABLED, false).apply()
@@ -222,13 +232,19 @@ class OverlayService : Service() {
 
     /**
      * Tap (#118): closes whatever is open; otherwise starts a spoken conversation. Without the mic
-     * permission the card opens instead (its mic button sends you to the app to grant it).
+     * permission the app opens and asks for it, then sends [ACTION_TALK] (#167); before, the card
+     * opened with no word of why. A service can open an activity here because Bibi holds the
+     * overlay permission.
      */
     private fun onBibiTap() {
         when {
             card.isShown -> card.close()
             talk.isShown -> talk.close()
-            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED -> card.show()
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ->
+                startActivity(
+                    launchIntent(this).putExtra(EXTRA_ASK_MIC, true)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                )
             else -> talk.show()
         }
     }
@@ -310,12 +326,21 @@ class OverlayService : Service() {
         /** Extra on the app's launch intent: open the chat screen. */
         const val EXTRA_OPEN_CHAT = "io.github.saadahmed1122.bibi.OPEN_CHAT"
 
+        /** Extra on the app's launch intent: a tap on Bibi needs the mic; ask, then [talkNow] (#167). */
+        const val EXTRA_ASK_MIC = "io.github.saadahmed1122.bibi.ASK_MIC"
+
+        /** Call from the app while it is in front, right after the mic was allowed: Bibi starts listening. */
+        fun talkNow(context: Context) {
+            context.startForegroundService(Intent(context, OverlayService::class.java).setAction(ACTION_TALK))
+        }
+
         private const val ACTION_START = "io.github.saadahmed1122.bibi.overlay.START"
         private const val ACTION_SHOW = "io.github.saadahmed1122.bibi.overlay.SHOW"
         private const val ACTION_HIDE = "io.github.saadahmed1122.bibi.overlay.HIDE"
         private const val ACTION_STOP = "io.github.saadahmed1122.bibi.overlay.STOP"
         private const val ACTION_TURN_OFF = "io.github.saadahmed1122.bibi.overlay.TURN_OFF"
         private const val ACTION_CALM = "io.github.saadahmed1122.bibi.overlay.CALM"
+        private const val ACTION_TALK = "io.github.saadahmed1122.bibi.overlay.TALK"
 
         private const val CHANNEL_ID = "bibi_overlay"
         private const val NOTIFICATION_ID = 1
@@ -360,8 +385,11 @@ class OverlayService : Service() {
         /** True between onCreate and onDestroy; the service runs in the app's own process. */
         @Volatile private var running = false
 
-        private fun openChatIntent(context: Context): Intent =
+        private fun launchIntent(context: Context): Intent =
             checkNotNull(context.packageManager.getLaunchIntentForPackage(context.packageName))
+
+        private fun openChatIntent(context: Context): Intent =
+            launchIntent(context)
                 .putExtra(EXTRA_OPEN_CHAT, true)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
     }

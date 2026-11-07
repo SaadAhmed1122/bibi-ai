@@ -6,6 +6,11 @@ import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import io.github.saadahmed1122.bibi.feature.chat.R as ChatR
+import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -80,10 +85,14 @@ class MainActivity : ComponentActivity() {
     /** Set by a tap on floating Bibi or the notification's Open chat ([OverlayService.EXTRA_OPEN_CHAT]). */
     private var openChatRequested by mutableStateOf(false)
 
+    /** Set by a tap on floating Bibi without the mic ([OverlayService.EXTRA_ASK_MIC], #167). */
+    private var askMicForTalk by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         openChatRequested = intent.getBooleanExtra(OverlayService.EXTRA_OPEN_CHAT, false)
+        askMicForTalk = intent.getBooleanExtra(OverlayService.EXTRA_ASK_MIC, false)
         val container = (application as BibiApplication).container
         setContent {
             BibiTheme {
@@ -94,6 +103,33 @@ class MainActivity : ComponentActivity() {
                         screen = Screen.Chat
                         openChatRequested = false
                     }
+                }
+                // A tap on floating Bibi without the mic: say why, ask, and on Allow go back to where the
+                // user was with Bibi listening. Deny or Not now: the typed chat, as before (#167).
+                val askMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                    if (granted) {
+                        OverlayService.talkNow(this@MainActivity)
+                        moveTaskToBack(true)
+                    } else {
+                        openChatRequested = true
+                    }
+                }
+                if (askMicForTalk) {
+                    AlertDialog(
+                        onDismissRequest = { askMicForTalk = false; openChatRequested = true },
+                        title = { Text(stringResource(R.string.talk_mic_title)) },
+                        text = { Text(stringResource(R.string.talk_mic_why)) },
+                        confirmButton = {
+                            TextButton(onClick = { askMicForTalk = false; askMic.launch(Manifest.permission.RECORD_AUDIO) }) {
+                                Text(stringResource(ChatR.string.voice_mic_continue))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { askMicForTalk = false; openChatRequested = true }) {
+                                Text(stringResource(R.string.talk_mic_type_instead))
+                            }
+                        },
+                    )
                 }
                 BackHandler(enabled = screen != Screen.Home, onBack = goHome)
                 val floating by container.floating.state.collectAsStateWithLifecycle()
@@ -302,6 +338,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.getBooleanExtra(OverlayService.EXTRA_OPEN_CHAT, false)) openChatRequested = true
+        if (intent.getBooleanExtra(OverlayService.EXTRA_ASK_MIC, false)) askMicForTalk = true
     }
 
     // A usage session (SPEC-test-report.md) runs while the app is on screen.

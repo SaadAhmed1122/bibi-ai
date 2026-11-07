@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Bibi</string>
+    <string name="talk_mic_title">Talk with Bibi</string>
+    <string name="talk_mic_type_instead">Type instead</string>
+    <string name="talk_mic_why">To talk, Bibi needs the microphone. It listens only while the talk bubble is open; tap × or say \"Bye Bibi\" to stop. What you say is turned into text on this phone and never recorded or sent anywhere.</string>
     <string name="model_download_notification">Bibi\'s AI model</string>
     <string name="router_download_notification">Bibi\'s action model</string>
     <string name="voice_download_notification">Bibi\'s voice pack</string>

@@ -247,6 +247,12 @@ Owner, before uploading:
 - [x] Fixed build on the vivo (2026-11-05): the log shows `router waited_ms=…` then `router load_ms=…`, so the action model loads only after the chat model. "it is dark in here, give me some light" turned the light on (landscape), "flashlight off" turned it off and a chat question got an answer (portrait).
 - [ ] Owner, over the next days: leave Floating Bibi on, use the phone normally, and send Settings > About > Share crash log if Bibi ever stops answering. The crash needed Android to freeze the AI process for minutes or hours mid-load, so it can't be forced on demand.
 
+## P3 — Tap to talk asks for the mic (issue #167)
+1. [ ] Fresh install (or Settings > Apps > Bibi > Permissions > Microphone > Don't allow). Turn on Floating Bibi and go to the home screen.
+2. [ ] Tap Bibi: the app opens with "Talk with Bibi". Tap Continue, then Allow.
+3. [ ] The app goes away and the bubble says "Listening…". Say something: Bibi answers.
+4. [ ] Repeat with Deny: the typed chat opens.
+
 ## P3 — Character behaviors (issue #162)
 Claude checked on the vivo (debug build, 2026-11-07, portrait and landscape): drag and drop, tap hop, charger and low-battery reactions (simulated with `dumpsys battery`), mirroring on the right edge.
 
