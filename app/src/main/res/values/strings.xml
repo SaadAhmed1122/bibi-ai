@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Bibi</string>
     <string name="model_download_notification">Bibi\'s AI model</string>
+    <string name="router_download_notification">Bibi\'s action model</string>
+    <string name="voice_download_notification">Bibi\'s voice pack</string>
     <string name="home_title">Hi, I\'m Bibi</string>
     <string name="home_body">Your offline companion. Everything stays on this phone.</string>
     <string name="home_chat">Open chat</string>

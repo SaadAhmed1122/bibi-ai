@@ -1,5 +1,6 @@
 package io.github.saadahmed1122.bibi.core.designsystem
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -19,16 +20,25 @@ import io.github.saadahmed1122.bibi.domain.model.ModelFile
  * failure. Stateless; the caller owns the ViewModel.
  */
 @Composable
-fun ModelDownloadBlock(state: ModelDownloadState, onDownload: () -> Unit, onCancel: () -> Unit) {
-    val totalMb = (ModelFile.SIZE_BYTES / MB).toInt()
+fun ModelDownloadBlock(
+    state: ModelDownloadState,
+    onDownload: () -> Unit,
+    onCancel: () -> Unit,
+    sizeBytes: Long = ModelFile.SIZE_BYTES,
+    /** The button text with a %1$d for megabytes; the chat model's by default. */
+    @StringRes label: Int = R.string.model_download,
+    primary: Boolean = true,
+) {
+    val totalMb = (sizeBytes / MB).toInt()
     when (state) {
         ModelDownloadState.Idle -> {
-            PrimaryButton(stringResource(R.string.model_download, totalMb), onClick = onDownload)
+            val text = stringResource(label, totalMb)
+            if (primary) PrimaryButton(text, onClick = onDownload) else SecondaryButton(text, onClick = onDownload)
             Text(stringResource(R.string.model_download_wifi_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         is ModelDownloadState.Downloading -> {
             val done = (state.done / MB).toInt()
-            val total = ((state.total ?: ModelFile.SIZE_BYTES) / MB).toInt()
+            val total = ((state.total ?: sizeBytes) / MB).toInt()
             val text = when {
                 state.waiting -> stringResource(R.string.model_download_waiting, done, total)
                 state.total == null && state.done == 0L -> stringResource(R.string.model_downloading_start)
@@ -43,7 +53,7 @@ fun ModelDownloadBlock(state: ModelDownloadState, onDownload: () -> Unit, onCanc
             val message = when (state.kind) {
                 ModelDownloadState.Kind.NeedsLogin -> stringResource(R.string.model_download_failed_login, state.code)
                 ModelDownloadState.Kind.NotFound -> stringResource(R.string.model_download_failed_missing, state.code)
-                ModelDownloadState.Kind.NoSpace -> stringResource(R.string.model_download_failed_space)
+                ModelDownloadState.Kind.NoSpace -> stringResource(R.string.model_download_failed_space, (sizeBytes * 2 / MB).toInt())
                 ModelDownloadState.Kind.Network -> stringResource(R.string.model_download_failed_network, state.code)
             }
             Text(message, color = MaterialTheme.colorScheme.error)

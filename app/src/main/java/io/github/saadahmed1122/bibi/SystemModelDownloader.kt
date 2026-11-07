@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import androidx.core.content.edit
-import io.github.saadahmed1122.bibi.domain.model.ModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.DownloadStatus
 import io.github.saadahmed1122.bibi.domain.usecase.ModelDownloader
 import io.github.saadahmed1122.bibi.domain.usecase.ModelSource
@@ -14,27 +13,35 @@ import java.io.InputStream
 
 /**
  * [ModelDownloader] on Android's DownloadManager (SPEC-model-download.md): it resumes after network
- * drops, keeps going when Bibi is closed and shows its own notification. The file lands in the
- * app's external files folder and is read back through the system, then copied and checked.
+ * drops, keeps going when Bibi is closed and shows its own notification. Files land in the app's
+ * external files folder and are read back through the system, then copied and checked.
+ * One instance per pack: [pack] keeps its saved ids and file names apart ("chat", "router", "voice").
  */
-class SystemModelDownloader(context: Context) : ModelDownloader {
+class SystemModelDownloader(context: Context, private val pack: String, private val title: String) : ModelDownloader {
     private val appContext = context.applicationContext
     private val manager = appContext.getSystemService(DownloadManager::class.java)
     private val prefs = appContext.getSharedPreferences("model_download", Context.MODE_PRIVATE)
 
-    override val activeId: Long?
-        get() = prefs.getLong(KEY_ID, -1L).takeIf { it >= 0 }
+    override val activeIds: List<Long>
+        get() = prefs.getString(pack, "").orEmpty().split(',').mapNotNull { it.toLongOrNull() }
 
-    override fun start(url: String): Long {
-        // DownloadManager never overwrites: a leftover from a killed attempt would get a "-1" name.
-        appContext.getExternalFilesDir(null)?.let { File(it, FILE).delete() }
-        val request = DownloadManager.Request(Uri.parse(url))
-            .setTitle(appContext.getString(R.string.model_download_notification))
-            .setDescription(ModelFile.NAME)
-            .setDestinationInExternalFilesDir(appContext, null, FILE)
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        return manager.enqueue(request).also { id -> prefs.edit { putLong(KEY_ID, id) } }
+    override fun start(urls: List<String>): List<Long> {
+        val ids = urls.mapIndexed { i, url ->
+            val file = "$pack-$i.download"
+            // DownloadManager never overwrites: a leftover from a killed attempt would get a "-1" name.
+            appContext.getExternalFilesDir(null)?.let { File(it, file).delete() }
+            val request = DownloadManager.Request(Uri.parse(url))
+                .setTitle(title)
+                .setDescription(Uri.parse(url).lastPathSegment)
+                .setDestinationInExternalFilesDir(appContext, null, file)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            manager.enqueue(request)
+        }
+        save(ids)
+        return ids
     }
+
+    private fun save(ids: List<Long>) = prefs.edit { if (ids.isEmpty()) remove(pack) else putString(pack, ids.joinToString(",")) }
 
     override fun status(id: Long): DownloadStatus? =
         manager.query(DownloadManager.Query().setFilterById(id)).use { c ->
@@ -59,11 +66,6 @@ class SystemModelDownloader(context: Context) : ModelDownloader {
 
     override fun remove(id: Long) {
         manager.remove(id)
-        if (activeId == id) prefs.edit { remove(KEY_ID) }
-    }
-
-    private companion object {
-        const val KEY_ID = "id"
-        const val FILE = "${ModelFile.NAME}.download"
+        save(activeIds - id)
     }
 }

@@ -59,7 +59,7 @@
     <string name="voice_mic_continue">Continue</string>
     <string name="voice_mic_not_now">Not now</string>
     <string name="voice_title">Voice (optional)</string>
-    <string name="voice_missing">To talk with Bibi and hear its answers, it needs the voice pack: the Parakeet speech-to-text and Piper voice folders (about 730 MB). Put both folders in one folder on the phone, then choose that folder here.</string>
+    <string name="voice_missing">To talk with Bibi and hear its answers, it needs the voice pack: the Parakeet speech-to-text and Piper voice folders (about 730 MB). Download it here, or put both folders in one folder on the phone and choose that folder.</string>
     <string name="voice_choose">Choose voice folder</string>
     <string name="voice_ready">The voice pack is ready.</string>
     <string name="voice_remove">Remove voice pack</string>

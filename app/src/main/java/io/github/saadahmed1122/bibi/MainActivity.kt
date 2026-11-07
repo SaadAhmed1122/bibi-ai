@@ -44,7 +44,6 @@ import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.usecase.MemoryExport
 import io.github.saadahmed1122.bibi.domain.usecase.Retention
 import io.github.saadahmed1122.bibi.feature.chat.ChatRoute
-import io.github.saadahmed1122.bibi.feature.chat.ModelDownloadViewModel
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportRoute
 import io.github.saadahmed1122.bibi.feature.chat.ModelImportViewModel
 import io.github.saadahmed1122.bibi.feature.chat.VoicePackViewModel
@@ -119,7 +118,7 @@ class MainActivity : ComponentActivity() {
                     Screen.Home -> onboardingStep?.let { step ->
                         val importer = viewModel { ModelImportViewModel(container.models) }
                         val model by importer.state.collectAsStateWithLifecycle()
-                        val downloader = viewModel { ModelDownloadViewModel(BuildConfig.MODEL_URL, container.modelDownloader, container.models) }
+                        val downloader = viewModel { container.chatDownload() }
                         val download by downloader.state.collectAsStateWithLifecycle()
                         val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                             if (uri != null) importer.import(UriModelSource(contentResolver, uri))
@@ -196,7 +195,10 @@ class MainActivity : ComponentActivity() {
                             onPickRouter = { routerPicker.launch(arrayOf("*/*")) },
                             voice = voice,
                             onPickVoice = { voicePicker.launch(null) },
-                            download = viewModel { ModelDownloadViewModel(BuildConfig.MODEL_URL, container.modelDownloader, container.models) },
+                            download = viewModel { container.chatDownload() },
+                            routerDownload = viewModel(key = "routerDownload") { container.routerDownload() },
+                            // Created only inside viewModel {}: each instance polls from init.
+                            voiceDownload = if (container.hasVoiceDownload) viewModel(key = "voiceDownload") { container.voiceDownload() } else null,
                         )
                     }
                     Screen.Settings -> SettingsRoute(

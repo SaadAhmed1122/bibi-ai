@@ -6,7 +6,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Added
-- In-app model download (#161): **Download the model** on the first-run and model screens fetches the chat model with Android's DownloadManager (resumes, keeps going when the app is closed), then checks its size and SHA-256 as before. The server URL is a build setting (`BIBI_MODEL_URL`). The app now has the `INTERNET` permission for this download only; the privacy policy and the phone-actions card say what uses the network. Version 0.3.4-p3 (code 6).
+- In-app model download (#161): **Download the model** on the first-run and model screens fetches the chat model with Android's DownloadManager (resumes, keeps going when the app is closed), then checks its size and SHA-256 as before. The server folder is a build setting (`BIBI_MODEL_BASE_URL`). The app now has the `INTERNET` permission for this download only; the privacy policy and the phone-actions card say what uses the network. Version 0.3.4-p3 (code 6).
+
+- The phone-actions model and the voice pack can be downloaded in the app too (#165), from the same server folder (`BIBI_MODEL_BASE_URL`); the action model also works from its public Hugging Face file.
 
 ### Changed
 - The build's "no INTERNET" check became a permission allowlist: any permission a library adds still fails the build.

@@ -14,7 +14,9 @@
     <string name="model_download_cancel">Cancel download</string>
     <string name="model_download_failed_login">The download server asked for a login (HTTP %1$d), so the file can\'t be fetched here. Choose the file instead.</string>
     <string name="model_download_failed_missing">The model wasn\'t found on the download server (HTTP %1$d). Choose the file instead.</string>
-    <string name="model_download_failed_space">Not enough free space. Bibi needs about 1.2 GB free while it downloads and checks the model.</string>
+    <string name="model_download_failed_space">Not enough free space. Bibi needs about %1$d MB free while it downloads and checks the files.</string>
     <string name="model_download_failed_network">The download stopped (code %1$d). Check the connection and try again.</string>
     <string name="model_download_retry">Try again</string>
+    <string name="router_download">Download the action model (%1$d MB)</string>
+    <string name="voice_download">Download the voice pack (%1$d MB)</string>
 </resources>

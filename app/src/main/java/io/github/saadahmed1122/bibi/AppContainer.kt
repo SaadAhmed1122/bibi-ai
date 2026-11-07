@@ -24,6 +24,9 @@ import io.github.saadahmed1122.bibi.domain.model.MemoryItem
 import io.github.saadahmed1122.bibi.domain.model.Message
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
+import io.github.saadahmed1122.bibi.feature.chat.ModelDownloadViewModel
+import io.github.saadahmed1122.bibi.domain.model.VoicePack
+import io.github.saadahmed1122.bibi.domain.model.ModelFile
 import io.github.saadahmed1122.bibi.domain.usecase.ApplyRetention
 import io.github.saadahmed1122.bibi.domain.usecase.ChatHistoryRepository
 import io.github.saadahmed1122.bibi.domain.usecase.ImportModel
@@ -90,8 +93,37 @@ class AppContainer(context: Context) {
     /** The imported model in app-private storage; the `:inference` process (same app) reads it there. */
     val models: ModelRepository by lazy { ModelRepository(File(appContext.filesDir, "models")) }
 
-    /** The in-app model download (SPEC-model-download.md); it outlives the process, so one per app. */
-    val modelDownloader by lazy { SystemModelDownloader(appContext) }
+    /**
+     * In-app downloads (SPEC-model-download.md), one per pack. They outlive the process; each
+     * ViewModel picks its pack's downloads up again. URLs come from BIBI_MODEL_BASE_URL (build.gradle.kts).
+     */
+    fun chatDownload() = ModelDownloadViewModel(
+        BuildConfig.MODEL_URL, ModelFile.SIZE_BYTES,
+        SystemModelDownloader(appContext, "chat", appContext.getString(R.string.model_download_notification)), models,
+    )
+
+    fun routerDownload() = ModelDownloadViewModel(
+        BuildConfig.ROUTER_URL, RouterModelFile.SIZE_BYTES,
+        SystemModelDownloader(appContext, "router", appContext.getString(R.string.router_download_notification)), routerModel,
+    )
+
+    /** False without a server (BIBI_MODEL_BASE_URL): no public copy of the exact Parakeet files exists. */
+    val hasVoiceDownload: Boolean get() = BuildConfig.VOICE_BASE_URL.isNotEmpty()
+
+    fun voiceDownload(): ModelDownloadViewModel {
+        check(hasVoiceDownload) { "no voice server" }
+        return ModelDownloadViewModel(
+            urls = VoicePack.FILES.map { "${BuildConfig.VOICE_BASE_URL}/${it.dir}/${it.name}" },
+            sizes = VoicePack.FILES.map { it.size },
+            downloader = SystemModelDownloader(appContext, "voice", appContext.getString(R.string.voice_download_notification)),
+            isReady = { voicePack.state.value is ModelState.Ready },
+            install = { sources ->
+                voicePack.import { hint, name ->
+                    sources.getOrNull(VoicePack.FILES.indexOfFirst { it.sourceHint == hint && it.name == name })
+                }
+            },
+        )
+    }
 
     /** The optional action router model, next to the chat model (SPEC-tools.md). */
     val routerModel: ModelRepository by lazy {

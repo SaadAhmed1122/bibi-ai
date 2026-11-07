@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -32,31 +31,37 @@ class ModelDownloadViewModelTest {
         ModelRepository(tmp.root, ImportModel(Dispatchers.Unconfined, "m.bin", bytes.size.toLong(), sha, 100), "m.bin", bytes.size.toLong())
     }
 
+    /** Ids are 1, 2, 3… in start order; [status] applies to all unless [statuses] names one. */
     private class FakeDownloader(var file: ByteArray) : ModelDownloader {
-        override var activeId: Long? = null
+        override var activeIds: List<Long> = emptyList()
         var status: DownloadStatus? = DownloadStatus.Running(0, null)
+        val statuses = mutableMapOf<Long, DownloadStatus?>()
+        val files = mutableMapOf<Long, ByteArray>()
         val started = mutableListOf<String>()
         val removed = mutableListOf<Long>()
 
-        override fun start(url: String): Long {
-            started += url
-            return (started.size.toLong()).also { activeId = it }
+        override fun start(urls: List<String>): List<Long> {
+            val ids = urls.map { started += it; started.size.toLong() }
+            activeIds = ids
+            return ids
         }
 
-        override fun status(id: Long) = status
+        override fun status(id: Long) = if (id in statuses) statuses[id] else status
 
-        override fun source(id: Long) = object : ModelSource {
-            override val size: Long = file.size.toLong()
-            override fun open(): InputStream = file.inputStream()
+        override fun source(id: Long) = (files[id] ?: file).let { bytes ->
+            object : ModelSource {
+                override val size: Long = bytes.size.toLong()
+                override fun open(): InputStream = bytes.inputStream()
+            }
         }
 
         override fun remove(id: Long) {
             removed += id
-            if (activeId == id) activeId = null
+            activeIds = activeIds - id
         }
     }
 
-    private fun vm(d: ModelDownloader) = ModelDownloadViewModel("https://example.org/m.bin", d, repo, scope, pollMs = 500)
+    private fun vm(d: ModelDownloader) = ModelDownloadViewModel("https://example.org/m.bin", bytes.size.toLong(), d, repo, scope, pollMs = 500)
 
     @Test
     fun startEnqueuesTheUrlAndReportsProgress() {
@@ -91,7 +96,7 @@ class ModelDownloadViewModelTest {
         assertEquals(ModelState.Ready(tmp.root.resolve("m.bin").path), repo.state.value)
         assertEquals(ModelDownloadState.Idle, vm.state.value)
         assertEquals(listOf(1L), d.removed)
-        assertNull(d.activeId)
+        assertTrue(d.activeIds.isEmpty())
     }
 
     @Test
@@ -119,7 +124,7 @@ class ModelDownloadViewModelTest {
 
     @Test
     fun aDownloadFromAnEarlierLaunchIsFollowedAgain() {
-        val d = FakeDownloader(bytes).apply { activeId = 7; status = DownloadStatus.Running(500, 1000) }
+        val d = FakeDownloader(bytes).apply { activeIds = listOf(7); status = DownloadStatus.Running(500, 1000) }
         val vm = vm(d)
         scope.runCurrent()
         assertEquals(ModelDownloadState.Downloading(500, 1000, false), vm.state.value)
@@ -149,7 +154,7 @@ class ModelDownloadViewModelTest {
 
         tmp.newFile("m.bin").writeBytes(bytes)
         val d2 = FakeDownloader(bytes)
-        ModelDownloadViewModel("u", d2, ModelRepository(tmp.root, fileName = "m.bin", expectedSize = bytes.size.toLong()), scope).start()
+        ModelDownloadViewModel("u", 1L, d2, ModelRepository(tmp.root, fileName = "m.bin", expectedSize = bytes.size.toLong()), scope).start()
         assertTrue(d2.started.isEmpty())
     }
 
@@ -161,5 +166,55 @@ class ModelDownloadViewModelTest {
         d.status = null
         scope.runCurrent()
         assertEquals(ModelDownloadState.Idle, vm.state.value)
+    }
+
+    // --- packs of several files (the voice pack) ---
+
+    private fun pack(d: ModelDownloader, installed: MutableList<List<String>>) = ModelDownloadViewModel(
+        urls = listOf("a", "b", "c"),
+        sizes = listOf(100, 200, 700),
+        downloader = d,
+        isReady = { false },
+        install = { sources -> installed += sources.map { it.open().readBytes().decodeToString() } },
+        scope = scope,
+    )
+
+    @Test
+    fun packProgressAddsUpItsFiles() {
+        val d = FakeDownloader(bytes)
+        val vm = pack(d, mutableListOf())
+        vm.start()
+        d.statuses[1] = DownloadStatus.Done
+        d.statuses[2] = DownloadStatus.Running(50, 200)
+        d.statuses[3] = DownloadStatus.Running(0, null, waiting = true)
+        scope.runCurrent()
+        assertEquals(ModelDownloadState.Downloading(150, 1000, waiting = true), vm.state.value)
+    }
+
+    @Test
+    fun packInstallsAllFilesInUrlOrderOnceEveryOneIsDone() {
+        val d = FakeDownloader(bytes).apply { (1L..3L).forEach { files[it] = "file$it".encodeToByteArray() } }
+        val installed = mutableListOf<List<String>>()
+        val vm = pack(d, installed)
+        vm.start()
+        d.statuses[1] = DownloadStatus.Done
+        d.statuses[2] = DownloadStatus.Done
+        scope.runCurrent()
+        assertTrue(installed.isEmpty())
+        d.statuses[3] = DownloadStatus.Done
+        scope.advanceTimeBy(501)
+        assertEquals(listOf(listOf("file1", "file2", "file3")), installed)
+        assertEquals(listOf(1L, 2L, 3L), d.removed)
+    }
+
+    @Test
+    fun oneFailedFileStopsThePack() {
+        val d = FakeDownloader(bytes)
+        val vm = pack(d, mutableListOf())
+        vm.start()
+        d.statuses[2] = DownloadStatus.Failed(404)
+        scope.runCurrent()
+        assertEquals(ModelDownloadState.Failed(404), vm.state.value)
+        assertEquals(listOf(1L, 2L, 3L), d.removed)
     }
 }

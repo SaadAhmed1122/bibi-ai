@@ -29,6 +29,7 @@ import io.github.saadahmed1122.bibi.core.designsystem.Space
 import io.github.saadahmed1122.bibi.domain.model.ModelFile
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
+import io.github.saadahmed1122.bibi.domain.model.VoicePack
 
 /**
  * [onPick] opens the system file picker; the caller turns the result into [ModelImportViewModel.import].
@@ -46,20 +47,30 @@ fun ModelImportRoute(
     voice: VoicePackViewModel? = null,
     onPickVoice: () -> Unit = {},
     download: ModelDownloadViewModel? = null,
+    routerDownload: ModelDownloadViewModel? = null,
+    voiceDownload: ModelDownloadViewModel? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val downloadState = download?.state?.collectAsStateWithLifecycle()?.value
+    val routerDownloadState = routerDownload?.state?.collectAsStateWithLifecycle()?.value
+    val voiceDownloadState = voiceDownload?.state?.collectAsStateWithLifecycle()?.value
     ModelImportScreen(
         state, onPick, viewModel::cancel, viewModel::remove, onOpenChat, onBack, modifier,
         download = downloadState, onDownload = { download?.start() }, onCancelDownload = { download?.cancel() },
     ) {
         if (router != null) {
             val routerState by router.state.collectAsStateWithLifecycle()
-            RouterModelSection(routerState, onPickRouter, router::cancel, router::remove)
+            RouterModelSection(
+                routerState, onPickRouter, router::cancel, router::remove,
+                download = routerDownloadState, onDownload = { routerDownload?.start() }, onCancelDownload = { routerDownload?.cancel() },
+            )
         }
         if (voice != null) {
             val voiceState by voice.state.collectAsStateWithLifecycle()
-            VoicePackSection(voiceState, onPickVoice, voice::cancel, voice::remove)
+            VoicePackSection(
+                voiceState, onPickVoice, voice::cancel, voice::remove,
+                download = voiceDownloadState, onDownload = { voiceDownload?.start() }, onCancelDownload = { voiceDownload?.cancel() },
+            )
         }
     }
 }
@@ -135,12 +146,21 @@ fun RouterModelSection(
     onCancel: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    download: ModelDownloadState? = null,
+    onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {},
 ) {
+    val getIt = @Composable { choose: String ->
+        if (download != null) {
+            ModelDownloadBlock(download, onDownload, onCancelDownload, RouterModelFile.SIZE_BYTES, DsR.string.router_download, primary = false)
+        }
+        if (download !is ModelDownloadState.Downloading) SecondaryButton(choose, onClick = onPick)
+    }
     PackCard(stringResource(R.string.router_title), modifier) {
         when (state) {
             ModelState.Missing -> {
                 Text(stringResource(R.string.router_missing, RouterModelFile.NAME), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SecondaryButton(stringResource(R.string.router_choose), onClick = onPick)
+                getIt(stringResource(R.string.router_choose))
             }
             is ModelState.Importing -> {
                 Text(
@@ -161,7 +181,7 @@ fun RouterModelSection(
                     else -> stringResource(R.string.model_invalid_read)
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
-                SecondaryButton(stringResource(R.string.model_choose_other), onClick = onPick)
+                getIt(stringResource(R.string.model_choose_other))
             }
         }
     }
@@ -169,12 +189,27 @@ fun RouterModelSection(
 
 /** The optional voice pack (SPEC-voice.md): Parakeet and Piper, picked as a folder. */
 @Composable
-fun VoicePackSection(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+fun VoicePackSection(
+    state: ModelState,
+    onPick: () -> Unit,
+    onCancel: () -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+    download: ModelDownloadState? = null,
+    onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {},
+) {
+    val getIt = @Composable {
+        if (download != null) {
+            ModelDownloadBlock(download, onDownload, onCancelDownload, VoicePack.FILES.sumOf { it.size }, DsR.string.voice_download, primary = false)
+        }
+        if (download !is ModelDownloadState.Downloading) SecondaryButton(stringResource(R.string.voice_choose), onClick = onPick)
+    }
     PackCard(stringResource(R.string.voice_title), modifier) {
         when (state) {
             ModelState.Missing -> {
                 Text(stringResource(R.string.voice_missing), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SecondaryButton(stringResource(R.string.voice_choose), onClick = onPick)
+                getIt()
             }
             is ModelState.Importing -> {
                 Text(stringResource(R.string.model_importing, (state.progress * 100).toInt()), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
@@ -192,7 +227,7 @@ fun VoicePackSection(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit
                     else -> stringResource(R.string.model_invalid_read)
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
-                SecondaryButton(stringResource(R.string.voice_choose), onClick = onPick)
+                getIt()
             }
         }
     }
