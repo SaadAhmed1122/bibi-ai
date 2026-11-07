@@ -9,6 +9,10 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
+import android.os.BatteryManager
+import io.github.saadahmed1122.bibi.core.designsystem.BibiMood
+import java.time.LocalTime
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.content.res.Configuration
@@ -62,6 +66,38 @@ class OverlayService : Service() {
         }
     }
 
+    /** Reactions and sleep (SPEC-behaviors.md); kept here so cooldowns survive Hide and Show. */
+    private val behaviors = Behaviors()
+
+    /** B-02 unlock, B-05 charger, B-06 low battery. All are protected system broadcasts. */
+    private val eventReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val v = view ?: return
+            refreshBusy()
+            val now = System.nanoTime() / 1_000_000L
+            v.play(
+                when (intent.action) {
+                    Intent.ACTION_USER_PRESENT -> behaviors.onUnlock(now, LocalTime.now().hour)
+                    Intent.ACTION_POWER_CONNECTED -> behaviors.onPowerConnected(now)
+                    Intent.ACTION_BATTERY_CHANGED -> {
+                        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+                        val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
+                        if (level < 0 || scale <= 0) null else behaviors.onBattery(level * 100 / scale, plugged, now)
+                    }
+                    else -> null
+                },
+            )
+        }
+    }
+
+    /** No spontaneous acts while Bibi thinks or talks, the card or talk window is open, or in a call. */
+    private fun refreshBusy() {
+        val mode = getSystemService(AudioManager::class.java).mode
+        val inCall = mode == AudioManager.MODE_IN_CALL || mode == AudioManager.MODE_IN_COMMUNICATION
+        behaviors.busy = (application as ChatCardHost).bibiMood.value != BibiMood.IDLE || card.isShown || talk.isShown || inCall
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -79,6 +115,12 @@ class OverlayService : Service() {
         }
         // SCREEN_ON/OFF are protected broadcasts, so other apps can't send them.
         registerReceiver(screenReceiver, filter, RECEIVER_EXPORTED)
+        val events = IntentFilter().apply {
+            addAction(Intent.ACTION_USER_PRESENT)
+            addAction(Intent.ACTION_POWER_CONNECTED)
+            addAction(Intent.ACTION_BATTERY_CHANGED)
+        }
+        registerReceiver(eventReceiver, events, RECEIVER_EXPORTED)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -151,6 +193,8 @@ class OverlayService : Service() {
             },
             onTap = ::onBibiTap,
             onLongPress = ::openCard,
+            behaviors = behaviors,
+            hour = { LocalTime.now().hour },
         )
         v.calm = prefs.getBoolean(KEY_CALM, false)
         v.mood = (application as ChatCardHost).bibiMood.value
@@ -211,6 +255,7 @@ class OverlayService : Service() {
         running = false
         scope.cancel()
         unregisterReceiver(screenReceiver)
+        unregisterReceiver(eventReceiver)
         talk.close()
         card.close()
         cardOwner.destroy()

@@ -33,6 +33,10 @@ import kotlin.random.Random
  * - Breathing: a 3.5 s scale cycle, off in Calm. Blink every 3–6 s, every 8 s in Calm.
  * - Drag moves the window; release snaps to the nearer side edge in 280 ms, inside the system bars
  *   and cutout ([SnapMath]).
+ * - Behaviors ([Behaviors], SPEC-behaviors.md): a hop on tap, a squash while held and on landing,
+ *   short reactions with a pose and a hop, sleep in quiet hours. The clock runs at 24 fps only while
+ *   an act plays (at most 2.5 s), so the S1 battery numbers hold the rest of the time. On the right
+ *   half Bibi is mirrored, so the thought dots and the raised tail point into the screen.
  */
 @SuppressLint("ViewConstructor")
 class BibiView(
@@ -42,6 +46,9 @@ class BibiView(
     private val onMoved: (x: Int, y: Int) -> Unit,
     private val onTap: () -> Unit,
     private val onLongPress: () -> Unit = {},
+    /** Reactions, greeting and sleep (SPEC-behaviors.md); the service owns it so it survives Hide. */
+    private val behaviors: Behaviors = Behaviors(),
+    private val hour: () -> Int = { 12 },
 ) : View(context), Choreographer.FrameCallback {
 
     /** One 288 px frame per state, decoded once (about 330 KB each). */
@@ -68,10 +75,31 @@ class BibiView(
     var calm: Boolean = false
         set(value) {
             field = value
-            schedule.intervalNanos = FrameSchedule.intervalNanos(if (value) FrameSchedule.FPS_CALM else FrameSchedule.FPS_NORMAL)
+            behaviors.calm = value
+            updateRate(System.nanoTime() / 1_000_000L)
             scheduleNextBlink(System.nanoTime())
             invalidate()
         }
+
+    /** Plays [act] if [Behaviors] allowed it (non-null): faster clock until it ends. */
+    fun play(act: Act?) {
+        if (act == null) return
+        updateRate(System.nanoTime() / 1_000_000L)
+        invalidate()
+    }
+
+    private fun updateRate(nowMs: Long) {
+        val fps = when {
+            calm -> FrameSchedule.FPS_CALM
+            behaviors.current(nowMs) != null -> FPS_ACT
+            else -> FrameSchedule.FPS_NORMAL
+        }
+        val interval = FrameSchedule.intervalNanos(fps)
+        if (schedule.intervalNanos != interval) {
+            schedule.intervalNanos = interval
+            schedule.reset()
+        }
+    }
 
     private val schedule = FrameSchedule(FrameSchedule.intervalNanos(FrameSchedule.FPS_NORMAL))
 
@@ -108,6 +136,7 @@ class BibiView(
                 blinkUntilNanos = frameTimeNanos + max(160L, schedule.intervalNanos / 1_000_000L) * 1_000_000L
                 scheduleNextBlink(frameTimeNanos)
             }
+            updateRate(frameTimeNanos / 1_000_000L)
             invalidate()
         }
         Choreographer.getInstance().postFrameCallbackDelayed(this, schedule.delayMs)
@@ -120,6 +149,7 @@ class BibiView(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         updateVsync()
+        post { updateMirror() }
     }
 
     private fun scheduleNextBlink(fromNanos: Long) {
@@ -129,14 +159,39 @@ class BibiView(
 
     override fun onDraw(canvas: Canvas) {
         val now = System.nanoTime()
-        val breath = if (calm || mood != BibiMood.IDLE) 0f else (sin(2 * PI * ((now - startNanos) / 1e9) / 3.5) * 0.02).toFloat()
+        val nowMs = now / 1_000_000L
+        val act = behaviors.current(nowMs)
+        val t = behaviors.progress(nowMs)
+        val asleep = mood == BibiMood.IDLE && behaviors.sleeping(nowMs, hour())
+        // Asleep: a slower, deeper breath. Awake idle: the 3.5 s cycle. Off in Calm and during an act.
+        val period = if (asleep) 6.0 else 3.5
+        val breath = if (calm || mood != BibiMood.IDLE || act != null) 0f else (sin(2 * PI * ((now - startNanos) / 1e9) / period) * 0.02).toFloat()
+        var squashY = if (act != null) ActMotion.squashY(act, t) else 1f
+        if (dragging) squashY = GRABBED_SQUASH
         canvas.save()
-        // Scale around the paws so Bibi breathes upward instead of floating.
-        canvas.scale(1f - breath * 0.5f, 1f + breath, width / 2f, height.toFloat())
+        canvas.translate(0f, -(if (act != null) ActMotion.lift(act, t) else 0f) * height)
+        // Scale around the paws so Bibi breathes and squashes upward instead of floating.
+        canvas.scale((1f / squashY) * (1f - breath * 0.5f) * if (mirrored) -1f else 1f, squashY * (1f + breath), width / 2f, height.toFloat())
         dst.set(0, 0, width, height)
-        val frame = if (mood == BibiMood.IDLE && now < blinkUntilNanos) blink else frames.getValue(mood)
+        val pose = if (mood != BibiMood.IDLE) mood else act?.pose
+        val frame = when {
+            pose != null -> frames.getValue(pose)
+            asleep || now < blinkUntilNanos -> blink
+            else -> frames.getValue(BibiMood.IDLE)
+        }
         canvas.drawBitmap(frame, src, dst, paint)
         canvas.restore()
+    }
+
+    /** Mirrored on the right half of the screen (set after each snap). */
+    private var mirrored = false
+
+    private fun updateMirror() {
+        val m = params.x + width / 2 > screenSize().width / 2
+        if (m != mirrored) {
+            mirrored = m
+            invalidate()
+        }
     }
 
     // --- touch: drag, snap to edge, tap ---
@@ -167,7 +222,9 @@ class BibiView(
                 val dy = event.rawY - downRawY
                 if (!dragging && (abs(dx) > touchSlop || abs(dy) > touchSlop)) {
                     dragging = true
+                    behaviors.onTouch(System.nanoTime() / 1_000_000L)
                     removeCallbacks(longPress)
+                    invalidate()
                 }
                 if (dragging) {
                     params.x = downX + dx.toInt()
@@ -177,11 +234,11 @@ class BibiView(
             }
             MotionEvent.ACTION_UP -> {
                 removeCallbacks(longPress)
-                if (dragging) snapToEdge() else if (!longPressed) performClick()
+                if (dragging) drop() else if (!longPressed) performClick()
             }
             MotionEvent.ACTION_CANCEL -> {
                 removeCallbacks(longPress)
-                if (dragging) snapToEdge()
+                if (dragging) drop()
             }
         }
         return true
@@ -196,8 +253,15 @@ class BibiView(
 
     override fun performClick(): Boolean {
         super.performClick()
+        play(behaviors.onTap(System.nanoTime() / 1_000_000L))
         onTap()
         return true
+    }
+
+    private fun drop() {
+        dragging = false
+        play(behaviors.onDrop(System.nanoTime() / 1_000_000L))
+        snapToEdge()
     }
 
     /** Keeps Bibi on screen and on an edge after a rotation or display change, and saves the result. */
@@ -209,6 +273,7 @@ class BibiView(
         params.x = SnapMath.snapTarget(p.x, width, screen.width, insets.left, insets.right)
         params.y = p.y
         moveWindow()
+        updateMirror()
         onMoved(params.x, params.y)
     }
 
@@ -232,7 +297,9 @@ class BibiView(
                 }
 
                 override fun onAnimationEnd(animation: Animator) {
-                    if (!cancelled) onMoved(params.x, params.y)
+                    if (cancelled) return
+                    updateMirror()
+                    onMoved(params.x, params.y)
                 }
             })
             start()
@@ -264,5 +331,11 @@ class BibiView(
 
     private companion object {
         const val SNAP_MS = 280L
+
+        /** Short acts get a smoother clock; 12 fps hops look jerky. Calm never uses it. */
+        const val FPS_ACT = 24
+
+        /** Held and dragged: a little flatter and wider, like a picked-up cat. */
+        const val GRABBED_SQUASH = 0.94f
     }
 }

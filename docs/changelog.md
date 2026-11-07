@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased] - 2026-10-28
 
+### Added
+- Floating Bibi behaviors (#162): a hop when tapped, a squash while dragged and on landing, a wave and hop when you unlock the phone (at most every 30 minutes, not at night), a happy hop on the charger, a puzzled look at 15 % battery, sleeping at night after two quiet minutes, and mirrored on the right edge. At most 6 reactions an hour, none in Calm mode, during a call or while Bibi is busy.
+
 ### Fixed
 - The Play-installed 0.3.2-p3 crashed at launch on a realme RMX3363 (Android 13) inside Play's automatic protection (`com.pairip.application.Application` not found). The same code built locally runs there. Next upload: version 0.3.3-p3 (code 5) with automatic protection turned off (docs/release.md).
 - Bibi's AI process could crash (native SIGSEGV in LiteRT-LM `createConversation`) when Android thawed it after a long freeze in the middle of loading: the chat model and the action model finished loading at the same moment. The action model now loads only after the chat model (#150).
