@@ -12,14 +12,16 @@ sealed interface DownloadStatus {
 }
 
 /**
- * Fetches the model file in the background; the app wraps Android's DownloadManager, tests use a
- * fake. The download outlives the app process, so [activeId] survives restarts.
+ * Fetches a pack's files in the background (one file for a model, seven for the voice pack); the
+ * app wraps Android's DownloadManager, tests use a fake. Downloads outlive the app process, so
+ * [activeIds] survives restarts.
  */
 interface ModelDownloader {
-    /** The download started earlier and not removed yet, or null. */
-    val activeId: Long?
+    /** The downloads started earlier and not removed yet, in start order; empty if none. */
+    val activeIds: List<Long>
 
-    fun start(url: String): Long
+    /** Starts one download per URL; the ids come back in the same order. */
+    fun start(urls: List<String>): List<Long>
 
     /** Null when the system no longer knows [id] (e.g. cleared in system settings). */
     fun status(id: Long): DownloadStatus?

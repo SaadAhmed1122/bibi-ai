@@ -55,12 +55,17 @@ android {
         buildConfig = true
     }
 
-    // Where the in-app download fetches the chat model (SPEC-model-download.md). Set BIBI_MODEL_URL in
-    // ~/.gradle/gradle.properties or the environment to the owner's server. The default is the gated
-    // Hugging Face file, which answers 401 without a login: for the owner's own testing only.
-    val modelUrl = providers.gradleProperty("BIBI_MODEL_URL").orElse(providers.environmentVariable("BIBI_MODEL_URL"))
-        .getOrElse("https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/gemma3-1b-it-int4.litertlm")
-    defaultConfig.buildConfigField("String", "MODEL_URL", "\"$modelUrl\"")
+    // Where the in-app downloads fetch the models (SPEC-model-download.md). Set BIBI_MODEL_BASE_URL in
+    // ~/.gradle/gradle.properties or the environment to the owner's server folder, which holds
+    // gemma3-1b-it-int4.litertlm, embeddinggemma-2-text-270m.litertlm and voice/<folder>/<file>.
+    // Without it: the chat model is the gated Hugging Face file (answers 401; testing only), the
+    // action model its public Hugging Face file, and there is no voice download (empty base).
+    val base = providers.gradleProperty("BIBI_MODEL_BASE_URL").orElse(providers.environmentVariable("BIBI_MODEL_BASE_URL"))
+        .orNull?.trimEnd('/')
+    val hf = "https://huggingface.co/litert-community"
+    defaultConfig.buildConfigField("String", "MODEL_URL", "\"${base?.let { "$it/gemma3-1b-it-int4.litertlm" } ?: "$hf/Gemma3-1B-IT/resolve/main/gemma3-1b-it-int4.litertlm"}\"")
+    defaultConfig.buildConfigField("String", "ROUTER_URL", "\"${base?.let { "$it/embeddinggemma-2-text-270m.litertlm" } ?: "$hf/embeddinggemma-2-text-270m-litert-lm/resolve/main/embeddinggemma-2-text-270m.litertlm"}\"")
+    defaultConfig.buildConfigField("String", "VOICE_BASE_URL", "\"${base?.let { "$it/voice" }.orEmpty()}\"")
 }
 
 dependencies {
