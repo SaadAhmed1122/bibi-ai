@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Bibi</string>
+    <string name="talk_mic_title">Talk with Bibi</string>
+    <string name="talk_mic_type_instead">Type instead</string>
+    <string name="talk_mic_why">To talk, Bibi needs the microphone. It listens only while the talk bubble is open; tap × or say \"Bye Bibi\" to stop. What you say is turned into text on this phone and never recorded or sent anywhere.</string>
     <string name="home_title">Hi, I\'m Bibi</string>
     <string name="home_body">Your offline companion. Everything stays on this phone.</string>
     <string name="home_chat">Open chat</string>

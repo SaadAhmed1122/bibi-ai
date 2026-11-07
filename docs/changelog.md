@@ -6,6 +6,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased] - 2026-10-28
 
 ### Fixed
+- Tapping floating Bibi without the microphone allowed silently opened the typed chat card (#167). Now the app opens, says why it needs the mic and asks; on Allow it goes back and Bibi starts listening; "Type instead" or Deny opens the chat as before. Granting the mic also gives the floating service its microphone type right away, without opening the app again.
+
+### Fixed
 - The Play-installed 0.3.2-p3 crashed at launch on a realme RMX3363 (Android 13) inside Play's automatic protection (`com.pairip.application.Application` not found). The same code built locally runs there. Next upload: version 0.3.3-p3 (code 5) with automatic protection turned off (docs/release.md).
 - Bibi's AI process could crash (native SIGSEGV in LiteRT-LM `createConversation`) when Android thawed it after a long freeze in the middle of loading: the chat model and the action model finished loading at the same moment. The action model now loads only after the chat model (#150).
 - Spoken "Hey Bibi, …" works for phone actions even though the speech recognizer writes "Bibi" as "BB", and "Bye Bibi" ends a tap-to-talk conversation however the name comes out ("Bye BB", "Bye B D.").
