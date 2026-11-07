@@ -247,6 +247,14 @@ Owner, before uploading:
 - [x] Fixed build on the vivo (2026-11-05): the log shows `router waited_ms=…` then `router load_ms=…`, so the action model loads only after the chat model. "it is dark in here, give me some light" turned the light on (landscape), "flashlight off" turned it off and a chat question got an answer (portrait).
 - [ ] Owner, over the next days: leave Floating Bibi on, use the phone normally, and send Settings > About > Share crash log if Bibi ever stops answering. The crash needed Android to freeze the AI process for minutes or hours mid-load, so it can't be forced on demand.
 
+## P3 — Character behaviors (issue #162)
+Claude checked on the vivo (debug build, 2026-11-07, portrait and landscape): drag and drop, tap hop, charger and low-battery reactions (simulated with `dumpsys battery`), mirroring on the right edge.
+
+For the owner:
+1. [ ] Turn on Floating Bibi, lock the phone, unlock it: Bibi raises a paw and hops (once per 30 minutes).
+2. [ ] After 23:00, leave Bibi alone for 2 minutes: eyes closed, slow breathing. Tap: it wakes and hops.
+3. [ ] Turn on Calm mode: no hops or reactions.
+
 ## P3 — In-app model download (issue #161)
 Claude checked on the vivo (debug build, 2026-11-07): with the default Hugging Face URL the model step shows "asked for a login (HTTP 401)" with Try again and Choose model file; with the file served from the laptop (`adb reverse`), the download reached Ready in portrait and in landscape; killing the app mid-download and opening it again ended Ready; the model in private storage is 584,417,280 bytes and the temporary file is gone.
 
