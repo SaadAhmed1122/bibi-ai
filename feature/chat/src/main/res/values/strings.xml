@@ -18,7 +18,7 @@
     <string name="chat_banner_error">Bibi\'s model stopped working. Close and reopen the app.</string>
     <!-- Model screen -->
     <string name="model_title">Bibi\'s model</string>
-    <string name="model_missing">Bibi needs its AI model on this phone: the file %1$s (about 585 MB). Download it once in your browser, then choose it here. It is checked before use and never leaves the phone.</string>
+    <string name="model_missing">Bibi needs its AI model on this phone: the file %1$s (about 585 MB). Download it here once, or choose the file if you already have it. It is checked before use and never leaves the phone.</string>
     <string name="model_choose">Choose model file</string>
     <string name="model_choose_other">Choose another file</string>
     <string name="model_importing">Copying and checking the model… %1$d%%</string>
@@ -59,7 +59,7 @@
     <string name="voice_mic_continue">Continue</string>
     <string name="voice_mic_not_now">Not now</string>
     <string name="voice_title">Voice (optional)</string>
-    <string name="voice_missing">To talk with Bibi and hear its answers, it needs the voice pack: the Parakeet speech-to-text and Piper voice folders (about 730 MB). Put both folders in one folder on the phone, then choose that folder here.</string>
+    <string name="voice_missing">To talk with Bibi and hear its answers, it needs the voice pack: the Parakeet speech-to-text and Piper voice folders (about 730 MB). Download it here, or put both folders in one folder on the phone and choose that folder.</string>
     <string name="voice_choose">Choose voice folder</string>
     <string name="voice_ready">The voice pack is ready.</string>
     <string name="voice_remove">Remove voice pack</string>
@@ -71,7 +71,7 @@
     <string name="chat_safe_mode_on">Safe mode: on</string>
     <string name="chat_safe_mode_off">Safe mode: off</string>
     <string name="router_title">Phone actions (optional)</string>
-    <string name="router_missing">To understand requests like \"wake me up at seven\", Bibi uses a second, smaller model: the file %1$s (about 165 MB). Without it, Bibi still does actions for simple phrases such as \"set a timer for 5 minutes\".</string>
+    <string name="router_missing">To understand requests like \"wake me up at seven\", Bibi uses a second, smaller model: the file %1$s (about 165 MB). Without it, Bibi still does actions for simple phrases such as \"set a timer for 5 minutes\". Note: the Google library that runs this model (MediaPipe) may send usage statistics to Google.</string>
     <string name="router_choose">Choose action model</string>
     <string name="router_ready">The action model is ready.</string>
     <string name="router_remove">Remove action model</string>
