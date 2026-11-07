@@ -22,8 +22,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
-import io.github.saadahmed1122.bibi.core.designsystem.R as DsR
+import io.github.saadahmed1122.bibi.core.designsystem.ModelDownloadBlock
+import io.github.saadahmed1122.bibi.domain.model.ModelDownloadState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -52,6 +52,9 @@ fun OnboardingScreen(
     onAllowNotifications: () -> Unit,
     onNotNow: () -> Unit,
     modifier: Modifier = Modifier,
+    download: ModelDownloadState = ModelDownloadState.Idle,
+    onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {},
 ) {
     Scaffold(modifier = modifier.fillMaxSize(), containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -78,7 +81,7 @@ fun OnboardingScreen(
                     OnboardingStep.Model -> {
                         Title(R.string.onb_model_title)
                         Body(stringResource(R.string.onb_model_body, ModelFile.NAME))
-                        ModelPart(modelState, onPickModel, onCancelImport)
+                        ModelPart(modelState, onPickModel, onCancelImport, download, onDownload, onCancelDownload)
                         TextButton(onClick = onOpenTerms) { Text(stringResource(R.string.onb_terms)) }
                         Row(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.CenterVertically) {
                             SecondaryButton(stringResource(R.string.onb_back), onClick = onBack)
@@ -132,16 +135,20 @@ private fun Body(text: String) {
 }
 
 @Composable
-private fun ModelPart(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit) {
-    val uriHandler = LocalUriHandler.current
-    val modelUrl = stringResource(DsR.string.model_download_url)
-    // Opens the browser; Bibi itself has no internet permission. No browser: nothing happens.
-    val download = @Composable { SecondaryButton(stringResource(DsR.string.model_download), onClick = { runCatching { uriHandler.openUri(modelUrl) } }) }
+private fun ModelPart(
+    state: ModelState,
+    onPick: () -> Unit,
+    onCancel: () -> Unit,
+    download: ModelDownloadState,
+    onDownload: () -> Unit,
+    onCancelDownload: () -> Unit,
+) {
+    val choose = @Composable {
+        ModelDownloadBlock(download, onDownload, onCancelDownload)
+        if (download !is ModelDownloadState.Downloading) SecondaryButton(stringResource(R.string.onb_model_choose), onClick = onPick)
+    }
     when (state) {
-        ModelState.Missing -> {
-            PrimaryButton(stringResource(R.string.onb_model_choose), onClick = onPick)
-            download()
-        }
+        ModelState.Missing -> choose()
         is ModelState.Importing -> {
             Text(stringResource(R.string.onb_model_importing, (state.progress * 100).toInt()))
             LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
@@ -150,8 +157,7 @@ private fun ModelPart(state: ModelState, onPick: () -> Unit, onCancel: () -> Uni
         is ModelState.Ready -> Text(stringResource(R.string.onb_model_ready), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         is ModelState.Invalid -> {
             Text(stringResource(R.string.onb_model_invalid, ModelFile.NAME), color = MaterialTheme.colorScheme.error)
-            PrimaryButton(stringResource(R.string.onb_model_choose), onClick = onPick)
-            download()
+            choose()
         }
     }
 }

@@ -1,6 +1,6 @@
 # Bibi AI
 
-An offline AI companion for Android. Bibi is a small animated kitten that floats over your other apps. You can chat with it or talk to it, it remembers what you ask it to, and it does a few safe phone actions (timer, alarm, flashlight, open an app, dial with confirmation). Everything runs on the phone: the app has **no internet permission**, no account and no analytics.
+An offline AI companion for Android. Bibi is a small animated kitten that floats over your other apps. You can chat with it or talk to it, it remembers what you ask it to, and it does a few safe phone actions (timer, alarm, flashlight, open an app, dial with confirmation). Everything runs on the phone: the internet is used only to download the model once, and there is no account and no analytics.
 
 Bibi is a portfolio piece and a technical experiment by Saad Ahmed, built with Claude Code. It's in a closed test on Google Play (version `0.3.x-p3`).
 
@@ -87,12 +87,12 @@ Needs JDK 17 and the Android SDK (compileSdk 36). The app's minSdk is 32. The bu
 Release signing reads the `BIBI_UPLOAD_*` values from `~/.gradle/gradle.properties` ([docs/release.md](docs/release.md)). The names are listed in [.env.example](.env.example).
 
 ## Get the model
-The models aren't in the app or in this repository. The chat model is `gemma3-1b-it-int4.litertlm` (584,417,280 bytes), a LiteRT-LM build of Gemma 3 1B. Download it from [litert-community/Gemma3-1B-IT](https://huggingface.co/litert-community/Gemma3-1B-IT/blob/main/gemma3-1b-it-int4.litertlm) on Hugging Face. The model is gated: log in and accept the Gemma Terms of Use first. Copy it to the phone, then in Bibi tap **Choose model file**. The app copies the file and checks its SHA-256. Closed testers get a download link instead ([docs/tester-guide.md](docs/tester-guide.md)), and the optional action and voice files are listed there too.
+The models aren't in the app or in this repository. The chat model is `gemma3-1b-it-int4.litertlm` (584,417,280 bytes), a LiteRT-LM build of Gemma 3 1B. Download it from [litert-community/Gemma3-1B-IT](https://huggingface.co/litert-community/Gemma3-1B-IT/blob/main/gemma3-1b-it-int4.litertlm) on Hugging Face. The model is gated: log in and accept the Gemma Terms of Use first. Then either copy it to the phone and tap **Choose model file**, or host it on your own HTTPS server and build with `-PBIBI_MODEL_URL=https://your.server/gemma3-1b-it-int4.litertlm` so the app can download it (tap **Download the model**). The app copies the file and checks its SHA-256. Closed testers get a download link instead ([docs/tester-guide.md](docs/tester-guide.md)), and the optional action and voice files are listed there too.
 
 Gemma is provided under and subject to the [Gemma Terms of Use](https://ai.google.dev/gemma/terms). Every model and library credit is in [app/src/main/assets/licenses.txt](app/src/main/assets/licenses.txt), which is also the in-app Licenses screen.
 
 ## Privacy
-No `INTERNET` permission, so nothing you say, type or save can leave the phone except through a share you start. Policy: [docs/privacy-policy.md](docs/privacy-policy.md). The public-release audit of this repository is in [docs/public-release-audit.md](docs/public-release-audit.md).
+The `INTERNET` permission is used only by the one-time model download (Android DownloadManager). Nothing you say, type or save leaves the phone except through a share you start. The optional phone-actions model runs on Google's MediaPipe, which may send usage statistics to Google. Policy: [docs/privacy-policy.md](docs/privacy-policy.md). The public-release audit of this repository is in [docs/public-release-audit.md](docs/public-release-audit.md).
 
 ## Project docs
 - Status, decisions and open items: [docs/project_status.md](docs/project_status.md)

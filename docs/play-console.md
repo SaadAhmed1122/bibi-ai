@@ -33,10 +33,10 @@ No ads.
 ### Data safety
 - **Data collected:** none. **Data shared:** none.
 - **Why that's true:**
-  - The app has no `INTERNET` permission. A build check enforces this, and the merged release manifest has none.
+  - **Changes with the in-app download (2026-11-07, #161), owner to update in Play Console before uploading that build:** the app now has `INTERNET`, used by the system DownloadManager for the model file only. The download itself collects nothing. See the MediaPipe line below: with `INTERNET` it can send, so the form must declare what MediaPipe sends (App info and performance; Device or other IDs) as collected, not shared, optional, and only when the user adds the phone-actions model [VERIFY the exact categories against MediaPipe's privacy notice on the day].
   - There are no analytics, ads or crash-reporting SDKs. The crash log and the usage numbers (counts and dates, 0.3.0-p3) are local files.
   - Backups are off (`android:allowBackup="false"`).
-  - MediaPipe Tasks (the action router) tries to send usage metrics to Google (`play.googleapis.com/log`: device model, app package and version, performance, a per-install ID, per MediaPipe's privacy notice). It has no switch to turn this off. On the vivo the attempt fails with "missing INTERNET permission" (2026-11-05), so nothing is collected. If INTERNET is ever added, this answer and the privacy policy must change first.
+  - MediaPipe Tasks (the action router) tries to send usage metrics to Google (`play.googleapis.com/log`: device model, app package and version, performance, a per-install ID, per MediaPipe's privacy notice). It has no switch to turn this off. On the vivo the attempt fails with "missing INTERNET permission" (2026-11-05), so nothing is collected. INTERNET was added on 2026-11-07 (#161); the privacy policy now says so, and the Data safety answer must change as above.
 - **Security practices:**
   - "Data is encrypted in transit": not applicable, since nothing is transmitted.
   - "You can request that data be deleted": Settings > Privacy and your data > Delete everything; uninstalling removes everything.

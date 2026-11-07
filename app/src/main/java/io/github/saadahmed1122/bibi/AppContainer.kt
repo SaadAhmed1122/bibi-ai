@@ -90,6 +90,9 @@ class AppContainer(context: Context) {
     /** The imported model in app-private storage; the `:inference` process (same app) reads it there. */
     val models: ModelRepository by lazy { ModelRepository(File(appContext.filesDir, "models")) }
 
+    /** The in-app model download (SPEC-model-download.md); it outlives the process, so one per app. */
+    val modelDownloader by lazy { SystemModelDownloader(appContext) }
+
     /** The optional action router model, next to the chat model (SPEC-tools.md). */
     val routerModel: ModelRepository by lazy {
         ModelRepository(
