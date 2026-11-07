@@ -247,6 +247,15 @@ Owner, before uploading:
 - [x] Fixed build on the vivo (2026-11-05): the log shows `router waited_ms=…` then `router load_ms=…`, so the action model loads only after the chat model. "it is dark in here, give me some light" turned the light on (landscape), "flashlight off" turned it off and a chat question got an answer (portrait).
 - [ ] Owner, over the next days: leave Floating Bibi on, use the phone normally, and send Settings > About > Share crash log if Bibi ever stops answering. The crash needed Android to freeze the AI process for minutes or hours mid-load, so it can't be forced on demand.
 
+## P3 — In-app model download (issue #161)
+Claude checked on the vivo (debug build, 2026-11-07): with the default Hugging Face URL the model step shows "asked for a login (HTTP 401)" with Try again and Choose model file; with the file served from the laptop (`adb reverse`), the download reached Ready in portrait and in landscape; killing the app mid-download and opening it again ended Ready; the model in private storage is 584,417,280 bytes and the temporary file is gone.
+
+For the owner, after you put the file on your server:
+1. [ ] Build with `-PBIBI_MODEL_URL=https://<your server>/gemma3-1b-it-int4.litertlm` (or put `BIBI_MODEL_URL=...` in `~/.gradle/gradle.properties`). Check in a desktop browser first that the link downloads the file without a login page.
+2. [ ] Install, go to the model step, tap **Download the model** on mobile data or Wi-Fi. Leave the app while it runs; the system notification shows progress.
+3. [ ] Turn on airplane mode halfway: the screen says "Waiting for the internet"; turn it off and the download continues.
+4. [ ] It ends with "The model is ready." Send a chat message.
+
 ## P1 exit gate — 1 hour without a crash (issue #49)
 The last P1 check (PRD 0.6). Results go in `docs/p1-gate.md`.
 

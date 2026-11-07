@@ -6,7 +6,15 @@
     <string name="bibi_mood_speaking">Bibi is talking and gesturing with one paw.</string>
     <string name="bibi_mood_confused">Bibi tilts its head, puzzled; something didn\'t work.</string>
     <string name="ds_back">Back</string>
-    <string name="model_download">Download the model (browser)</string>
-    <!-- The closed-test model file on the owner's Google Drive (docs/tester-guide.md). One place for the app. -->
-    <string name="model_download_url" translatable="false">https://drive.google.com/file/d/15wvoZqcN9h5qh8eJ9qJZMrGdc3qoy4Rd/view?usp=sharing</string>
+    <string name="model_download">Download the model (%1$d MB)</string>
+    <string name="model_download_wifi_hint">One time. Wi-Fi is best. It keeps going if you leave the app.</string>
+    <string name="model_downloading">Downloading… %1$d of %2$d MB</string>
+    <string name="model_downloading_start">Starting the download…</string>
+    <string name="model_download_waiting">Waiting for the internet… %1$d of %2$d MB</string>
+    <string name="model_download_cancel">Cancel download</string>
+    <string name="model_download_failed_login">The download server asked for a login (HTTP %1$d), so the file can\'t be fetched here. Choose the file instead.</string>
+    <string name="model_download_failed_missing">The model wasn\'t found on the download server (HTTP %1$d). Choose the file instead.</string>
+    <string name="model_download_failed_space">Not enough free space. Bibi needs about 1.2 GB free while it downloads and checks the model.</string>
+    <string name="model_download_failed_network">The download stopped (code %1$d). Check the connection and try again.</string>
+    <string name="model_download_retry">Try again</string>
 </resources>

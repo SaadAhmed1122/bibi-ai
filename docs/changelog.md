@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased] - 2026-10-28
 
+### Added
+- In-app model download (#161): **Download the model** on the first-run and model screens fetches the chat model with Android's DownloadManager (resumes, keeps going when the app is closed), then checks its size and SHA-256 as before. The server URL is a build setting (`BIBI_MODEL_URL`). The app now has the `INTERNET` permission for this download only; the privacy policy and the phone-actions card say what uses the network. Version 0.3.4-p3 (code 6).
+
+### Changed
+- The build's "no INTERNET" check became a permission allowlist: any permission a library adds still fails the build.
+
 ### Fixed
 - The Play-installed 0.3.2-p3 crashed at launch on a realme RMX3363 (Android 13) inside Play's automatic protection (`com.pairip.application.Application` not found). The same code built locally runs there. Next upload: version 0.3.3-p3 (code 5) with automatic protection turned off (docs/release.md).
 - Bibi's AI process could crash (native SIGSEGV in LiteRT-LM `createConversation`) when Android thawed it after a long freeze in the middle of loading: the chat model and the action model finished loading at the same moment. The action model now loads only after the chat model (#150).

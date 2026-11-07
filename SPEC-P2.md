@@ -8,7 +8,7 @@ P2 (PRD 0.6) delivers memory, the five safe actions, two personalities, a Privac
 
 | Question | Answer |
 |---|---|
-| Model pack download (PRD 0.8 "Model") | **Side-load for now.** The P1 file import stays for the closed test; no `INTERNET` permission. Download is built once hosting is decided (open item 6). |
+| Model pack download (PRD 0.8 "Model") | **Side-load for now.** The P1 file import stays for the closed test; no `INTERNET` permission. Download is built once hosting is decided (open item 6). Superseded 2026-11-07: in-app download, SPEC-model-download.md. |
 | Database encryption (PRD §18) | **Plain Room for MVP**, protected by Android file-based encryption. Recorded as a PRD override; revisit before production. |
 | Voice | **In the in-app chat and in the floating card.** Adds the `microphone` foreground-service type and its Play declaration. A Parakeet + Gemma memory check on the vivo comes first. |
 | Dial risk class (open item 8) | **Sensitive:** a confirmation card with the exact number; nothing opens until Confirm. |
@@ -36,7 +36,7 @@ Why this order: tools is mostly a port of measured S4 code; personality and memo
 - **One Gemma conversation.** The preset and pinned memories are part of the system prompt, set when the conversation opens; a change applies at the next reopen (about 7 s on the vivo). Keyword-matched memories ride along with each user turn, so they need no reopen. Summaries use the engine only while the user is idle.
 - **Models in `:inference`.** The router, Parakeet and Piper run in the `:inference` process next to Gemma. Whether all of them fit at once on the vivo is measured first [VERIFY]; if not, the plan loads voice models on demand.
 - **Schema changes** (memory tables, audit log) are Room migrations with a `MigrationTestHelper` test. Under the merge rule they are major merges: the owner approves those PRs.
-- **Still no `INTERNET` permission**, no analytics, no crash reporter. No SMS, call log, contacts or Accessibility.
+- **Still no `INTERNET` permission** (superseded 2026-11-07 for the model download only, SPEC-model-download.md), no analytics, no crash reporter. No SMS, call log, contacts or Accessibility.
 
 ## Out of P2
 
