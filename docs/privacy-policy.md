@@ -1,11 +1,15 @@
 Bibi AI privacy policy
 
-Last updated: 4 November 2026
+Last updated: 7 November 2026
 
 Bibi AI is an AI companion that runs entirely on your phone. This policy explains what the app keeps and what it does not do.
 
-1. Nothing leaves your phone
-The app has no internet permission. The AI models run on the device. Bibi AI collects no data, sends no data to the developer or anyone else, shows no ads and has no analytics, accounts or crash reporting service.
+1. Nothing you say leaves your phone
+The AI models run on the device. Bibi AI collects no data, sends nothing you say, type or save to the developer or anyone else, shows no ads and has no analytics, accounts or crash reporting service.
+
+The app uses the internet for one thing: downloading the AI model, once, when you tap "Download the model". The download server sees what any web server sees (your IP address and the file asked for) and nothing else. You can skip it and choose a model file you already have.
+
+The optional "Phone actions" model is run by Google's MediaPipe library. That library may send usage statistics to Google. It runs only if you add the phone-actions model yourself.
 
 2. What is kept on your phone
 - Your chat messages with Bibi.
@@ -24,6 +28,7 @@ When you hold the talk button, the app records your voice and turns it into text
 - Display over other apps: only if you turn on the floating Bibi.
 - Notifications: the notification that keeps the floating Bibi running.
 - Set alarms: when you ask Bibi to set an alarm or a timer.
+- Internet: to download the AI model when you ask for it (see 1).
 The app doesn't ask for contacts, SMS, call logs, location or accessibility access.
 
 5. Your control

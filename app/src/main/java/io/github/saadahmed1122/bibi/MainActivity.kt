@@ -118,6 +118,8 @@ class MainActivity : ComponentActivity() {
                     Screen.Home -> onboardingStep?.let { step ->
                         val importer = viewModel { ModelImportViewModel(container.models) }
                         val model by importer.state.collectAsStateWithLifecycle()
+                        val downloader = viewModel { container.chatDownload() }
+                        val download by downloader.state.collectAsStateWithLifecycle()
                         val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                             if (uri != null) importer.import(UriModelSource(contentResolver, uri))
                         }
@@ -135,6 +137,9 @@ class MainActivity : ComponentActivity() {
                             onOpenTerms = { screen = Screen.Terms },
                             onAllowNotifications = { notifications.launch(Manifest.permission.POST_NOTIFICATIONS) },
                             onNotNow = onboarding::finish,
+                            download = download,
+                            onDownload = downloader::start,
+                            onCancelDownload = downloader::cancel,
                         )
                     } ?: HomeScreen(
                         onOpenChat = { screen = Screen.Chat },
@@ -190,6 +195,10 @@ class MainActivity : ComponentActivity() {
                             onPickRouter = { routerPicker.launch(arrayOf("*/*")) },
                             voice = voice,
                             onPickVoice = { voicePicker.launch(null) },
+                            download = viewModel { container.chatDownload() },
+                            routerDownload = viewModel(key = "routerDownload") { container.routerDownload() },
+                            // Created only inside viewModel {}: each instance polls from init.
+                            voiceDownload = if (container.hasVoiceDownload) viewModel(key = "voiceDownload") { container.voiceDownload() } else null,
                         )
                     }
                     Screen.Settings -> SettingsRoute(

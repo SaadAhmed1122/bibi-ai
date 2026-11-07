@@ -1,11 +1,11 @@
 <resources>
     <string name="onb_step">Step %1$d of 3</string>
     <string name="onb_welcome_title">Hi, I\'m Bibi</string>
-    <string name="onb_welcome_body">I\'m a small companion that lives on this phone. I chat with you using an AI model that runs right here: no internet, no account, and nothing is sent anywhere. Our chats are stored only on this phone.</string>
+    <string name="onb_welcome_body">I\'m a small companion that lives on this phone. I chat with you using an AI model that runs right here: no account, and nothing you say is sent anywhere. The internet is only used once, to download the model. Our chats are stored only on this phone.</string>
     <string name="onb_next">Next</string>
     <string name="onb_back">Back</string>
     <string name="onb_model_title">My AI model</string>
-    <string name="onb_model_body">To think, I need the model file %1$s (about 585 MB). Download it once in your browser, then choose it here. It is checked before use and never leaves the phone.</string>
+    <string name="onb_model_body">To think, I need the model file %1$s (about 585 MB). Download it here once, or choose the file if you already have it. It is checked before use and never leaves the phone.</string>
     <string name="onb_model_choose">Choose model file</string>
     <string name="onb_model_importing">Copying and checking… %1$d%%</string>
     <string name="onb_model_cancel">Cancel</string>

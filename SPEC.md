@@ -100,7 +100,7 @@ class ChatViewModel(private val sendMessage: SendMessage, …) : ViewModel() {
 
 - **Always:** start from an up-to-date `main` with one branch per task and a PR; never push to `main` (CLAUDE.md §10). Check library APIs with Context7 at the pinned version. Run `./gradlew test` before every commit. Update status and the changelog after each step. Run `graphify update .` after code changes.
 - **Ask first:** adding any dependency not listed above; any new permission; Room schema changes after the first release; changing the LiteRT-LM version; anything outside this map.
-- **Never:** commit keystores, `local.properties`, `.env` or model files; add the INTERNET permission, analytics or a crash reporter; add SMS, call-log, contacts or Accessibility permissions; build voice, tools or memory in P1; merge without the owner's OK.
+- **Never:** commit keystores, `local.properties`, `.env` or model files; add analytics or a crash reporter, or use the network for anything but the model download (SPEC-model-download.md); add SMS, call-log, contacts or Accessibility permissions; build voice, tools or memory in P1; merge without the owner's OK.
 
 ## Success criteria (P1 as a whole)
 

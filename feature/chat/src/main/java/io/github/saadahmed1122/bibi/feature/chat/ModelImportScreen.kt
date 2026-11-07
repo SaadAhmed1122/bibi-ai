@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import io.github.saadahmed1122.bibi.core.designsystem.R as DsR
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -22,12 +21,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.saadahmed1122.bibi.core.designsystem.BibiScreen
 import io.github.saadahmed1122.bibi.core.designsystem.BibiTheme
+import io.github.saadahmed1122.bibi.core.designsystem.ModelDownloadBlock
+import io.github.saadahmed1122.bibi.domain.model.ModelDownloadState
 import io.github.saadahmed1122.bibi.core.designsystem.PrimaryButton
 import io.github.saadahmed1122.bibi.core.designsystem.SecondaryButton
 import io.github.saadahmed1122.bibi.core.designsystem.Space
 import io.github.saadahmed1122.bibi.domain.model.ModelFile
 import io.github.saadahmed1122.bibi.domain.model.ModelState
 import io.github.saadahmed1122.bibi.domain.model.RouterModelFile
+import io.github.saadahmed1122.bibi.domain.model.VoicePack
 
 /**
  * [onPick] opens the system file picker; the caller turns the result into [ModelImportViewModel.import].
@@ -44,20 +46,31 @@ fun ModelImportRoute(
     onPickRouter: () -> Unit = {},
     voice: VoicePackViewModel? = null,
     onPickVoice: () -> Unit = {},
+    download: ModelDownloadViewModel? = null,
+    routerDownload: ModelDownloadViewModel? = null,
+    voiceDownload: ModelDownloadViewModel? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val uriHandler = LocalUriHandler.current
-    val modelUrl = stringResource(DsR.string.model_download_url)
-    // Opens the browser; Bibi itself has no internet permission (SPEC-model-import.md). No browser: nothing happens.
-    val onDownload = { runCatching { uriHandler.openUri(modelUrl) }; Unit }
-    ModelImportScreen(state, onPick, viewModel::cancel, viewModel::remove, onOpenChat, onBack, modifier, onDownload = onDownload) {
+    val downloadState = download?.state?.collectAsStateWithLifecycle()?.value
+    val routerDownloadState = routerDownload?.state?.collectAsStateWithLifecycle()?.value
+    val voiceDownloadState = voiceDownload?.state?.collectAsStateWithLifecycle()?.value
+    ModelImportScreen(
+        state, onPick, viewModel::cancel, viewModel::remove, onOpenChat, onBack, modifier,
+        download = downloadState, onDownload = { download?.start() }, onCancelDownload = { download?.cancel() },
+    ) {
         if (router != null) {
             val routerState by router.state.collectAsStateWithLifecycle()
-            RouterModelSection(routerState, onPickRouter, router::cancel, router::remove)
+            RouterModelSection(
+                routerState, onPickRouter, router::cancel, router::remove,
+                download = routerDownloadState, onDownload = { routerDownload?.start() }, onCancelDownload = { routerDownload?.cancel() },
+            )
         }
         if (voice != null) {
             val voiceState by voice.state.collectAsStateWithLifecycle()
-            VoicePackSection(voiceState, onPickVoice, voice::cancel, voice::remove)
+            VoicePackSection(
+                voiceState, onPickVoice, voice::cancel, voice::remove,
+                download = voiceDownloadState, onDownload = { voiceDownload?.start() }, onCancelDownload = { voiceDownload?.cancel() },
+            )
         }
     }
 }
@@ -71,7 +84,9 @@ fun ModelImportScreen(
     onOpenChat: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    download: ModelDownloadState? = null,
     onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {},
     extra: @Composable ColumnScope.() -> Unit = {},
 ) {
     BibiScreen(title = stringResource(R.string.model_title), modifier = modifier, onBack = onBack) {
@@ -79,8 +94,8 @@ fun ModelImportScreen(
         when (state) {
             ModelState.Missing -> {
                 Text(stringResource(R.string.model_missing, ModelFile.NAME), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                PrimaryButton(stringResource(R.string.model_choose), onClick = onPick)
-                SecondaryButton(stringResource(DsR.string.model_download), onClick = onDownload)
+                if (download != null) ModelDownloadBlock(download, onDownload, onCancelDownload)
+                if (download !is ModelDownloadState.Downloading) SecondaryButton(stringResource(R.string.model_choose), onClick = onPick)
             }
             is ModelState.Importing -> {
                 val percent = (state.progress * 100).toInt()
@@ -103,8 +118,8 @@ fun ModelImportScreen(
                     else -> stringResource(R.string.model_invalid_read)
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
-                PrimaryButton(stringResource(R.string.model_choose_other), onClick = onPick)
-                SecondaryButton(stringResource(DsR.string.model_download), onClick = onDownload)
+                if (download != null) ModelDownloadBlock(download, onDownload, onCancelDownload)
+                if (download !is ModelDownloadState.Downloading) SecondaryButton(stringResource(R.string.model_choose_other), onClick = onPick)
             }
         }
         }
@@ -131,12 +146,21 @@ fun RouterModelSection(
     onCancel: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    download: ModelDownloadState? = null,
+    onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {},
 ) {
+    val getIt = @Composable { choose: String ->
+        if (download != null) {
+            ModelDownloadBlock(download, onDownload, onCancelDownload, RouterModelFile.SIZE_BYTES, DsR.string.router_download, primary = false)
+        }
+        if (download !is ModelDownloadState.Downloading) SecondaryButton(choose, onClick = onPick)
+    }
     PackCard(stringResource(R.string.router_title), modifier) {
         when (state) {
             ModelState.Missing -> {
                 Text(stringResource(R.string.router_missing, RouterModelFile.NAME), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SecondaryButton(stringResource(R.string.router_choose), onClick = onPick)
+                getIt(stringResource(R.string.router_choose))
             }
             is ModelState.Importing -> {
                 Text(
@@ -157,7 +181,7 @@ fun RouterModelSection(
                     else -> stringResource(R.string.model_invalid_read)
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
-                SecondaryButton(stringResource(R.string.model_choose_other), onClick = onPick)
+                getIt(stringResource(R.string.model_choose_other))
             }
         }
     }
@@ -165,12 +189,27 @@ fun RouterModelSection(
 
 /** The optional voice pack (SPEC-voice.md): Parakeet and Piper, picked as a folder. */
 @Composable
-fun VoicePackSection(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+fun VoicePackSection(
+    state: ModelState,
+    onPick: () -> Unit,
+    onCancel: () -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+    download: ModelDownloadState? = null,
+    onDownload: () -> Unit = {},
+    onCancelDownload: () -> Unit = {},
+) {
+    val getIt = @Composable {
+        if (download != null) {
+            ModelDownloadBlock(download, onDownload, onCancelDownload, VoicePack.FILES.sumOf { it.size }, DsR.string.voice_download, primary = false)
+        }
+        if (download !is ModelDownloadState.Downloading) SecondaryButton(stringResource(R.string.voice_choose), onClick = onPick)
+    }
     PackCard(stringResource(R.string.voice_title), modifier) {
         when (state) {
             ModelState.Missing -> {
                 Text(stringResource(R.string.voice_missing), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SecondaryButton(stringResource(R.string.voice_choose), onClick = onPick)
+                getIt()
             }
             is ModelState.Importing -> {
                 Text(stringResource(R.string.model_importing, (state.progress * 100).toInt()), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
@@ -188,7 +227,7 @@ fun VoicePackSection(state: ModelState, onPick: () -> Unit, onCancel: () -> Unit
                     else -> stringResource(R.string.model_invalid_read)
                 }
                 Text(message, color = MaterialTheme.colorScheme.error)
-                SecondaryButton(stringResource(R.string.voice_choose), onClick = onPick)
+                getIt()
             }
         }
     }
@@ -218,6 +257,20 @@ private fun ModelReadyDarkPreview() = BibiTheme(darkTheme = true) {
         VoicePackSection(ModelState.Importing(0.3f), {}, {}, {})
     }
 }
+
+@Preview
+@Composable
+private fun ModelDownloadIdlePreview() = BibiTheme { ModelImportScreen(ModelState.Missing, {}, {}, {}, {}, {}, download = ModelDownloadState.Idle) }
+
+@Preview
+@Composable
+private fun ModelDownloadingPreview() = BibiTheme {
+    ModelImportScreen(ModelState.Missing, {}, {}, {}, {}, {}, download = ModelDownloadState.Downloading(245_000_000, 584_417_280, waiting = false))
+}
+
+@Preview
+@Composable
+private fun ModelDownloadFailedPreview() = BibiTheme { ModelImportScreen(ModelState.Missing, {}, {}, {}, {}, {}, download = ModelDownloadState.Failed(401)) }
 
 @Preview(fontScale = 2f)
 @Composable

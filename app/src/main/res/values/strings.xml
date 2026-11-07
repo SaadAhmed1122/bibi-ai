@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Bibi</string>
+    <string name="model_download_notification">Bibi\'s AI model</string>
+    <string name="router_download_notification">Bibi\'s action model</string>
+    <string name="voice_download_notification">Bibi\'s voice pack</string>
     <string name="home_title">Hi, I\'m Bibi</string>
     <string name="home_body">Your offline companion. Everything stays on this phone.</string>
     <string name="home_chat">Open chat</string>
@@ -10,7 +13,7 @@
     <string name="settings_safe_mode_desc">Bibi only chats: no phone actions and nothing new saved to memory.</string>
     <string name="settings_privacy">Privacy and your data</string>
     <string name="privacy_title">Privacy</string>
-    <string name="privacy_offline">Everything Bibi does happens on this phone. The app has no internet permission, so nothing you say, type or save can leave it.</string>
+    <string name="privacy_offline">Everything Bibi does happens on this phone. The internet is used only to download the AI model when you ask. Nothing you say, type or save leaves the phone.</string>
     <string name="privacy_stored">What Bibi keeps</string>
     <string name="privacy_counting">Counting…</string>
     <string name="privacy_messages">Chat messages: %1$d</string>
