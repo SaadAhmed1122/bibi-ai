@@ -15,6 +15,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Fixed
 - Tapping floating Bibi without the microphone allowed silently opened the typed chat card (#167). Now the app opens, says why it needs the mic and asks; on Allow it goes back and Bibi starts listening; "Type instead" or Deny opens the chat as before. Granting the mic also gives the floating service its microphone type right away, without opening the app again.
+- Floating Bibi covered the Continue button of that "Talk with Bibi" dialog (seen on a realme RMX3363). Bibi now steps off screen while the dialog is open and comes back when it closes (#169).
 
 ### Fixed
 - The Play-installed 0.3.2-p3 crashed at launch on a realme RMX3363 (Android 13) inside Play's automatic protection (`com.pairip.application.Application` not found). The same code built locally runs there. Next upload: version 0.3.3-p3 (code 5) with automatic protection turned off (docs/release.md).

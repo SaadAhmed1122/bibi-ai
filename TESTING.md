@@ -252,6 +252,7 @@ Owner, before uploading:
 2. [ ] Tap Bibi: the app opens with "Talk with Bibi". Tap Continue, then Allow.
 3. [ ] The app goes away and the bubble says "Listening…". Say something: Bibi answers.
 4. [ ] Repeat with Deny: the typed chat opens.
+5. [ ] While "Talk with Bibi" is open, floating Bibi is gone (it covered Continue before, #169); it is back after the dialog closes.
 
 ## P3 — Character behaviors (issue #162)
 Claude checked on the vivo (debug build, 2026-11-07, portrait and landscape): drag and drop, tap hop, charger and low-battery reactions (simulated with `dumpsys battery`), mirroring on the right edge.
